@@ -1,5 +1,5 @@
 ﻿
-namespace MyFileStorage.Api.DTO
+namespace MyFileSpace.SharedKernel.DTO
 {
     public class FileDTO
     {

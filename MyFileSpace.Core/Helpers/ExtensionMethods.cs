@@ -1,8 +1,8 @@
 ﻿
 using Microsoft.AspNetCore.Http;
-using MyFileStorage.Api.DTO;
+using MyFileSpace.SharedKernel.DTO;
 
-namespace MyFileStorage.Api.Extensions
+namespace MyFileSpace.Api.Extensions
 {
     public static class ExtensionMethods
     {

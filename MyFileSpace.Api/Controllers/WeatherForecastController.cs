@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace MyFileStorage.Api.Controllers
+namespace MyFileSpace.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]

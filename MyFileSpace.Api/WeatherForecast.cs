@@ -1,4 +1,4 @@
-namespace MyFileStorage.Api
+namespace MyFileSpace.Api
 {
     public class WeatherForecast
     {

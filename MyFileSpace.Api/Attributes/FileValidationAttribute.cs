@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MyFileStorage.Api.Attributes
+namespace MyFileSpace.Api.Attributes
 {
     public class FileValidationAttribute : ValidationAttribute
     {

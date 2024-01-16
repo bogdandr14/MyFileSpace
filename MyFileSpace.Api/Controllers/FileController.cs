@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MyFileStorage.Api.Attributes;
-using MyFileStorage.Api.DTO;
-using MyFileStorage.Core.Services;
+using MyFileSpace.Api.Attributes;
+using MyFileSpace.Core.Services;
+using MyFileSpace.SharedKernel.DTO;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace MyFileStorage.Api.Controllers
+namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

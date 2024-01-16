@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace MyFileStorage.Core.Providers
+namespace MyFileSpace.Core.Providers
 {
     public interface IAppConfigurationProvider
     {

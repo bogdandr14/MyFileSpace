@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MyFileStorage.Core\MyFileStorage.Core.csproj" />
-    <ProjectReference Include="..\MyFileStorage.SharedKernel\MyFileStorage.SharedKernel.csproj" />
+    <ProjectReference Include="..\MyFileSpace.Core\MyFileSpace.Core.csproj" />
+    <ProjectReference Include="..\MyFileSpace.SharedKernel\MyFileSpace.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

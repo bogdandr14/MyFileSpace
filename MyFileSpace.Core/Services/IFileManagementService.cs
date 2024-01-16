@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
-using MyFileStorage.Api.DTO;
+using MyFileSpace.SharedKernel.DTO;
 
-namespace MyFileStorage.Core.Services
+namespace MyFileSpace.Core.Services
 {
     public interface IFileManagementService
     {

@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
-using MyFileStorage.Api.DTO;
-using MyFileStorage.Core.Providers;
+using MyFileSpace.Core.Providers;
+using MyFileSpace.SharedKernel.DTO;
 
-namespace MyFileStorage.Core.Services
+namespace MyFileSpace.Core.Services
 {
     public class FileManagementService : IFileManagementService
     {
