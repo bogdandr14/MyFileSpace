@@ -1,0 +1,6 @@
+@MyFileStorage.Api_HostAddress = http://localhost:5221
+
+GET {{MyFileStorage.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
