@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using MyFileSpace.Api.Extensions;
 using MyFileSpace.Core.Providers;
-using MyFileSpace.SharedKernel.DTO;
+using MyFileSpace.Core.Repositories;
+using MyFileSpace.SharedKernel.DTOs;
 
 namespace MyFileSpace.Core.Services
 {
@@ -20,36 +22,44 @@ namespace MyFileSpace.Core.Services
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
-        public async Task<FileDTO> GetFile(string fileName)
+        public async Task<FileData> GetFileData(string fileName)
         {
             if (String.IsNullOrWhiteSpace(fileName))
             {
                 throw new Exception("No filename given");
             }
 
-            FileDTO fileObject = _mapper.Map<FileDTO>(fileName);
-            fileObject.FileInBytes = await File.ReadAllBytesAsync(Path.Combine(_fileDirectoryPath, fileName));
-
+            FileData fileObject = new CsvFileRepository().GetByName(fileName);
             return fileObject;
+        }
+        public async Task<byte[]> GetFileByGuid(Guid fileGuid)
+        {
+            FileData? fileObject = new CsvFileRepository().GetByGuid(fileGuid);
+            return await File.ReadAllBytesAsync(Path.Combine(_fileDirectoryPath, fileObject.Path));
         }
 
         public async Task AddFileAsync(IFormFile file)
         {
-            string fullPath = Path.Combine(_fileDirectoryPath, file.FileName);
+            FileData fileData = file.ToFileData();
+            string fullPath = Path.Combine(_fileDirectoryPath, fileData.Path);
 
             using (FileStream fileStream = File.Create(fullPath))
             {
                 fileStream.Seek(0, SeekOrigin.Begin);
                 await file.OpenReadStream().CopyToAsync(fileStream);
             }
+
+            new CsvFileRepository().Add(file.ToFileData());
         }
-        public async Task UpdateFileAsync(int id, IFormFile file)
+
+        public async Task UpdateFileAsync(Guid fileGuid, IFormFile file)
         {
             throw new NotImplementedException();
         }
-        public bool DeleteFile(string fileName)
+
+        public bool DeleteFile(Guid fileGuid)
         {
-            string path = Path.Combine(_fileDirectoryPath, fileName);
+            string path = Path.Combine(_fileDirectoryPath, new CsvFileRepository().GetByGuid(fileGuid).Path);
 
             if (File.Exists(path))
             {

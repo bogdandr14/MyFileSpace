@@ -1,24 +1,26 @@
 ﻿
 using Microsoft.AspNetCore.Http;
-using MyFileSpace.SharedKernel.DTO;
+using MyFileSpace.SharedKernel.DTOs;
 
 namespace MyFileSpace.Api.Extensions
 {
     public static class ExtensionMethods
     {
-        public static FileDTO ToImageFile(this IFormFile file)
+        public static FileData ToFileData(this IFormFile file)
         {
             if (file is null)
             {
                 return null;
             }
 
-            return new FileDTO
+            Guid newObjectGuid = Guid.NewGuid();
+            return new FileData
             {
-                Name = Guid.NewGuid(),
-                MimeType = file.ContentType,
-                Stream = file.OpenReadStream(),
-                SizeInBytes = file.Length
+                Guid = newObjectGuid,
+                SizeInBytes = file.Length,
+                Name = file.FileName,
+                ModifiedOn = DateTime.Now,
+                Path = $"{newObjectGuid}.{file.FileName.Split('.').Last()}"
             };
         }
 

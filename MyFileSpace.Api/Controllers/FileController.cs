@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
 using MyFileSpace.Core.Services;
-using MyFileSpace.SharedKernel.DTO;
+using MyFileSpace.SharedKernel.DTOs;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,16 +26,16 @@ namespace MyFileSpace.Api.Controllers
 
         // GET api/<FileController>/5
         [HttpGet("info/{fileName}")]
-        public FileDTO GetInfo(string fileName)
+        public FileData GetInfo(string fileName)
         {
-            return _fileManagementService.GetFile(id).Result;
+            return _fileManagementService.GetFileData(fileName).Result;
         }
 
         // GET api/<FileController>/5
-        [HttpGet("{id}")]
-        public byte[] Get(string fileName)
+        [HttpGet("{guid: Guid}")]
+        public byte[] Get(Guid guid)
         {
-            return _fileManagementService.GetFile(id).Result;
+            return _fileManagementService.GetFileByGuid(guid).Result;
         }
 
         // POST api/<FileController>
@@ -46,17 +46,17 @@ namespace MyFileSpace.Api.Controllers
         }
 
         // PUT api/<FileController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromForm][FileValidation(4096)] IFormFile uploadedFile)
+        [HttpPut("{id:Guid}")]
+        public void Put(Guid guid, [FromForm][FileValidation(4096)] IFormFile uploadedFile)
         {
-            _fileManagementService.UpdateFileAsync(id, uploadedFile);
+            _fileManagementService.UpdateFileAsync(guid, uploadedFile);
         }
 
         // DELETE api/<FileController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete("{guid:Guid}")]
+        public void Delete(Guid guid)
         {
-            _fileManagementService.DeleteFile(id);
+            _fileManagementService.DeleteFile(guid);
         }
     }
 }
