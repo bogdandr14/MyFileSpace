@@ -25,10 +25,17 @@ namespace MyFileSpace.Api.Controllers
         }
 
         // GET api/<FileController>/5
-        [HttpGet("{id}")]
-        public FileDTO Get(int id)
+        [HttpGet("info/{fileName}")]
+        public FileDTO GetInfo(string fileName)
         {
-            return _fileManagementService.GetFile(id.ToString()).Result;
+            return _fileManagementService.GetFile(id).Result;
+        }
+
+        // GET api/<FileController>/5
+        [HttpGet("{id}")]
+        public byte[] Get(string fileName)
+        {
+            return _fileManagementService.GetFile(id).Result;
         }
 
         // POST api/<FileController>
@@ -49,7 +56,7 @@ namespace MyFileSpace.Api.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
-            _fileManagementService.DeleteFile(id.ToString());
+            _fileManagementService.DeleteFile(id);
         }
     }
 }
