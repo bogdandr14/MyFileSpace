@@ -1,11 +1,12 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using MyFileSpace.Infrastructure.Helpers;
 using MyFileSpace.SharedKernel.DTOs;
 using System.Globalization;
 
-namespace MyFileSpace.Core.Repositories
+namespace MyFileSpace.Infrastructure.Repositories
 {
-    internal class CsvFileRepository
+    internal class CsvFileDataRepository : IFileDataRepository
     {
         private readonly CsvConfiguration _config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
         private readonly string _storedFilesData = "YOUR FILE DIRECTORY\\storedFiles.csv";
@@ -13,8 +14,6 @@ namespace MyFileSpace.Core.Repositories
 
         public List<FileData> GetAll()
         {
-            // when not cached
-
             using (var reader = new StreamReader(_storedFilesData))
             {
                 using (var csv = new CsvReader(reader, _config))
@@ -31,24 +30,12 @@ namespace MyFileSpace.Core.Repositories
 
         public FileData? GetByName(string fileName)
         {
-            return GetAll().Find(f => f.Name == fileName);
+            return GetAll().Find(f => f.OriginalName == fileName);
         }
 
         public void Add(FileData file)
         {
             AddMany(new List<FileData> { file });
-        }
-
-        private void AddMany(List<FileData> files)
-        {
-            if (!File.Exists(_storedFilesData))
-            {
-                PersistNewFile(files, _storedFilesData);
-            }
-            else
-            {
-                PersistExistingFile(files, _storedFilesData);
-            }
         }
 
         public void Update(FileData updatedFile)
@@ -72,6 +59,18 @@ namespace MyFileSpace.Core.Repositories
             File.Move(_storedFilesDataTemp, _storedFilesData);
         }
 
+
+        private void AddMany(List<FileData> files)
+        {
+            if (!File.Exists(_storedFilesData))
+            {
+                PersistNewFile(files, _storedFilesData);
+            }
+            else
+            {
+                PersistExistingFile(files, _storedFilesData);
+            }
+        }
 
         private void PersistNewFile(List<FileData> files, string csvPath)
         {

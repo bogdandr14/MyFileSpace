@@ -5,6 +5,15 @@ namespace MyFileSpace.Core.Services
 {
     public interface IFileManagementService
     {
+
+        /// <summary>
+        /// Retrieves all names of the files stored in the local file system.
+        /// </summary>
+        /// <returns>
+        /// Returns a list of file names.
+        /// </returns>
+        IEnumerable<string> GetAllFileNames();
+
         /// <summary>
         /// Retrieves the file from the local file system.
         /// </summary>
@@ -14,7 +23,7 @@ namespace MyFileSpace.Core.Services
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        Task<FileData> GetFileData(string fileName);
+        FileData GetFileData(string fileName);
 
 
         /// <summary>
@@ -26,21 +35,21 @@ namespace MyFileSpace.Core.Services
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        Task<byte[]> GetFileByGuid(Guid fileGuid);
+        byte[] GetFileByGuid(Guid fileGuid);
 
         /// <summary>
         /// Saves a file in the local file system.
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved 
         /// in the local system.</param>
-        Task AddFileAsync(IFormFile file);
+        void AddFile(IFormFile file);
 
         /// <summary>
         /// Updates a file in the local file system.
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved 
         /// in the local system.</param>
-        Task UpdateFileAsync(Guid fileGuid, IFormFile file);
+        void UpdateFile(Guid fileGuid, IFormFile file);
 
         /// <summary>
         /// Deletes a file from the local file system.
@@ -51,6 +60,6 @@ namespace MyFileSpace.Core.Services
         /// Returns <code>true</code> in case the removal of the file was successfull, or 
         /// <code>false</code> otherwise.
         /// </returns>
-        bool DeleteFile(Guid fileGuid);
+        void DeleteFile(Guid fileGuid);
     }
 }

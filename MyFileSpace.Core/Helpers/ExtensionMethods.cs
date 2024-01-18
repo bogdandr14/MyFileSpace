@@ -10,7 +10,7 @@ namespace MyFileSpace.Api.Extensions
         {
             if (file is null)
             {
-                return null;
+                throw new ArgumentNullException("The file is null");
             }
 
             Guid newObjectGuid = Guid.NewGuid();
@@ -18,25 +18,9 @@ namespace MyFileSpace.Api.Extensions
             {
                 Guid = newObjectGuid,
                 SizeInBytes = file.Length,
-                Name = file.FileName,
+                OriginalName = file.FileName,
                 ModifiedOn = DateTime.Now,
-                Path = $"{newObjectGuid}.{file.FileName.Split('.').Last()}"
             };
-        }
-
-        public static string GetExtension(string mimeType)
-        {
-            switch (mimeType.ToLower())
-            {
-                case "image/jpeg":
-                    return "jpg";
-                case "image/png":
-                    return "png";
-                case "image/gif":
-                    return "gif";
-                default:
-                    throw new BadImageFormatException("File format is not supported");
-            }
         }
     }
 }

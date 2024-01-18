@@ -1,73 +1,77 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using MyFileSpace.Api.Extensions;
-using MyFileSpace.Core.Providers;
-using MyFileSpace.Core.Repositories;
+using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.DTOs;
 
 namespace MyFileSpace.Core.Services
 {
-    public class FileManagementService : IFileManagementService
+    internal class FileManagementService : IFileManagementService
     {
-        private const string _filesDirectoryConfiguration = "FilesDirectory";
-        private readonly IMapper _mapper;
+        private readonly IFileDataRepository _fileDataRepository;
+        private readonly IFileSystemRepository _fileSystemRepository;
 
-        private readonly string _fileDirectoryPath;
-
-        public FileManagementService(IMapper mapper, IAppConfigurationProvider configurationProvider)
+        public FileManagementService(IFileDataRepository fileDataRepository, IFileSystemRepository fileSystemRepository, IConfiguration configuration)
         {
-            _mapper = mapper;
-            string relativeFileDirectoryPath = configurationProvider.GetValue(_filesDirectoryConfiguration);
-            _fileDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), relativeFileDirectoryPath);
-            Directory.CreateDirectory(_fileDirectoryPath);
+            _fileDataRepository = fileDataRepository;
+            _fileSystemRepository = fileSystemRepository;
         }
 
-        public async Task<FileData> GetFileData(string fileName)
+        public IEnumerable<string> GetAllFileNames()
         {
-            if (String.IsNullOrWhiteSpace(fileName))
+            return _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList();
+        }
+
+        public FileData GetFileData(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
             {
                 throw new Exception("No filename given");
             }
 
-            FileData fileObject = new CsvFileRepository().GetByName(fileName);
-            return fileObject;
-        }
-        public async Task<byte[]> GetFileByGuid(Guid fileGuid)
-        {
-            FileData? fileObject = new CsvFileRepository().GetByGuid(fileGuid);
-            return await File.ReadAllBytesAsync(Path.Combine(_fileDirectoryPath, fileObject.Path));
+            return RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName));
         }
 
-        public async Task AddFileAsync(IFormFile file)
+        public byte[] GetFileByGuid(Guid fileGuid)
+        {
+            FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
+            return _fileSystemRepository.ReadFromFileSystem(fileObject.StoredName);
+        }
+
+        public void AddFile(IFormFile file)
         {
             FileData fileData = file.ToFileData();
-            string fullPath = Path.Combine(_fileDirectoryPath, fileData.Path);
-
-            using (FileStream fileStream = File.Create(fullPath))
-            {
-                fileStream.Seek(0, SeekOrigin.Begin);
-                await file.OpenReadStream().CopyToAsync(fileStream);
-            }
-
-            new CsvFileRepository().Add(file.ToFileData());
+            _fileSystemRepository.AddInFileSystem(fileData.StoredName, file);
+            _fileDataRepository.Add(fileData);
         }
 
-        public async Task UpdateFileAsync(Guid fileGuid, IFormFile file)
+        public void UpdateFile(Guid fileGuid, IFormFile file)
         {
-            throw new NotImplementedException();
+            FileData fileData = file.ToFileData();
+            _fileSystemRepository.UpdateInFileSystem(fileData.StoredName, file);
+            _fileDataRepository.Update(file.ToFileData());
         }
 
-        public bool DeleteFile(Guid fileGuid)
+        public void DeleteFile(Guid fileGuid)
         {
-            string path = Path.Combine(_fileDirectoryPath, new CsvFileRepository().GetByGuid(fileGuid).Path);
-
-            if (File.Exists(path))
+            FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
+            if (!_fileSystemRepository.RemoveFromFileSystem(fileObject.StoredName))
             {
-                File.Delete(path);
-                return true;
+                throw new Exception("Could not delete file");
+            }
+            _fileDataRepository.Delete(fileGuid);
+        }
+
+        private FileData RetrieveValidFileData(Func<FileData?> func)
+        {
+            FileData? fileObject = func.Invoke();
+
+            if (fileObject is null)
+            {
+                throw new Exception("File not found");
             }
 
-            return false;
+            return fileObject;
         }
     }
 }
