@@ -41,9 +41,10 @@ namespace MyFileSpace.Api.Controllers
 
         // POST api/<FileController>
         [HttpPost]
-        public void Post([FromForm][FileValidation(4096)] IFormFile uploadedFile)
+        public Task Post([FileValidation(4096)] IFormFile uploadedFile)
         {
             _fileManagementService.AddFile(uploadedFile);
+            return Task.CompletedTask;
         }
 
         // PUT api/<FileController>/5

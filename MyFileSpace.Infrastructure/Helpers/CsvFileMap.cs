@@ -9,7 +9,6 @@ namespace MyFileSpace.Infrastructure.Helpers
         {
             Map(m => m.Guid).Name("FileGuid");
             Map(m => m.OriginalName).Name("FileName");
-            Map(m => m.StoredName).Name("FilePath");
             Map(m => m.SizeInBytes).Name("SizeInBytes");
             Map(m => m.ModifiedOn).Name("ModifiedOn");
         }

@@ -10,8 +10,7 @@ namespace MyFileSpace.Infrastructure.Repositories
 
         public FileSystemRepository(IConfiguration configuration)
         {
-            string relativeFileDirectoryPath = configuration.GetConfigValue("FilesDirectory");
-            _fileDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), relativeFileDirectoryPath);
+            _fileDirectoryPath = configuration.GetConfigValue("FilesDirectoryPath");
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
@@ -19,7 +18,7 @@ namespace MyFileSpace.Infrastructure.Repositories
         {
             string fullPath = GetFullPath(storedFileName);
 
-            if (File.Exists(fullPath))
+            if (!File.Exists(fullPath))
             {
                 throw new FileNotFoundException("File could not be found");
             }

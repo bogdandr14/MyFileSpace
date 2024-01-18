@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using Microsoft.Extensions.Configuration;
 using MyFileSpace.Infrastructure.Helpers;
 using MyFileSpace.SharedKernel.DTOs;
 using System.Globalization;
@@ -8,13 +9,27 @@ namespace MyFileSpace.Infrastructure.Repositories
 {
     internal class CsvFileDataRepository : IFileDataRepository
     {
-        private readonly CsvConfiguration _config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
-        private readonly string _storedFilesData = "YOUR FILE DIRECTORY\\storedFiles.csv";
-        private readonly string _storedFilesDataTemp = "YOUR FILE DIRECTORY\\storedFilesTemp.csv";
+        private const string FILE_DATA_NAME = "storedFiles.csv";
+        private const string FILE_DATA_TEMP_NAME = "storedFilesTemp.csv";
 
+        private readonly CsvConfiguration _config;
+        private readonly string _storedDataFilePath;
+
+        private string StoredFileDataPath { get { return $"{_storedDataFilePath}\\{FILE_DATA_NAME}"; } }
+        private string StoredFileDataTempPath { get { return $"{_storedDataFilePath}\\{FILE_DATA_TEMP_NAME}"; } }
+        public CsvFileDataRepository(IConfiguration configuration)
+        {
+            _config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
+            _storedDataFilePath = configuration.GetConfigValue("DataFilePath");
+
+            if (!Path.Exists(StoredFileDataPath))
+            {
+                InitialSeed();
+            }
+        }
         public List<FileData> GetAll()
         {
-            using (var reader = new StreamReader(_storedFilesData))
+            using (var reader = new StreamReader(StoredFileDataPath))
             {
                 using (var csv = new CsvReader(reader, _config))
                 {
@@ -44,9 +59,9 @@ namespace MyFileSpace.Infrastructure.Repositories
             fileDatas.RemoveAll(f => f.Guid == updatedFile.Guid);
             fileDatas.Add(updatedFile);
 
-            PersistNewFile(fileDatas, _storedFilesDataTemp);
-            File.Delete(_storedFilesData);
-            File.Move(_storedFilesDataTemp, _storedFilesData);
+            PersistNewFile(fileDatas, StoredFileDataTempPath);
+            File.Delete(StoredFileDataPath);
+            File.Move(StoredFileDataTempPath, StoredFileDataPath);
         }
 
         public void Delete(Guid fileGuid)
@@ -54,21 +69,20 @@ namespace MyFileSpace.Infrastructure.Repositories
             List<FileData> fileDatas = GetAll();
             fileDatas.RemoveAll(f => f.Guid == fileGuid);
 
-            PersistNewFile(fileDatas, _storedFilesDataTemp);
-            File.Delete(_storedFilesData);
-            File.Move(_storedFilesDataTemp, _storedFilesData);
+            PersistNewFile(fileDatas, StoredFileDataTempPath);
+            File.Delete(StoredFileDataPath);
+            File.Move(StoredFileDataTempPath, StoredFileDataPath);
         }
-
 
         private void AddMany(List<FileData> files)
         {
-            if (!File.Exists(_storedFilesData))
+            if (!File.Exists(StoredFileDataPath))
             {
-                PersistNewFile(files, _storedFilesData);
+                PersistNewFile(files, StoredFileDataPath);
             }
             else
             {
-                PersistExistingFile(files, _storedFilesData);
+                PersistExistingFile(files, StoredFileDataPath);
             }
         }
 
@@ -91,6 +105,17 @@ namespace MyFileSpace.Infrastructure.Repositories
             using (var csvWriter = new CsvWriter(writer, _config))
             {
                 csvWriter.WriteRecords(files);
+            }
+        }
+
+        private void InitialSeed()
+        {
+            using (var writer = new StreamWriter(StoredFileDataPath))
+            using (var csvWriter = new CsvWriter(writer, _config))
+            {
+
+                csvWriter.WriteHeader<CsvFileMap>();
+                csvWriter.NextRecord();
             }
         }
     }
