@@ -47,7 +47,7 @@ namespace MyFileSpace.Infrastructure.Repositories
             return !_bypassCache && _cache.Get(key) != null;
         }
 
-        public T Get<T>(string key, Func<T> fallback)
+        public T GetAndSet<T>(string key, Func<T> fallback, TimeSpan? timespan = null)
         {
             T? obj = Get<T>(key);
             if (obj is not null)
@@ -57,7 +57,7 @@ namespace MyFileSpace.Infrastructure.Repositories
 
             obj = fallback.Invoke();
 
-            Set(key, obj);
+            Set(key, obj, timespan);
 
             return obj;
         }

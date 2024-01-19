@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.RegisterCoreServices();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddDistributedMemoryCache();
 
 var app = builder.Build();
 

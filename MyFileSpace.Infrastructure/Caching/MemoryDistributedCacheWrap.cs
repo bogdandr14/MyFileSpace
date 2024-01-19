@@ -14,6 +14,8 @@ namespace MyFileSpace.Infrastructure.Caching
 
         private MemoryCache cache;
 
+        private Object coherentState;
+
         private IDictionary entries;
 
         private FieldInfo cacheSizeField;
@@ -29,21 +31,32 @@ namespace MyFileSpace.Infrastructure.Caching
         private void GetFields()
         {
             // Find the IMemoryCache field on the MemoryDistributedCache type.
-            FieldInfo? cacheField = typeof(MemoryDistributedCache).GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.FieldType == typeof(IMemoryCache));
+            FieldInfo[] fieldInfos = typeof(MemoryDistributedCache).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo? cacheField = fieldInfos.FirstOrDefault(x => x.FieldType == typeof(IMemoryCache));
+            cacheField = fieldInfos.FirstOrDefault(x => x.FieldType == typeof(MemoryCache));
             if (cacheField == null)
             {
                 throw new Exception($"Could not find field of type {nameof(IMemoryCache)} on type {nameof(MemoryDistributedCache)}");
             }
 
+            // Find the coherent state for MemoryCache type.
+            var coherentStateField = typeof(MemoryCache).GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.Name == "_coherentState");
+            if (coherentStateField == null)
+            {
+                throw new Exception($"Could not find coherent state for {nameof(MemoryCache)}");
+            }
+
             // Find the entries concurrent dictionary on the MemoryCache type.
-            FieldInfo? entriesField = typeof(MemoryCache).GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.FieldType.IsGenericType && x.FieldType.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>));
+            FieldInfo[] entriesFields = coherentStateField.FieldType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo? entriesField = entriesFields.FirstOrDefault(x=> x.FieldType.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>));
             if (entriesField == null)
             {
                 throw new Exception($"Could not find entries concurrent dictionary on type {nameof(MemoryCache)}");
             }
 
             // Find the cache size field on the the MemoryCache type.
-            FieldInfo? cacheSizeField = typeof(MemoryCache).GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.FieldType == typeof(Int64) && x.Name.Contains("cacheSize"));
+            FieldInfo[] cacheSizeFields = coherentStateField.FieldType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo? cacheSizeField = cacheSizeFields.FirstOrDefault(x => x.FieldType == typeof(Int64) && x.Name.Contains("cacheSize"));
             if (cacheSizeField == null)
             {
                 throw new Exception($"Could not find cacheSize field on type {nameof(MemoryCache)}");
@@ -57,7 +70,14 @@ namespace MyFileSpace.Infrastructure.Caching
             }
             this.cache = memoryCache;
 
-            IDictionary? dictionary = entriesField.GetValue(cache) as IDictionary;
+            Object? coherent = coherentStateField.GetValue(cache);
+            if (coherent == null)
+            {
+                throw new NullReferenceException($"Could not get object of CoherentState from {nameof(MemoryCache)}");
+            }
+            this.coherentState = coherent;
+
+            IDictionary? dictionary = entriesField.GetValue(coherentState) as IDictionary;
             if (dictionary == null)
             {
                 throw new NullReferenceException($"Could not get object of type {nameof(IDictionary)} from {nameof(MemoryCache)}");
