@@ -35,21 +35,21 @@ namespace MyFileSpace.Core.Services
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        Task<byte[]> GetFileByGuid(Guid fileGuid);
+        Task<byte[]> GetFileByName(string fileName);
 
         /// <summary>
         /// Saves a file in the local file system.
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved 
         /// in the local system.</param>
-        void AddFile(IFormFile file);
+        Task AddFile(IFormFile file);
 
         /// <summary>
         /// Updates a file in the local file system.
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved 
         /// in the local system.</param>
-        void UpdateFile(Guid fileGuid, IFormFile file);
+        Task UpdateFile(Guid fileGuid, IFormFile file);
 
         /// <summary>
         /// Deletes a file from the local file system.
@@ -60,6 +60,6 @@ namespace MyFileSpace.Core.Services
         /// Returns <code>true</code> in case the removal of the file was successfull, or 
         /// <code>false</code> otherwise.
         /// </returns>
-        void DeleteFile(Guid fileGuid);
+        Task DeleteFile(Guid fileGuid);
     }
 }

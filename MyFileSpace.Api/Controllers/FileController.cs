@@ -20,45 +20,95 @@ namespace MyFileSpace.Api.Controllers
 
         // GET: api/<FileController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public ActionResult<IEnumerable<string>> Get()
         {
-            return _fileManagementService.GetAllFileNames();
+            try
+            {
+                return Ok(_fileManagementService.GetAllFileNames());
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         // GET api/<FileController>/5
         [HttpGet("info/{fileName}")]
-        public FileData GetInfo(string fileName)
+        public ActionResult<FileData> GetInfo(string fileName)
         {
-            return _fileManagementService.GetFileData(fileName);
+            try
+            {
+                return Ok(_fileManagementService.GetFileData(fileName));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
-        // GET api/<FileController>/5
-        [HttpGet("{guid:Guid}")]
-        public Task<byte[]> Get(Guid guid)
+        // GET api/<FileController>/download/5
+        [HttpGet("download/{fileName}")]
+        public async Task<ActionResult> DownloadFile(string fileName)
         {
-            return _fileManagementService.GetFileByGuid(guid);
+            try
+            {
+                byte[] fileContent = await _fileManagementService.GetFileByName(fileName);
+                FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
+                fileContentResult.FileDownloadName = fileName;
+
+                FileData fileData = _fileManagementService.GetFileData(fileName);
+                fileContentResult.LastModified = fileData.ModifiedOn;
+                return fileContentResult;
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         // POST api/<FileController>
         [HttpPost]
-        public Task Post([FileValidation(4096)] IFormFile uploadedFile)
+        public async Task<ActionResult> Post([FileValidation(4096)] IFormFile uploadedFile)
         {
-            _fileManagementService.AddFile(uploadedFile);
-            return Task.CompletedTask;
+            try
+            {
+                await _fileManagementService.AddFile(uploadedFile);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         // PUT api/<FileController>/5
         [HttpPut("{guid:Guid}")]
-        public void Put(Guid guid, [FileValidation(4096)] IFormFile uploadedFile)
+        public async Task<ActionResult> Put(Guid guid, [FileValidation(4096)] IFormFile uploadedFile)
         {
-            _fileManagementService.UpdateFile(guid, uploadedFile);
+            try
+            {
+                await _fileManagementService.UpdateFile(guid, uploadedFile);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         // DELETE api/<FileController>/5
         [HttpDelete("{guid:Guid}")]
-        public void Delete(Guid guid)
+        public async Task<ActionResult> Delete(Guid guid)
         {
-            _fileManagementService.DeleteFile(guid);
+            try
+            {
+                await _fileManagementService.DeleteFile(guid);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
     }
 }

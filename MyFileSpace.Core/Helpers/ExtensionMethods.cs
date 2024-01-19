@@ -17,7 +17,7 @@ namespace MyFileSpace.Api.Extensions
             return file.ToFileData(fileGuid);
         }
 
-        public static string FileName(this FileData file)
+        public static string StoredFileName(this FileData file)
         {
             return $"{file.Guid}.{file.OriginalName.Split(".").Last()}";
         }
@@ -32,9 +32,10 @@ namespace MyFileSpace.Api.Extensions
             return new FileData
             {
                 Guid = fileGuid ?? Guid.NewGuid(),
-                SizeInBytes = file.Length,
+                ContentType = file.ContentType,
                 OriginalName = file.FileName,
                 ModifiedOn = DateTime.Now,
+                SizeInBytes = file.Length,
             };
         }
     }

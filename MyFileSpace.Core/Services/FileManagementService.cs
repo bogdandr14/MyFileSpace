@@ -32,37 +32,51 @@ namespace MyFileSpace.Core.Services
             return RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName));
         }
 
-        public Task<byte[]> GetFileByGuid(Guid fileGuid)
+        public Task<byte[]> GetFileByName(string fileName)
         {
-            FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
-            return _fileSystemRepository.ReadFromFileSystem(fileObject.FileName());
+            FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName));
+            return _fileSystemRepository.ReadFromFileSystem(fileObject.StoredFileName());
         }
 
-        public void AddFile(IFormFile file)
+        public async Task AddFile(IFormFile file)
         {
             FileData fileData = file.NewFileData();
-            _fileSystemRepository.AddInFileSystem(fileData.FileName(), file);
+            if(_fileDataRepository.GetByName(file.FileName)!= null)
+            {
+                throw new Exception($"File with name ${file.FileName} already exists!");
+            }
+
+            await _fileSystemRepository.AddInFileSystem(fileData.StoredFileName(), file);
             _fileDataRepository.Add(fileData);
         }
 
-        public void UpdateFile(Guid fileGuid, IFormFile file)
+        public async Task UpdateFile(Guid fileGuid, IFormFile file)
         {
             FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
             if (!fileObject.OriginalName.Split('.').Last().Equals(file.FileName.Split('.').Last()))
             {
                 throw new Exception("Incorrect file format");
             }
-            _fileSystemRepository.UpdateInFileSystem(fileObject.FileName(), file);
+
+            FileData? fileWithSameName = _fileDataRepository.GetByName(file.FileName);
+            if (fileWithSameName != null !&& fileWithSameName.Guid.Equals(fileObject.Guid))
+            {
+                throw new Exception($"Can not rename file ${fileObject.OriginalName} to ${file.FileName} as it already exists!");
+            }
+
+            await _fileSystemRepository.UpdateInFileSystem(fileObject.StoredFileName(), file);
             _fileDataRepository.Update(file.ExistingFileData(fileGuid));
         }
 
-        public void DeleteFile(Guid fileGuid)
+        public async Task DeleteFile(Guid fileGuid)
         {
             FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
-            if (!_fileSystemRepository.RemoveFromFileSystem(fileObject.FileName()).Result)
+            bool isFileDeleted = await _fileSystemRepository.RemoveFromFileSystem(fileObject.StoredFileName());
+            if (!isFileDeleted)
             {
                 throw new Exception("Could not delete file");
             }
+
             _fileDataRepository.Delete(fileGuid);
         }
 

@@ -23,16 +23,8 @@ namespace MyFileSpace.Infrastructure.Repositories
             {
                 throw new FileNotFoundException("File could not be found");
             }
-            byte[] result;
-            using (FileStream fileStream = File.Open(fullPath, FileMode.Open, FileAccess.Read))
-            {
-                result = new byte[fileStream.Length];
-                await fileStream.ReadAsync(result, 0, (int)fileStream.Length);
-            }
 
-            Task<byte[]> task = File.ReadAllBytesAsync(fullPath);
-            byte[] bytes = await task;
-            return bytes;
+            return await File.ReadAllBytesAsync(fullPath);
         }
 
         public async Task UpdateInFileSystem(string fileName, IFormFile file)
@@ -42,7 +34,7 @@ namespace MyFileSpace.Infrastructure.Repositories
                 throw new Exception("File not found to update");
             }
 
-            AddInFileSystem(fileName, file);
+            await AddInFileSystem(fileName, file);
         }
 
         public async Task<bool> RemoveFromFileSystem(string fileName)
@@ -52,10 +44,9 @@ namespace MyFileSpace.Infrastructure.Repositories
             if (File.Exists(fullPath))
             {
                 File.Delete(fullPath);
-                return true;
+                return await Task.FromResult(true);
             }
-
-            return false;
+            return await Task.FromResult(false);
         }
 
         public async Task AddInFileSystem(string fileName, IFormFile file)

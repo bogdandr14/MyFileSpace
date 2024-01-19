@@ -11,6 +11,9 @@ namespace MyFileSpace.Infrastructure.Models
         [Name("FileName")]
         new public string OriginalName { get; set; }
 
+        [Name("ContentType")]
+        new public string ContentType { get; set; }
+
         [Name("ModifiedOn")]
         new public DateTime ModifiedOn { get; set; }
 
@@ -23,6 +26,7 @@ namespace MyFileSpace.Infrastructure.Models
             {
                 Guid = file.Guid,
                 OriginalName = file.OriginalName,
+                ContentType = file.ContentType,
                 ModifiedOn = file.ModifiedOn,
                 SizeInBytes = file.SizeInBytes,
             };
@@ -34,6 +38,7 @@ namespace MyFileSpace.Infrastructure.Models
             {
                 Guid = Guid,
                 OriginalName = OriginalName,
+                ContentType = ContentType,
                 ModifiedOn = ModifiedOn,
                 SizeInBytes = SizeInBytes,
             };
