@@ -35,7 +35,7 @@ namespace MyFileSpace.Core.Services
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        byte[] GetFileByGuid(Guid fileGuid);
+        Task<byte[]> GetFileByGuid(Guid fileGuid);
 
         /// <summary>
         /// Saves a file in the local file system.

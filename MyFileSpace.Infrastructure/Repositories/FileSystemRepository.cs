@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MyFileSpace.Infrastructure.Helpers;
+using MyFileSpace.SharedKernel.Repositories;
 
 namespace MyFileSpace.Infrastructure.Repositories
 {
@@ -14,31 +15,39 @@ namespace MyFileSpace.Infrastructure.Repositories
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
-        public byte[] ReadFromFileSystem(string storedFileName)
+        public async Task<byte[]> ReadFromFileSystem(string fileName)
         {
-            string fullPath = GetFullPath(storedFileName);
+            string fullPath = GetFullPath(fileName);
 
             if (!File.Exists(fullPath))
             {
                 throw new FileNotFoundException("File could not be found");
             }
+            byte[] result;
+            using (FileStream fileStream = File.Open(fullPath, FileMode.Open, FileAccess.Read))
+            {
+                result = new byte[fileStream.Length];
+                await fileStream.ReadAsync(result, 0, (int)fileStream.Length);
+            }
 
-            return File.ReadAllBytes(fullPath);
+            Task<byte[]> task = File.ReadAllBytesAsync(fullPath);
+            byte[] bytes = await task;
+            return bytes;
         }
 
-        public void UpdateInFileSystem(string storedFileName, IFormFile file)
+        public async Task UpdateInFileSystem(string fileName, IFormFile file)
         {
-            if (!RemoveFromFileSystem(storedFileName))
+            if (!RemoveFromFileSystem(fileName).Result)
             {
                 throw new Exception("File not found to update");
             }
 
-            AddInFileSystem(storedFileName, file);
+            AddInFileSystem(fileName, file);
         }
 
-        public bool RemoveFromFileSystem(string storedFileName)
+        public async Task<bool> RemoveFromFileSystem(string fileName)
         {
-            string fullPath = GetFullPath(storedFileName);
+            string fullPath = GetFullPath(fileName);
 
             if (File.Exists(fullPath))
             {
@@ -49,18 +58,18 @@ namespace MyFileSpace.Infrastructure.Repositories
             return false;
         }
 
-        public void AddInFileSystem(string storedFileName, IFormFile file)
+        public async Task AddInFileSystem(string fileName, IFormFile file)
         {
-            using (FileStream fileStream = File.Create(GetFullPath(storedFileName)))
+            using (FileStream fileStream = File.Create(GetFullPath(fileName)))
             {
                 fileStream.Seek(0, SeekOrigin.Begin);
-                file.OpenReadStream().CopyToAsync(fileStream);
+                await file.OpenReadStream().CopyToAsync(fileStream);
             }
         }
 
-        private string GetFullPath(string storedFileName)
+        private string GetFullPath(string fileName)
         {
-            return Path.Combine(_fileDirectoryPath, storedFileName);
+            return Path.Combine(_fileDirectoryPath, fileName);
         }
     }
 }

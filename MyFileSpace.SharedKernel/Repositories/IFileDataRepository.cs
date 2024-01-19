@@ -1,6 +1,6 @@
 ﻿using MyFileSpace.SharedKernel.DTOs;
 
-namespace MyFileSpace.Infrastructure.Repositories
+namespace MyFileSpace.SharedKernel.Repositories
 {
     public interface IFileDataRepository
     {

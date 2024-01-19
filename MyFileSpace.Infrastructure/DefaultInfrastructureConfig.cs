@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel.Repositories;
 
 namespace MyFileSpace.Infrastructure
 {

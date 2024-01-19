@@ -1,4 +1,4 @@
-﻿namespace MyFileSpace.Infrastructure.Repositories
+﻿namespace MyFileSpace.SharedKernel.Repositories
 {
     public interface ICacheRepository
     {

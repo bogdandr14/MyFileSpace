@@ -34,7 +34,7 @@ namespace MyFileSpace.Api.Controllers
 
         // GET api/<FileController>/5
         [HttpGet("{guid:Guid}")]
-        public byte[] Get(Guid guid)
+        public Task<byte[]> Get(Guid guid)
         {
             return _fileManagementService.GetFileByGuid(guid);
         }
@@ -49,7 +49,7 @@ namespace MyFileSpace.Api.Controllers
 
         // PUT api/<FileController>/5
         [HttpPut("{guid:Guid}")]
-        public void Put(Guid guid, [FromForm][FileValidation(4096)] IFormFile uploadedFile)
+        public void Put(Guid guid, [FileValidation(4096)] IFormFile uploadedFile)
         {
             _fileManagementService.UpdateFile(guid, uploadedFile);
         }

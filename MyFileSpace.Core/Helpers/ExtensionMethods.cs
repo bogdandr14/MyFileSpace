@@ -6,17 +6,32 @@ namespace MyFileSpace.Api.Extensions
 {
     public static class ExtensionMethods
     {
-        public static FileData ToFileData(this IFormFile file)
+
+        public static FileData NewFileData(this IFormFile file)
+        {
+            return file.ToFileData();
+        }
+
+        public static FileData ExistingFileData(this IFormFile file, Guid fileGuid)
+        {
+            return file.ToFileData(fileGuid);
+        }
+
+        public static string FileName(this FileData file)
+        {
+            return $"{file.Guid}.{file.OriginalName.Split(".").Last()}";
+        }
+
+        private static FileData ToFileData(this IFormFile file, Guid? fileGuid = null)
         {
             if (file is null)
             {
                 throw new ArgumentNullException("The file is null");
             }
 
-            Guid newObjectGuid = Guid.NewGuid();
             return new FileData
             {
-                Guid = newObjectGuid,
+                Guid = fileGuid ?? Guid.NewGuid(),
                 SizeInBytes = file.Length,
                 OriginalName = file.FileName,
                 ModifiedOn = DateTime.Now,

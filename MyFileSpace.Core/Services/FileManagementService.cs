@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MyFileSpace.Api.Extensions;
-using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel.Repositories;
 using MyFileSpace.SharedKernel.DTOs;
 
 namespace MyFileSpace.Core.Services
@@ -32,30 +32,34 @@ namespace MyFileSpace.Core.Services
             return RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName));
         }
 
-        public byte[] GetFileByGuid(Guid fileGuid)
+        public Task<byte[]> GetFileByGuid(Guid fileGuid)
         {
             FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
-            return _fileSystemRepository.ReadFromFileSystem(fileObject.StoredName);
+            return _fileSystemRepository.ReadFromFileSystem(fileObject.FileName());
         }
 
         public void AddFile(IFormFile file)
         {
-            FileData fileData = file.ToFileData();
-            _fileSystemRepository.AddInFileSystem(fileData.StoredName, file);
+            FileData fileData = file.NewFileData();
+            _fileSystemRepository.AddInFileSystem(fileData.FileName(), file);
             _fileDataRepository.Add(fileData);
         }
 
         public void UpdateFile(Guid fileGuid, IFormFile file)
         {
-            FileData fileData = file.ToFileData();
-            _fileSystemRepository.UpdateInFileSystem(fileData.StoredName, file);
-            _fileDataRepository.Update(file.ToFileData());
+            FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
+            if (!fileObject.OriginalName.Split('.').Last().Equals(file.FileName.Split('.').Last()))
+            {
+                throw new Exception("Incorrect file format");
+            }
+            _fileSystemRepository.UpdateInFileSystem(fileObject.FileName(), file);
+            _fileDataRepository.Update(file.ExistingFileData(fileGuid));
         }
 
         public void DeleteFile(Guid fileGuid)
         {
             FileData fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
-            if (!_fileSystemRepository.RemoveFromFileSystem(fileObject.StoredName))
+            if (!_fileSystemRepository.RemoveFromFileSystem(fileObject.FileName()).Result)
             {
                 throw new Exception("Could not delete file");
             }
