@@ -6,7 +6,6 @@ namespace MyFileSpace.Api.Extensions
 {
     public static class ExtensionMethods
     {
-
         public static FileData NewFileData(this IFormFile file)
         {
             return file.ToFileData();

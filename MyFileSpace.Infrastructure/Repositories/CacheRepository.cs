@@ -64,6 +64,50 @@ namespace MyFileSpace.Infrastructure.Repositories
 
         public T? Get<T>(string key)
         {
+            byte[]? bytes = GetBytes(key);
+
+            if (bytes is null)
+            {
+                return default;
+            }
+
+            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes));
+        }
+
+        public void Set<T>(string key, T value, TimeSpan? timeSpan)
+        {
+            if (_bypassCache)
+            {
+                return;
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
+
+            SetBytes(key, bytes, timeSpan);
+        }
+
+        public byte[] GetAndSetBytes(string key, Func<byte[]> fallback, TimeSpan? timespan = null)
+        {
+            byte[]? obj = GetBytes(key);
+            if (obj is not null)
+            {
+                return obj;
+            }
+
+            obj = fallback.Invoke();
+
+            SetBytes(key, obj, timespan);
+
+            return obj;
+        }
+
+        public byte[]? GetBytes(string key)
+        {
             if (_bypassCache)
             {
                 return default;
@@ -79,29 +123,10 @@ namespace MyFileSpace.Infrastructure.Repositories
                 throw new ArgumentNullException(nameof(key));
             }
 
-            byte[]? bytes = _cache.Get(key);
-
-            if (bytes is null)
-            {
-                return default;
-            }
-
-            object? obj = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(bytes));
-
-            if (obj is null)
-            {
-                return default;
-            }
-
-            return (T)obj;
+            return _cache.Get(key);
         }
 
-        public void Set<T>(string key, T value)
-        {
-            Set(key, value, _cacheLifeSpan);
-        }
-
-        public void Set<T>(string key, T value, TimeSpan? timeSpan)
+        public void SetBytes(string key, byte[] bytes, TimeSpan? timeSpan)
         {
             if (_bypassCache)
             {
@@ -118,15 +143,10 @@ namespace MyFileSpace.Infrastructure.Repositories
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
-
+            timeSpan ??= _cacheLifeSpan;
             if (timeSpan.HasValue)
             {
+
                 DistributedCacheEntryOptions options = new DistributedCacheEntryOptions()
                 {
                     AbsoluteExpirationRelativeToNow = timeSpan.Value

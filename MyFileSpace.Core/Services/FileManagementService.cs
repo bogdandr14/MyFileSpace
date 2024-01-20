@@ -21,7 +21,7 @@ namespace MyFileSpace.Core.Services
 
         public IEnumerable<string> GetAllFileNames()
         {
-            return _cacheRepository.GetAndSet(CacheHelper.ALL_FILES, () => _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList());
+            return _cacheRepository.GetAndSet(CacheKeys.ALL_FILES, () => _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList());
         }
 
         public FileData GetFileData(string fileName)
@@ -31,13 +31,14 @@ namespace MyFileSpace.Core.Services
                 throw new Exception("No filename given");
             }
 
-            return _cacheRepository.GetAndSet($"{CacheHelper.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
+            return _cacheRepository.GetAndSet($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
         }
 
-        public Task<byte[]> GetFileByName(string fileName)
+        public async Task<byte[]> GetFileByName(string fileName)
         {
-            FileData fileObject = _cacheRepository.GetAndSet($"{CacheHelper.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
-            return _cacheRepository.GetAndSet($"{CacheHelper.FILE_DATA_PREFIX}{fileName}", () => _fileSystemRepository.ReadFromFileSystem(fileObject.StoredFileName()), TimeSpan.FromMinutes(1));
+            FileData fileObject = _cacheRepository.GetAndSet($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
+            Func<byte[]> fileBytesFunct = () => _fileSystemRepository.ReadFromFileSystem(fileObject.StoredFileName()).GetAwaiter().GetResult();
+            return await Task.FromResult(_cacheRepository.GetAndSetBytes($"{CacheKeys.FILE_BYTES_PREFIX}{fileName}", fileBytesFunct, TimeSpan.FromMinutes(1)));
         }
 
         public async Task AddFile(IFormFile file)
@@ -51,8 +52,8 @@ namespace MyFileSpace.Core.Services
             await _fileSystemRepository.AddInFileSystem(fileData.StoredFileName(), file);
             _fileDataRepository.Add(fileData);
 
-            _cacheRepository.Remove($"{CacheHelper.ALL_FILES}");
-            _cacheRepository.Set($"{CacheHelper.FILE_DATA_PREFIX}{fileData.OriginalName}", fileData);
+            _cacheRepository.Remove($"{CacheKeys.ALL_FILES}");
+            _cacheRepository.Set($"{CacheKeys.FILE_DATA_PREFIX}{fileData.OriginalName}", fileData);
         }
 
         public async Task UpdateFile(Guid fileGuid, IFormFile file)
@@ -73,9 +74,9 @@ namespace MyFileSpace.Core.Services
             FileData updatedFileData = file.ExistingFileData(fileGuid);
             _fileDataRepository.Update(updatedFileData);
 
-            _cacheRepository.Remove($"{CacheHelper.ALL_FILES}");
-            _cacheRepository.Remove($"{CacheHelper.FILE_DATA_PREFIX}{fileObject.OriginalName}");
-            _cacheRepository.Set($"{CacheHelper.FILE_DATA_PREFIX}{updatedFileData.OriginalName}", updatedFileData);
+            _cacheRepository.Remove($"{CacheKeys.ALL_FILES}");
+            _cacheRepository.Remove($"{CacheKeys.FILE_DATA_PREFIX}{fileObject.OriginalName}");
+            _cacheRepository.Set($"{CacheKeys.FILE_DATA_PREFIX}{updatedFileData.OriginalName}", updatedFileData);
         }
 
         public async Task DeleteFile(Guid fileGuid)
@@ -89,8 +90,8 @@ namespace MyFileSpace.Core.Services
 
             _fileDataRepository.Delete(fileGuid);
 
-            _cacheRepository.Remove($"{CacheHelper.ALL_FILES}");
-            _cacheRepository.Remove($"{CacheHelper.FILE_DATA_PREFIX}{fileObject.OriginalName}");
+            _cacheRepository.Remove($"{CacheKeys.ALL_FILES}");
+            _cacheRepository.Remove($"{CacheKeys.FILE_DATA_PREFIX}{fileObject.OriginalName}");
         }
 
         private FileData RetrieveValidFileData(Func<FileData?> func)
