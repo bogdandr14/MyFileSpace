@@ -30,27 +30,27 @@ namespace MyFileSpace.Infrastructure.Repositories
             }
         }
 
-        public List<FileData> GetAll()
+        public List<FileDTO> GetAll()
         {
             return GetAllCsv().Select(x => x.ToBase()).ToList();
         }
 
-        public FileData? GetByGuid(Guid fileGuid)
+        public FileDTO? GetByGuid(Guid fileGuid)
         {
             return GetAll().Find(f => f.Guid.Equals(fileGuid));
         }
 
-        public FileData? GetByName(string fileName)
+        public FileDTO? GetByName(string fileName)
         {
             return GetAll().Find(f => f.OriginalName.Equals(fileName));
         }
 
-        public void Add(FileData file)
+        public void Add(FileDTO file)
         {
             AddMany(new List<CsvFileData> { CsvFileData.Adapt(file) });
         }
 
-        public void Update(FileData updatedFile)
+        public void Update(FileDTO updatedFile)
         {
             CsvFileData updatedCsvFile = CsvFileData.Adapt(updatedFile);
             List<CsvFileData> fileDatas = GetAllCsv();

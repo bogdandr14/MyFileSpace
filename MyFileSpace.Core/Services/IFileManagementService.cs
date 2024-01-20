@@ -23,7 +23,7 @@ namespace MyFileSpace.Core.Services
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        FileData GetFileData(string fileName);
+        FileDTO GetFileData(string fileName);
 
 
         /// <summary>

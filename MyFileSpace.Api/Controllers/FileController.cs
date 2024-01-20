@@ -34,7 +34,7 @@ namespace MyFileSpace.Api.Controllers
 
         // GET api/<FileController>/5
         [HttpGet("info/{fileName}")]
-        public ActionResult<FileData> GetInfo(string fileName)
+        public ActionResult<FileDTO> GetInfo(string fileName)
         {
             try
             {
@@ -56,8 +56,8 @@ namespace MyFileSpace.Api.Controllers
                 FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
                 fileContentResult.FileDownloadName = fileName;
 
-                FileData fileData = _fileManagementService.GetFileData(fileName);
-                fileContentResult.LastModified = fileData.ModifiedOn;
+                FileDTO fileData = _fileManagementService.GetFileData(fileName);
+                fileContentResult.LastModified = fileData.ModifiedAt;
                 return fileContentResult;
             }
             catch (Exception e)

@@ -6,36 +6,48 @@ namespace MyFileSpace.Api.Extensions
 {
     public static class ExtensionMethods
     {
-        public static FileData NewFileData(this IFormFile file)
-        {
-            return file.ToFileData();
-        }
-
-        public static FileData ExistingFileData(this IFormFile file, Guid fileGuid)
-        {
-            return file.ToFileData(fileGuid);
-        }
-
-        public static string StoredFileName(this FileData file)
-        {
-            return $"{file.Guid}.{file.OriginalName.Split(".").Last()}";
-        }
-
-        private static FileData ToFileData(this IFormFile file, Guid? fileGuid = null)
+        public static FileDTO CreateNewFileDTO(this IFormFile file)
         {
             if (file is null)
             {
                 throw new ArgumentNullException("The file is null");
             }
 
-            return new FileData
+            return new FileDTO
             {
-                Guid = fileGuid ?? Guid.NewGuid(),
+                Guid = Guid.NewGuid(),
                 ContentType = file.ContentType,
                 OriginalName = file.FileName,
-                ModifiedOn = DateTime.Now,
+                CreatedAt = DateTime.Now,
+                ModifiedAt = DateTime.Now,
                 SizeInBytes = file.Length,
             };
         }
+
+        public static FileDTO UpdateExistingFileDTO(this IFormFile file, FileDTO fileDto)
+        {
+            if (!fileDto.OriginalName.Split('.').Last().Equals(file.FileName.Split('.').Last()))
+            {
+                throw new Exception("Incorrect file format");
+            }
+
+            if (fileDto.ContentType != file.ContentType)
+            {
+                throw new Exception($"Can not change content type of the file from ${fileDto.ContentType} to ${file.ContentType}");
+            }
+
+            fileDto.OriginalName = file.FileName;
+            fileDto.ModifiedAt = DateTime.Now;
+            fileDto.SizeInBytes = file.Length;
+
+            return fileDto;
+        }
+
+        public static string StoredFileName(this FileDTO file)
+        {
+            //return $"{file.Guid}.{file.OriginalName.Split(".").Last()}";
+            return $"{file.Guid}";
+        }
+
     }
 }

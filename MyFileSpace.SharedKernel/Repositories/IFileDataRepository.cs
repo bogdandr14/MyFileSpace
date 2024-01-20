@@ -4,11 +4,11 @@ namespace MyFileSpace.SharedKernel.Repositories
 {
     public interface IFileDataRepository
     {
-        public List<FileData> GetAll();
-        public FileData? GetByGuid(Guid fileGuid);
-        public FileData? GetByName(string fileName);
-        public void Add(FileData file);
-        public void Update(FileData updatedFile);
+        public List<FileDTO> GetAll();
+        public FileDTO? GetByGuid(Guid fileGuid);
+        public FileDTO? GetByName(string fileName);
+        public void Add(FileDTO file);
+        public void Update(FileDTO updatedFile);
         public void Delete(Guid fileGuid);
     }
 }

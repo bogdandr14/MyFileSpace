@@ -3,44 +3,49 @@ using MyFileSpace.SharedKernel.DTOs;
 
 namespace MyFileSpace.Infrastructure.Models
 {
-    public class CsvFileData : FileData
+    public class CsvFileData
     {
         [Name("FileGuid")]
-        new public Guid Guid { get; set; }
+        public Guid Guid { get; set; }
 
         [Name("FileName")]
-        new public string OriginalName { get; set; }
+        public string OriginalName { get; set; }
 
         [Name("ContentType")]
-        new public string ContentType { get; set; }
+        public string ContentType { get; set; }
 
-        [Name("ModifiedOn")]
-        new public DateTime ModifiedOn { get; set; }
+        [Name("CreatedAt")]
+        public DateTime CreatedAt { get; set; }
+
+        [Name("ModifiedAt")]
+        public DateTime ModifiedAt { get; set; }
 
         [Name("SizeInBytes")]
-        new public long SizeInBytes { get; set; }
+        public long SizeInBytes { get; set; }
 
-        public static CsvFileData Adapt(FileData file)
+        public static CsvFileData Adapt(FileDTO file)
         {
             return new CsvFileData()
             {
                 Guid = file.Guid,
                 OriginalName = file.OriginalName,
                 ContentType = file.ContentType,
-                ModifiedOn = file.ModifiedOn,
-                SizeInBytes = file.SizeInBytes,
+                CreatedAt = file.CreatedAt,
+                ModifiedAt = file.ModifiedAt,
+                SizeInBytes = file.SizeInBytes
             };
         }
 
-        public FileData ToBase()
+        public FileDTO ToBase()
         {
-            return new FileData()
+            return new FileDTO()
             {
                 Guid = Guid,
                 OriginalName = OriginalName,
                 ContentType = ContentType,
-                ModifiedOn = ModifiedOn,
-                SizeInBytes = SizeInBytes,
+                ModifiedAt = ModifiedAt,
+                CreatedAt = CreatedAt,
+                SizeInBytes = SizeInBytes
             };
         }
     }
