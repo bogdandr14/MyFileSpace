@@ -11,5 +11,6 @@ namespace MyFileSpace.Infrastructure.Caching
         IEnumerable<string> GetAllKeys();
 
         Task<IEnumerable<string>> GetAllKeysAsync(CancellationToken token = default(CancellationToken));
+        long GetCacheSize();
     }
 }

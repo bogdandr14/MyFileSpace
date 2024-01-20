@@ -168,5 +168,11 @@ namespace MyFileSpace.Infrastructure.Repositories
         {
             _cache.Clear();
         }
+
+        public string GetMemoryUsed()
+        {
+            double cacheSizeKB = _cache.GetCacheSize() / 1024;
+            return $"{cacheSizeKB}KB used";
+        }
     }
 }

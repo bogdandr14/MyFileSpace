@@ -9,6 +9,7 @@ namespace MyFileSpace.Core
         public static void RegisterCoreServices(this IServiceCollection services)
         {
             services.AddScoped<IFileManagementService, FileManagementService>();
+            services.AddScoped<ICacheService, CacheService>();
             services.RegisterInfrastructureServices();
         }
     }

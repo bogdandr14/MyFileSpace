@@ -48,7 +48,7 @@ namespace MyFileSpace.Infrastructure.Caching
 
             // Find the entries concurrent dictionary on the MemoryCache type.
             FieldInfo[] entriesFields = coherentStateField.FieldType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-            FieldInfo? entriesField = entriesFields.FirstOrDefault(x=> x.FieldType.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>));
+            FieldInfo? entriesField = entriesFields.FirstOrDefault(x => x.FieldType.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>));
             if (entriesField == null)
             {
                 throw new Exception($"Could not find entries concurrent dictionary on type {nameof(MemoryCache)}");
@@ -82,7 +82,14 @@ namespace MyFileSpace.Infrastructure.Caching
             {
                 throw new NullReferenceException($"Could not get object of type {nameof(IDictionary)} from {nameof(MemoryCache)}");
             }
+
             this.entries = dictionary;
+
+            long? cacheSize = this.cacheSizeField.GetValue(this.coherentState) as long?;
+            if (cacheSize == null)
+            {
+                throw new NullReferenceException($"Could not get cache size from {nameof(MemoryCache)}");
+            }
         }
 
         /// <inheritdoc />
@@ -94,7 +101,7 @@ namespace MyFileSpace.Infrastructure.Caching
             // Reset the cache size field, but only if we have a size limit.
             if (this.options.SizeLimit != null)
             {
-                this.cacheSizeField.SetValue(this.cache, 0);
+                this.cacheSizeField.SetValue(this.coherentState, 0);
             }
         }
 
@@ -116,6 +123,13 @@ namespace MyFileSpace.Infrastructure.Caching
         public async Task<IEnumerable<string>> GetAllKeysAsync(CancellationToken token = default)
         {
             return await Task.Run(() => this.entries.Keys.OfType<string>().ToList(), token);
+        }
+
+        public long GetCacheSize()
+        {
+            long? cacheSize = cacheSizeField.GetValue(this.coherentState) as long?;
+
+            return cacheSize ?? 0;
         }
     }
 }

@@ -11,6 +11,7 @@
         public byte[] GetAndSetBytes(string key, Func<byte[]> fallback, TimeSpan? timespan = null);
         public void SetBytes(string key, byte[] bytes, TimeSpan? timeSpan = null);
         public void Remove(string key);
+        public string GetMemoryUsed();
         public void Clear();
     }
 }
