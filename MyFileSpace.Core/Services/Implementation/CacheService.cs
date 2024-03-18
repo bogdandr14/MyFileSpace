@@ -1,6 +1,6 @@
-﻿using MyFileSpace.SharedKernel.Repositories;
+﻿using MyFileSpace.Infrastructure.Repositories;
 
-namespace MyFileSpace.Core.Services
+namespace MyFileSpace.Core.Services.Implementation
 {
     internal class CacheService : ICacheService
     {

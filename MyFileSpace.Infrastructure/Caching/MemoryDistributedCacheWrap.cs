@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace MyFileSpace.Infrastructure.Caching
 {
-    internal class MemoryDistributedCacheWrap : MemoryDistributedCache, IMemoryDistributedCacheWrap
+    internal class MemoryDistributedCacheWrap : MemoryDistributedCache, IDistributedCacheWrap
     {
 
         private readonly MemoryDistributedCacheOptions options;
@@ -106,11 +106,9 @@ namespace MyFileSpace.Infrastructure.Caching
         }
 
         /// <inheritdoc />
-        public Task ClearAsync(CancellationToken token = default)
+        public async Task ClearAsync(CancellationToken token = default)
         {
-            this.Clear();
-
-            return Task.CompletedTask;
+            await Task.Run(() => Clear(), token);
         }
 
         /// <inheritdoc />
@@ -122,7 +120,7 @@ namespace MyFileSpace.Infrastructure.Caching
         /// <inheritdoc />
         public async Task<IEnumerable<string>> GetAllKeysAsync(CancellationToken token = default)
         {
-            return await Task.Run(() => this.entries.Keys.OfType<string>().ToList(), token);
+            return await Task.Run(() => GetAllKeys(), token);
         }
 
         public long GetCacheSize()
@@ -130,6 +128,11 @@ namespace MyFileSpace.Infrastructure.Caching
             long? cacheSize = cacheSizeField.GetValue(this.coherentState) as long?;
 
             return cacheSize ?? 0;
+        }
+
+        public async Task<long> GetCacheSizeAsync()
+        {
+            return await Task.FromResult(GetCacheSize());
         }
     }
 }

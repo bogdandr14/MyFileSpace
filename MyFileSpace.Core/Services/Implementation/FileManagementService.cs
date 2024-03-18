@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MyFileSpace.Api.Extensions;
 using MyFileSpace.Core.Helpers;
+using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.DTOs;
-using MyFileSpace.SharedKernel.Repositories;
 
-namespace MyFileSpace.Core.Services
+namespace MyFileSpace.Core.Services.Implementation
 {
     internal class FileManagementService : IFileManagementService
     {

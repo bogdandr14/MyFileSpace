@@ -1,13 +1,12 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.Configuration;
-using MyFileSpace.Infrastructure.Helpers;
 using MyFileSpace.Infrastructure.Models;
 using MyFileSpace.SharedKernel.DTOs;
-using MyFileSpace.SharedKernel.Repositories;
+using MyFileSpace.SharedKernel.Helpers;
 using System.Globalization;
 
-namespace MyFileSpace.Infrastructure.Repositories
+namespace MyFileSpace.Infrastructure.Repositories.Implementation
 {
     internal class CsvFileDataRepository : IFileDataRepository
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace MyFileSpace.SharedKernel.Repositories
+namespace MyFileSpace.Infrastructure.Repositories
 {
     public interface IFileSystemRepository
     {

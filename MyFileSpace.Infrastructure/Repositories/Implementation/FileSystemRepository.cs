@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using MyFileSpace.Infrastructure.Helpers;
-using MyFileSpace.SharedKernel.Repositories;
+using MyFileSpace.SharedKernel.Helpers;
 
-namespace MyFileSpace.Infrastructure.Repositories
+namespace MyFileSpace.Infrastructure.Repositories.Implementation
 {
     internal class FileSystemRepository : IFileSystemRepository
     {
