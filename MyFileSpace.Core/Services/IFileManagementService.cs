@@ -12,7 +12,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a list of file names.
         /// </returns>
-        IEnumerable<string> GetAllFileNames();
+        Task<IEnumerable<string>> GetAllFileNames();
 
         /// <summary>
         /// Retrieves the file from the local file system.
@@ -23,7 +23,7 @@ namespace MyFileSpace.Core.Services
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        FileDTO GetFileData(string fileName);
+        Task<FileDTO> GetFileData(string fileName);
 
 
         /// <summary>

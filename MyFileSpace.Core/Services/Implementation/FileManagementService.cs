@@ -19,26 +19,26 @@ namespace MyFileSpace.Core.Services.Implementation
             _cacheRepository = cacheRepository;
         }
 
-        public IEnumerable<string> GetAllFileNames()
+        public async Task<IEnumerable<string>> GetAllFileNames()
         {
-            return _cacheRepository.GetAndSet(CacheKeys.ALL_FILES, () => _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList());
+            return await _cacheRepository.GetAndSetAsync(CacheKeys.ALL_FILES, () => _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList());
         }
 
-        public FileDTO GetFileData(string fileName)
+        public async Task<FileDTO> GetFileData(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 throw new Exception("No filename given");
             }
 
-            return _cacheRepository.GetAndSet($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
+            return await _cacheRepository.GetAndSetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
         }
 
         public async Task<byte[]> GetFileByName(string fileName)
         {
-            FileDTO fileObject = _cacheRepository.GetAndSet($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
+            FileDTO fileObject = await _cacheRepository.GetAndSetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
             Func<byte[]> fileBytesFunct = () => _fileSystemRepository.ReadFromFileSystem(fileObject.StoredFileName()).GetAwaiter().GetResult();
-            return await Task.FromResult(_cacheRepository.GetAndSetBytes($"{CacheKeys.FILE_BYTES_PREFIX}{fileName}", fileBytesFunct, TimeSpan.FromMinutes(1)));
+            return await _cacheRepository.GetAndSetBytesAsync($"{CacheKeys.FILE_BYTES_PREFIX}{fileName}", fileBytesFunct, TimeSpan.FromMinutes(1));
         }
 
         public async Task AddFile(IFormFile file)
@@ -52,8 +52,8 @@ namespace MyFileSpace.Core.Services.Implementation
             await _fileSystemRepository.AddInFileSystem(fileData.StoredFileName(), file);
             _fileDataRepository.Add(fileData);
 
-            _cacheRepository.Remove($"{CacheKeys.ALL_FILES}");
-            _cacheRepository.Set($"{CacheKeys.FILE_DATA_PREFIX}{fileData.OriginalName}", fileData);
+            await _cacheRepository.RemoveAsync($"{CacheKeys.ALL_FILES}");
+            await _cacheRepository.SetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileData.OriginalName}", fileData);
         }
 
         public async Task UpdateFile(Guid fileGuid, IFormFile file)
@@ -66,15 +66,15 @@ namespace MyFileSpace.Core.Services.Implementation
                 throw new Exception($"Can not rename file ${existingFile.OriginalName} to ${file.FileName} as it already exists!");
             }
 
-            _cacheRepository.Remove($"{CacheKeys.FILE_DATA_PREFIX}{existingFile.OriginalName}");
-            _cacheRepository.Remove($"{CacheKeys.FILE_BYTES_PREFIX}{existingFile.OriginalName}");
+            await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_DATA_PREFIX}{existingFile.OriginalName}");
+            await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_BYTES_PREFIX}{existingFile.OriginalName}");
 
             FileDTO updatedFileData = file.UpdateExistingFileDTO(existingFile);
             await _fileSystemRepository.UpdateInFileSystem(updatedFileData.StoredFileName(), file);
             _fileDataRepository.Update(updatedFileData);
 
-            _cacheRepository.Remove($"{CacheKeys.ALL_FILES}");
-            _cacheRepository.Set($"{CacheKeys.FILE_DATA_PREFIX}{updatedFileData.OriginalName}", updatedFileData);
+            await _cacheRepository.RemoveAsync($"{CacheKeys.ALL_FILES}");
+            await _cacheRepository.SetAsync($"{CacheKeys.FILE_DATA_PREFIX}{updatedFileData.OriginalName}", updatedFileData);
         }
 
         public async Task DeleteFile(Guid fileGuid)
@@ -88,9 +88,9 @@ namespace MyFileSpace.Core.Services.Implementation
 
             _fileDataRepository.Delete(fileGuid);
 
-            _cacheRepository.Remove($"{CacheKeys.ALL_FILES}");
-            _cacheRepository.Remove($"{CacheKeys.FILE_DATA_PREFIX}{fileObject.OriginalName}");
-            _cacheRepository.Remove($"{CacheKeys.FILE_BYTES_PREFIX}{fileObject.OriginalName}");
+            await _cacheRepository.RemoveAsync($"{CacheKeys.ALL_FILES}");
+            await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileObject.OriginalName}");
+            await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_BYTES_PREFIX}{fileObject.OriginalName}");
         }
 
         private FileDTO RetrieveValidFileData(Func<FileDTO?> func)

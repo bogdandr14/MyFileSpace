@@ -19,12 +19,6 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             _cacheRepository = cacheRepository;
         }
 
-        public BaseRootCacheRepository(MyFileSpaceDbContext dbContext, ISpecificationEvaluator specificationEvaluator, ICacheRepository cacheRepository) : base(dbContext, specificationEvaluator)
-        {
-            _cacheRepository = cacheRepository;
-        }
-
-
         public override async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
         {
             await base.UpdateAsync(entity, cancellationToken);

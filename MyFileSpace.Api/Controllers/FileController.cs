@@ -20,11 +20,11 @@ namespace MyFileSpace.Api.Controllers
 
         // GET: api/<FileController>
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        public async Task<ActionResult<IEnumerable<string>>> Get()
         {
             try
             {
-                return Ok(_fileManagementService.GetAllFileNames());
+                return Ok(await _fileManagementService.GetAllFileNames());
             }
             catch (Exception e)
             {
@@ -34,11 +34,11 @@ namespace MyFileSpace.Api.Controllers
 
         // GET api/<FileController>/5
         [HttpGet("info/{fileName}")]
-        public ActionResult<FileDTO> GetInfo(string fileName)
+        public async Task<ActionResult<FileDTO>> GetInfo(string fileName)
         {
             try
             {
-                return Ok(_fileManagementService.GetFileData(fileName));
+                return Ok(await _fileManagementService.GetFileData(fileName));
             }
             catch (Exception e)
             {
@@ -56,7 +56,7 @@ namespace MyFileSpace.Api.Controllers
                 FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
                 fileContentResult.FileDownloadName = fileName;
 
-                FileDTO fileData = _fileManagementService.GetFileData(fileName);
+                FileDTO fileData = await _fileManagementService.GetFileData(fileName);
                 fileContentResult.LastModified = fileData.ModifiedAt;
                 return fileContentResult;
             }

@@ -6,6 +6,7 @@ namespace MyFileSpace.Infrastructure.Persistence
 {
     public static class PersistenceSetup
     {
+
         public static void AddDbContext(this IServiceCollection services, string connectionString) =>
            services.AddDbContext<MyFileSpaceDbContext>(options =>
                options.UseSqlServer(connectionString)); // will be created in web project root

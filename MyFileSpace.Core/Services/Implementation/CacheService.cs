@@ -9,24 +9,24 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             _cacheRepository = cacheRepository;
         }
-        public IEnumerable<string> GetAllKeys()
+        public async Task<IEnumerable<string>> GetAllKeys()
         {
-            return _cacheRepository.GetAllKeys();
+            return await _cacheRepository.GetAllKeysAsync();
         }
 
-        public bool IsObjectCached(string key)
+        public async Task<bool> IsObjectCached(string key)
         {
-            return _cacheRepository.IsObjectCached(key);
+            return await _cacheRepository.IsObjectCachedAsync(key);
         }
 
-        public string GetMemoryUsed()
+        public async Task<string> GetMemoryUsed()
         {
-            return _cacheRepository.GetMemoryUsed();
+            return await _cacheRepository.GetMemoryUsedAsync();
         }
 
-        public void ClearCache()
+        public async Task ClearCache()
         {
-            _cacheRepository.Clear();
+            await _cacheRepository.ClearAsync();
         }
 
     }

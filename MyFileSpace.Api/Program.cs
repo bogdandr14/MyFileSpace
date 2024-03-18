@@ -1,4 +1,5 @@
 using MyFileSpace.Core;
+using MyFileSpace.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "SwaggerFileUpload", Version = "v1" });
 });
+builder.Services.AddDbContext("DefaultConnection");
 builder.Services.RegisterCoreServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();

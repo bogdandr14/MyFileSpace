@@ -36,41 +36,14 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             _cache = new MemoryDistributedCacheWrap(Options.Create(distributedCacheOptions));
         }
 
-        public IEnumerable<string> GetAllKeys()
-        {
-            return _cache.GetAllKeys();
-        }
-
         public async Task<IEnumerable<string>> GetAllKeysAsync()
         {
             return await _cache.GetAllKeysAsync();
         }
 
-        public bool IsObjectCached(string key)
-        {
-            return !_bypassCache && _cache.Get(key) != null;
-        }
-
         public async Task<bool> IsObjectCachedAsync(string key)
         {
             return !_bypassCache && await _cache.GetAsync(key) != null;
-        }
-
-        public T GetAndSet<T>(string key, Func<T> fallback, TimeSpan? timespan = null)
-        {
-            T? obj = Get<T>(key);
-            if (obj is not null)
-            {
-                return obj;
-            }
-
-            obj = fallback.Invoke();
-            if (obj is not null)
-            {
-                Set(key, obj, timespan);
-            }
-
-            return obj;
         }
 
         public async Task<T> GetAndSetAsync<T>(string key, Func<Task<T>> fallback, TimeSpan? timespan = null)
@@ -90,16 +63,21 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             return obj;
         }
 
-        public T? Get<T>(string key)
+        public async Task<T> GetAndSetAsync<T>(string key, Func<T> fallback, TimeSpan? timespan = null)
         {
-            byte[]? bytes = GetBytes(key);
-
-            if (bytes is null)
+            T? obj = await GetAsync<T>(key);
+            if (obj is not null)
             {
-                return default;
+                return obj;
             }
 
-            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes));
+            obj = fallback.Invoke();
+            if (obj is not null)
+            {
+                await SetAsync(key, obj, timespan);
+            }
+
+            return obj;
         }
 
         public async Task<T?> GetAsync<T>(string key)
@@ -112,23 +90,6 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             }
 
             return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes));
-        }
-
-        public void Set<T>(string key, T value, TimeSpan? timeSpan)
-        {
-            if (_bypassCache)
-            {
-                return;
-            }
-
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
-
-            SetBytes(key, bytes, timeSpan);
         }
 
         public async Task SetAsync<T>(string key, T value, TimeSpan? timeSpan)
@@ -148,21 +109,6 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             await SetBytesAsync(key, bytes, timeSpan);
         }
 
-        public byte[] GetAndSetBytes(string key, Func<byte[]> fallback, TimeSpan? timespan = null)
-        {
-            byte[]? obj = GetBytes(key);
-            if (obj is not null)
-            {
-                return obj;
-            }
-
-            obj = fallback.Invoke();
-
-            SetBytes(key, obj, timespan);
-
-            return obj;
-        }
-
         public async Task<byte[]> GetAndSetBytesAsync(string key, Func<byte[]> fallback, TimeSpan? timespan = null)
         {
             byte[]? obj = await GetBytesAsync(key);
@@ -178,18 +124,6 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             return obj;
         }
 
-        public byte[]? GetBytes(string key)
-        {
-            if (_bypassCache)
-            {
-                return default;
-            }
-
-            ValidateAction(key);
-
-            return _cache.Get(key);
-        }
-
         public async Task<byte[]?> GetBytesAsync(string key)
         {
             if (_bypassCache)
@@ -200,30 +134,6 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             ValidateAction(key);
 
             return await _cache.GetAsync(key);
-        }
-
-        public void SetBytes(string key, byte[] bytes, TimeSpan? timeSpan)
-        {
-            if (_bypassCache)
-            {
-                return;
-            }
-
-            ValidateAction(key);
-
-            timeSpan ??= _cacheLifeSpan;
-            if (timeSpan.HasValue)
-            {
-                DistributedCacheEntryOptions options = new DistributedCacheEntryOptions()
-                {
-                    AbsoluteExpirationRelativeToNow = timeSpan.Value
-                };
-                _cache.Set(key, bytes, options);
-            }
-            else
-            {
-                _cache.Set(key, bytes);
-            }
         }
 
         public async Task SetBytesAsync(string key, byte[] bytes, TimeSpan? timeSpan)
@@ -250,31 +160,15 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             }
         }
 
-        public void Remove(string key)
-        {
-            _cache.Remove(key);
-        }
-
         public async Task RemoveAsync(string key)
         {
             await _cache.RemoveAsync(key);
-        }
-
-        public string GetMemoryUsed()
-        {
-            double cacheSizeKB = _cache.GetCacheSize() / 1024;
-            return $"{cacheSizeKB}KB used";
         }
 
         public async Task<string> GetMemoryUsedAsync()
         {
             double cacheSizeKB = await _cache.GetCacheSizeAsync() / 1024;
             return $"{cacheSizeKB}KB used";
-        }
-
-        public void Clear()
-        {
-            _cache.Clear();
         }
 
         public async Task ClearAsync()
