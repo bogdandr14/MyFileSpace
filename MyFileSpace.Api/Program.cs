@@ -1,20 +1,25 @@
-using MyFileSpace.Core;
-using MyFileSpace.Infrastructure.Persistence;
+using Ardalis.ListStartupServices;
+using MyFileSpace.Api;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Host.UseSerilog((_, config) => config.ReadFrom.Configuration(builder.Configuration));
+
+builder.Services.AddModulesConfiguration(builder.Environment, builder.Configuration);
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "SwaggerFileUpload", Version = "v1" });
-});
-builder.Services.AddDbContext("DefaultConnection");
-builder.Services.RegisterCoreServices();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddSwaggerConfiguration();
+
+builder.Services.AddServiceDescriptorConfiguration();
+
 builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddDistributedMemoryCache();
 
 var app = builder.Build();
@@ -23,20 +28,32 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseShowAllServicesMiddleware();
 }
+else
+{
+    app.UseExceptionHandler(Constants.ERROR_PATH);
+    app.UseHsts();
+}
+
+app.UserCorsConfiguration();
 
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
+// Enable middleware to serve generated Swagger as a JSON endpoint.
 app.UseSwagger();
+
+app.UseSwaggerUIConfiguration();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Migrate and seed Database
+//app.Services.SetDbInstance();
 
 app.Run();

@@ -40,8 +40,9 @@ namespace MyFileSpace.SharedKernel.Helpers
             return Convert.ToHexString(hash);
         }
 
-        public static bool VerifyKey(string passphrase, string hash, byte[] salt)
+        public static bool VerifyKey(string passphrase, string hash, string saltString)
         {
+            byte[] salt = Convert.FromHexString(saltString);
             var hashToCompare = Rfc2898DeriveBytes.Pbkdf2(passphrase, salt, ITERATIONS, HASH_ALGORITHM, KEY_SIZE);
             return CryptographicOperations.FixedTimeEquals(hashToCompare, Convert.FromHexString(hash));
         }

@@ -1,17 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MyFileSpace.SharedKernel.Helpers;
 
 namespace MyFileSpace.Infrastructure.Persistence
 {
-    public static class PersistenceSetup
+    public static class DefaultPersistenceConfig
     {
+        public const string USE_CONNECTION = "UseConnection";
+        public const string DEFAULT_CONNECTION = "DefaultConnection";
 
-        public static void AddDbContext(this IServiceCollection services, string connectionString) =>
-           services.AddDbContext<MyFileSpaceDbContext>(options =>
-               options.UseSqlServer(connectionString)); // will be created in web project root
+        public static void RegisterDbContext(this IServiceCollection services, IConfiguration configurationManager)
+        {
+            string connectionToUse = configurationManager.GetConfigValue(USE_CONNECTION) ?? DEFAULT_CONNECTION;
+            string? connectionString = configurationManager.GetConnectionString(connectionToUse);
 
-        public static void SetDbInstance(this IServiceProvider serviceProvider)
+            services.AddDbContext<MyFileSpaceDbContext>(options => options.UseSqlServer(connectionString)); // will be created in web project root
+        }
+
+        public static void SetDbInstance(this IServiceProvider serviceProvider)//to use in program main
         {
             using (var scope = serviceProvider.CreateScope())
             {
