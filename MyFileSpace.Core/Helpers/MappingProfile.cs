@@ -19,6 +19,21 @@ namespace MyFileSpace.Core.Helpers
         {
             CreateMap<User, UserDetailsDTO>()
                 .ReverseMap();
+
+            CreateMap<StoredFile, FileDetailsDTO>()
+                .ForMember(x => x.Path, y => y.MapFrom(z => RecursivePathBuilder(z.Directory)));
+        }
+
+        private string RecursivePathBuilder(VirtualDirectory directory)
+        {
+            string path = string.Empty;
+            while (directory != null)
+            {
+                path = $"{directory.VirtualPath}/{path}";
+                directory = directory.ParentDirectory!;
+            }
+
+            return path;
         }
     }
 }

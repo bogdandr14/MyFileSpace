@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
+using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
 using MyFileSpace.SharedKernel.DTOs;
 
@@ -34,7 +35,7 @@ namespace MyFileSpace.Api.Controllers
 
         // GET api/<FileController>/5
         [HttpGet("info/{fileName}")]
-        public async Task<ActionResult<FileDTO>> GetInfo(string fileName)
+        public async Task<ActionResult<SharedKernel.DTOs.FileDTO>> GetInfo(string fileName)
         {
             try
             {
@@ -56,7 +57,7 @@ namespace MyFileSpace.Api.Controllers
                 FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
                 fileContentResult.FileDownloadName = fileName;
 
-                FileDTO fileData = await _fileManagementService.GetFileData(fileName);
+                MyFileSpace.SharedKernel.DTOs.FileDTO fileData = await _fileManagementService.GetFileData(fileName);
                 fileContentResult.LastModified = fileData.ModifiedAt;
                 return fileContentResult;
             }
@@ -68,7 +69,7 @@ namespace MyFileSpace.Api.Controllers
 
         // POST api/<FileController>
         [HttpPost]
-        public async Task<ActionResult> Post([FileValidation(4096)] IFormFile uploadedFile)
+        public async Task<ActionResult> Post([FileValidation(4096)] IFormFile uploadedFile, [FromForm] AuthDTO auth)
         {
             try
             {

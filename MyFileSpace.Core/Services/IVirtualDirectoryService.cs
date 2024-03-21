@@ -1,12 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
+using MyFileSpace.Core.DTOs;
 
 namespace MyFileSpace.Core.Services
 {
     public interface IVirtualDirectoryService
     {
+        /// <summary>
+        /// Retrieves all directories information for the current user.
+        /// </summary>
+        /// <returns>
+        /// Returns a list of directory details.
+        /// </returns>
+        Task<List<FileDetailsDTO>> GetAllDirectoriesInfo();
+
+        /// <summary>
+        /// Retrieves the directory information.
+        /// </summary>
+        /// <param name="directoryId"> The information for the directory that should be retrieved 
+        /// from the local system.</param>
+        /// <param name="accessKey"> Access key in case of anonymous user
+        /// <returns>
+        /// Returns a directory object, which contains all the information 
+        /// about the directory.
+        /// </returns>
+        Task<FileDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null);
+
+        /// <summary>
+        /// Adds a virtual directory for the current user.
+        /// </summary>
+        /// <param name="directory"> All the information for the directory that must be saved.</param>
+        /// <param name="parentDirectoryId"> The directory where the directory should be saved </param>
+        Task AddDirectory(IFormFile directory, Guid parentDirectoryId);
+
+        /// <summary>
+        /// Updates a virtual directory.
+        /// </summary>
+        /// <param name="directory"> All the information for the directory.</param>
+        Task UpdateDirectory(IFormFile directory, Guid directoryId);
+
+        /// <summary>
+        /// Moves a directory to another directory.
+        /// </summary>
+        /// <param name="directoryToMoveId"> The directory that needs to be moved.</param>
+        /// <param name="newParentDirectoryId"> The new parent directory id for the directory that should be moved.</param>
+        Task MoveToDirectory(Guid directoryToMoveId, Guid newParentDirectoryId);
+
+        /// <summary>
+        /// Marks a directory as deleted, keeping it in the database.
+        /// </summary>
+        /// <param name="directoryId"> The id of the directory that should be deleted with all its content.</param>
+        Task MoveDirectoryToBin(Guid directoryId);
+
+        /// <summary>
+        /// Restores the deleted file.
+        /// </summary>
+        /// <param name="directoryId"> The name of the directory that should be restored from the localfile system.</param>
+        Task RestoreDirectory(Guid directoryId);
+
+        /// <summary>
+        /// Deletes a virtual directory and all its content.
+        /// </summary>
+        /// <param name="directoryId"> The name of the directory that should be removed.</param>
+        Task DeleteDirectory(Guid directoryId);
     }
 }

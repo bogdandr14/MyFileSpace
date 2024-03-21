@@ -6,11 +6,11 @@ using System.Text;
 
 namespace MyFileSpace.Core.Helpers
 {
-    internal static class JsonWebToken
+    public static class JsonWebToken
     {
         private const string PASSPHRASE = "ScdfRrGmK*&$riHDciDF*UnvoqNh3GB2Lx3p8tRLc8kkmyaHW!ATUdf4dC7Ubh%q";
         private const string ISSUER_AND_AUDIENCE = "MyFileSpace";
-        private const string USER_ROLE_CLAIM = "user_role";
+        public const string USER_ROLE_CLAIM = "user_role";
 
         public static string GenerateToken(User user)
         {
@@ -69,7 +69,7 @@ namespace MyFileSpace.Core.Helpers
         {
             var authClaims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.TagName),
                 new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
                 new Claim(USER_ROLE_CLAIM, user.Role.ToString())
             };

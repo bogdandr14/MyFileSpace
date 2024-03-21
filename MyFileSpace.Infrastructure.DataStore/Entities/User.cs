@@ -6,7 +6,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
 {
     public class User: BaseRootEntity<Guid>, IRootEntity<Guid>
     {
-        public string Username { get; set; }
+        public string TagName { get; set; }
         public string Password { get; set; }
         public string Email { get; set; }
         public RoleType Role { get; set; }

@@ -7,9 +7,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 namespace MyFileSpace.Api
 {
-
     public static class MainStartupConfig
-
     {
         #region "Builder setup"
         // add list services for diagnostic purposes - see https://github.com/ardalis/AspNetCoreStartupServices
@@ -31,6 +29,7 @@ namespace MyFileSpace.Api
             services.RegisterDbContext(configuration);
             services.RegisterInfrastructureServices(isDevelopment);
             services.RegisterCoreServices(isDevelopment);
+            services.AddScoped<Session>();
         }
 
         public static void AddSwaggerConfiguration(this IServiceCollection serviceCollection)

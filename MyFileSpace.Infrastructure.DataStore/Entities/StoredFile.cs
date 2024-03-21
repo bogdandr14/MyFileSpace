@@ -11,7 +11,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
 
         public string Name { get; set; }
         public AccessType AccessLevel { get; set; }
-        public int SizeInBytes { get; set; }
+        public long SizeInBytes { get; set; }
 
         public bool State { get; set; }
 

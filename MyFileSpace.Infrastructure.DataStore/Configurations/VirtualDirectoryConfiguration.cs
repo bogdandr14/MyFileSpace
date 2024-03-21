@@ -22,6 +22,10 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
                 .HasConversion<byte>()
                 .IsRequired();
 
+            builder.Property(sf => sf.State)
+                .HasDefaultValue(true)
+                .IsRequired();
+
             //Foreign keys
             builder.HasOne(vd => vd.Owner)
                     .WithMany(u => u.Directories)

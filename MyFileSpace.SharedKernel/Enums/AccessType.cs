@@ -4,7 +4,6 @@
     {
         Private = 1,
         Restricted = 2,
-        Unlisted = 3,
-        Public = 4
+        Public = 3
     }
 }

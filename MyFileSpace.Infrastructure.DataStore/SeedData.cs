@@ -39,7 +39,7 @@ namespace MyFileSpace.Infrastructure.Persistence
             User admin = new User();
 
             admin.Role = RoleType.Admin;
-            admin.Username = "FileSpaceAdmin";
+            admin.TagName = "FileSpaceAdmin";
             admin.Password = CryptographyUtility.HashKey("%file*SpacE20-24", out string salt);
             admin.Salt = salt;
             dbContext.User.Add(admin);

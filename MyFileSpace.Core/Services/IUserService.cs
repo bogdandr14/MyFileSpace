@@ -59,7 +59,7 @@ namespace MyFileSpace.Core.Services
         /// Returns an <see cref="UserDetailsDTO"/> object which contains all information about the 
         /// requested user.
         /// </returns>
-        Task<UserDetailsDTO> GetUser(string username);
+        Task<UserDetailsDTO> GetUserByTagName(string username);
 
         /// <summary>
         /// Updates the information of the specified user.
@@ -80,7 +80,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns true if the username is available, or false if the username is already taken.
         /// </returns>
-        Task<bool> CheckUsernameAvailable(string username);
+        Task<bool> CheckTagNameAvailable(string username);
 
         /// <summary>
         /// Checks if the email is available to use.

@@ -1,64 +1,85 @@
 ﻿using Microsoft.AspNetCore.Http;
-using MyFileSpace.SharedKernel.DTOs;
+using MyFileSpace.Core.DTOs;
+using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Repositories;
 
 namespace MyFileSpace.Core.Services
 {
     public interface IStoredFileService
     {
         /// <summary>
-        /// Retrieves all names of the files stored in the local file system.
+        /// Retrieves all files information for the stored files in the local file system.
         /// </summary>
         /// <returns>
-        /// Returns a list of file names.
+        /// Returns a list of file details.
         /// </returns>
-        Task<IEnumerable<string>> GetAllFileNames();
+        Task<List<FileDetailsDTO>> GetAllFilesInfo();
 
         /// <summary>
-        /// Retrieves the file from the local file system.
+        /// Retrieves the file information.
         /// </summary>
-        /// <param name="fileName"> The information for the file that should be retrieved 
+        /// <param name="fileId"> The information for the file that should be retrieved 
         /// from the local system.</param>
+        /// <param name="accessKey"> Access key in case of anonymous user
         /// <returns>
         /// Returns a file object, which contains all the information 
         /// about the file.
         /// </returns>
-        Task<FileDTO> GetFileData(string fileName);
+        Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null);
 
 
         /// <summary>
         /// Retrieves the file from the local file system.
         /// </summary>
-        /// <param name="fileName"> The information for the file that should be retrieved 
-        /// from the local system.</param>
+        /// <param name="fileId"> The file that should be retrieved from the local system.</param>
         /// <returns>
-        /// Returns a file object, which contains all the information 
-        /// about the file.
+        /// Downloads a file.
         /// </returns>
-        Task<byte[]> GetFileByName(string fileName);
+        Task<byte[]> DownloadFile(Guid fileId, string? accessKey = null);
 
         /// <summary>
         /// Saves a file in the local file system.
         /// </summary>
-        /// <param name="file"> All the information for the file that must be saved 
-        /// in the local system.</param>
-        Task AddFile(IFormFile file);
+        /// <param name="file"> All the information for the file that must be saved in the local system.</param>
+        /// <param name="directoryId"> The directory where the file should be saved </param>
+        Task AddFile(IFormFile file, Guid directoryId);
 
         /// <summary>
         /// Updates a file in the local file system.
         /// </summary>
-        /// <param name="file"> All the information for the file that must be saved 
-        /// in the local system.</param>
-        Task UpdateFile(Guid fileGuid, IFormFile file);
+        /// <param name="file"> All the information for the file that must be saved in the local system.</param>
+        Task UpdateFile(IFormFile file, Guid fileId);
+
+        /// <summary>
+        /// Updates a file innformation.
+        /// </summary>
+        /// <param name="fileUpdate"> All the information for the file that must be saved in the local system.</param>
+        /// <param name="fileUpdate"> The id of the file that needs to be updated.</param>
+        Task UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId);
+
+        /// <summary>
+        /// Move a file to a specific directory, keeping it in the local file system.
+        /// </summary>
+        /// <param name="fileId"> The file id that should be moved in the localfile system.</param>
+        /// <param name="directoryId"> The directory id where the file should be moved.</param>
+        Task MoveToDirectory(Guid fileId, Guid directoryId);
+        
+        /// <summary>
+        /// Marks a file as deleted, keeping it in the local file system.
+        /// </summary>
+        /// <param name="fileId"> The name of the file that should be deleted from the localfile system.</param>
+        Task MoveFileToBin(Guid fileId);
+
+        /// <summary>
+        /// Restores the deleted file.
+        /// </summary>
+        /// <param name="fileId"> The name of the file that should be restored from the localfile system.</param>
+        Task RestoreFile(Guid fileId);
 
         /// <summary>
         /// Deletes a file from the local file system.
         /// </summary>
-        /// <param name="fileGuid"> The name of the file that should be removed from the 
-        /// localfile system.</param>
-        /// <returns>
-        /// Returns <code>true</code> in case the removal of the file was successfull, or 
-        /// <code>false</code> otherwise.
-        /// </returns>
-        Task DeleteFile(Guid fileGuid);
+        /// <param name="fileId"> The name of the file that should be removed from the localfile system.</param>
+        Task DeleteFile(Guid fileId);
     }
 }

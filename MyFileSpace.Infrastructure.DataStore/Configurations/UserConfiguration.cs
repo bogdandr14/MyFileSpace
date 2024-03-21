@@ -11,13 +11,13 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
         {
             //Primary key
             builder.HasKey(u => u.Id);
-            builder.HasAlternateKey(u => u.Username);
+            builder.HasAlternateKey(u => u.TagName);
 
             //Index
-            builder.HasIndex(u => u.Username).IsUnique();
+            builder.HasIndex(u => u.TagName).IsUnique();
 
             //Properties
-            builder.Property(u => u.Username)
+            builder.Property(u => u.TagName)
                     .HasMaxLength(50)
                     .IsRequired();
 

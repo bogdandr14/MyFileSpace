@@ -2,6 +2,6 @@
 {
     public class UserUpdateDTO : AuthDTO
     {
-        public string Username { get; set; }
+        public string TagName { get; set; }
     }
 }

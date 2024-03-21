@@ -2,6 +2,7 @@
 using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Persistence.Interfaces;
 using MyFileSpace.SharedKernel.Entities;
+using System;
 using System.Reflection;
 
 namespace MyFileSpace.Infrastructure.Persistence
@@ -28,6 +29,8 @@ namespace MyFileSpace.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<VirtualDirectory>().Navigation(p => p.ParentDirectory).AutoInclude();
 
             modelBuilder.ApplyConfigurationsFromAssembly(
                     Assembly.GetExecutingAssembly(),
