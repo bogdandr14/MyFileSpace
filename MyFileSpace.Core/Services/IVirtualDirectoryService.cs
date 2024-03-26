@@ -11,7 +11,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a list of directory details.
         /// </returns>
-        Task<List<FileDetailsDTO>> GetAllDirectoriesInfo();
+        Task<List<DirectoryDTO>> GetAllDirectoriesInfo();
 
         /// <summary>
         /// Retrieves the directory information.
@@ -23,20 +23,20 @@ namespace MyFileSpace.Core.Services
         /// Returns a directory object, which contains all the information 
         /// about the directory.
         /// </returns>
-        Task<FileDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null);
+        Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null);
 
         /// <summary>
         /// Adds a virtual directory for the current user.
         /// </summary>
         /// <param name="directory"> All the information for the directory that must be saved.</param>
         /// <param name="parentDirectoryId"> The directory where the directory should be saved </param>
-        Task AddDirectory(IFormFile directory, Guid parentDirectoryId);
+        Task AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId);
 
         /// <summary>
         /// Updates a virtual directory.
         /// </summary>
-        /// <param name="directory"> All the information for the directory.</param>
-        Task UpdateDirectory(IFormFile directory, Guid directoryId);
+        /// <param name="directoryUpdate"> All the information for the directory.</param>
+        Task UpdateDirectory(DirectoryUpdateDTO directoryUpdate, Guid directoryId);
 
         /// <summary>
         /// Moves a directory to another directory.

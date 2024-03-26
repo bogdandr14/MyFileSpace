@@ -23,6 +23,11 @@ namespace MyFileSpace.Core
         public static void RegisterCommonDependencies(this IServiceCollection services)
         {
             services.AddScoped<IFileManagementService, FileManagementService>();
+            services.AddScoped<IAccessKeyService, AccessKeyService>();
+            services.AddScoped<IStoredFileService, StoredFileService>();
+            services.AddScoped<IUserAccessService, UserAccessService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IVirtualDirectoryService, VirtualDirectoryService>();
             services.AddScoped<ICacheService, CacheService>();
         }
 

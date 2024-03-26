@@ -17,7 +17,6 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
         private readonly Session _session;
 
-
         public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, Session session)
         {
             _mapper = mapper;
@@ -35,7 +34,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<bool> CheckTagNameAvailable(string tagName)
         {
-            return await GetCachedUserByTagName(tagName) == null;
+            return await GetUserByTagNameCached(tagName) == null;
         }
 
         public async Task<UserDetailsDTO> GetUserByTagName(string tagName)
@@ -45,19 +44,19 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<UserDetailsDTO> GetUserByIdAsync(Guid userId)
         {
-            return _mapper.Map<UserDetailsDTO>(await ValidateAndRetrieveUser(userId));
+            return _mapper.Map<UserDetailsDTO>(await _userRepository.ValidateAndRetrieveUser(userId));
         }
 
         public async Task<string> Login(AuthDTO userLogin)
         {
-            User user = await ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, userLogin.Email, userLogin.Password);
             return JsonWebToken.GenerateToken(user);
         }
 
         public async Task<UserDetailsDTO> Register(AuthDTO userRegister)
         {
-            await ValidateEmail(userRegister.Email);
-            ValidatePasswordStrength(userRegister.Password);
+            await _userRepository.ValidateEmail(userRegister.Email);
+            userRegister.Password.ValidatePasswordStrength();
 
             User user = new User()
             {
@@ -80,7 +79,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdatePassword(UpdatePasswordDTO updatePassword)
         {
-            User user = await ValidateCredentialsAndRetrieveUser(updatePassword.Email, updatePassword.CurrentPassword);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, updatePassword.Email, updatePassword.CurrentPassword);
 
             user.Password = CryptographyUtility.HashKey(updatePassword.NewPassword, out string salt);
             user.Salt = salt;
@@ -91,7 +90,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdateUser(Guid userId, UserUpdateDTO userToUpdate)
         {
-            User user = await ValidateCredentialsAndRetrieveUser(userToUpdate.Email, userToUpdate.Password);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, userToUpdate.Email, userToUpdate.Password);
             await ValidateTagNameUnique(user, userId, userToUpdate.TagName);
 
             string oldTagName = user.TagName;
@@ -102,7 +101,7 @@ namespace MyFileSpace.Core.Services.Implementation
         }
         #endregion
 
-        private async Task<User?> GetCachedUserByTagName(string tagName)
+        private async Task<User?> GetUserByTagNameCached(string tagName)
         {
             Func<Task<User?>> userTask = async () => await _userRepository.FirstOrDefaultAsync(new TagNameSpec(tagName));
             return await _cacheRepository.GetAndSetAsync(TagNameCacheKey(tagName), userTask);
@@ -114,25 +113,9 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Validators"
-        private async Task ValidateEmail(string email)
-        {
-            if (!(await CheckEmailAvailable(email)))
-            {
-                throw new Exception("email already exists");
-            }
-        }
-
-        private void ValidatePasswordStrength(string password)
-        {
-            if (password == null)
-            {
-                throw new Exception("password too weak");
-            }
-        }
-
         private async Task<User> ValidateTagNameAndRetrieveUser(string tagName)
         {
-            User? user = await GetCachedUserByTagName(tagName);
+            User? user = await GetUserByTagNameCached(tagName);
             if (user == null)
             {
                 throw new Exception("User with tagname not found");
@@ -150,48 +133,12 @@ namespace MyFileSpace.Core.Services.Implementation
 
             if (!newTagName.Equals(existingUser.TagName))
             {
-                User? user = await GetCachedUserByTagName(newTagName);
+                User? user = await GetUserByTagNameCached(newTagName);
                 if (user != null)
                 {
                     throw new Exception("tagName already exists");
                 }
             }
-        }
-
-        private async Task<User> ValidateAndRetrieveUser(Guid userId)
-        {
-            User? user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                throw new Exception("user not found");
-            }
-
-            return user;
-        }
-
-        private async Task<User> ValidateCredentialsAndRetrieveUser(string email, string passwordToValidate)
-        {
-            User? user = await _userRepository.FirstOrDefaultAsync(new EmailSpec(email));
-
-            if (user == null)
-            {
-                throw new Exception("user not found");
-            }
-
-            if (_session.IsAuthenticated)
-            {
-                if (!user.Id.Equals(_session.UserId))
-                {
-                    throw new Exception("Forbidden");
-                }
-            }
-
-            if (!CryptographyUtility.VerifyKey(passwordToValidate, user.Password, user.Salt))
-            {
-                throw new Exception("incorrect email or password");
-            }
-
-            return user;
         }
         #endregion
     }

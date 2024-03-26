@@ -19,6 +19,7 @@ namespace MyFileSpace.Core.Services.Implementation
             _cacheRepository = cacheRepository;
         }
 
+        #region "Public methods"
         public async Task<IEnumerable<string>> GetAllFileNames()
         {
             return await _cacheRepository.GetAndSetAsync(CacheKeys.ALL_FILES, () => _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList());
@@ -92,6 +93,7 @@ namespace MyFileSpace.Core.Services.Implementation
             await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileObject.OriginalName}");
             await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_BYTES_PREFIX}{fileObject.OriginalName}");
         }
+        #endregion
 
         private FileDTO RetrieveValidFileData(Func<FileDTO?> func)
         {

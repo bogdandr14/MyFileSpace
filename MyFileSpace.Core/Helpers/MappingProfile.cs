@@ -22,6 +22,22 @@ namespace MyFileSpace.Core.Helpers
 
             CreateMap<StoredFile, FileDetailsDTO>()
                 .ForMember(x => x.Path, y => y.MapFrom(z => RecursivePathBuilder(z.Directory)));
+
+            CreateMap<VirtualDirectory, DirectoryDTO>()
+                .ForMember(x => x.FullPath, y => y.MapFrom(z => RecursivePathBuilder(z)));
+
+            CreateMap<VirtualDirectory, DirectoryDetailsDTO>()
+                .ForMember(x => x.FullPath, y => y.MapFrom(z => RecursivePathBuilder(z)))
+                .ForMember(x => x.FullPath, y => y.MapFrom(z => z.Owner.TagName));
+
+            CreateMap<DirectoryUpdateDTO, VirtualDirectory>()
+                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Path));
+
+            CreateMap<User, UserPublicInfoDTO>()
+                .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
+
+            CreateMap<AccessKey, KeyAccessDetailsDTO>();
+
         }
 
         private string RecursivePathBuilder(VirtualDirectory directory)

@@ -3,7 +3,7 @@ using MyFileSpace.Infrastructure.Persistence.Entities;
 
 namespace MyFileSpace.Core.Specifications
 {
-    internal class TagNameSpec : Specification<User>, ISpecification<User>
+    internal class TagNameSpec : Specification<User>, ISingleResultSpecification<User>
     {
         public TagNameSpec(string tagName)
         {

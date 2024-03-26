@@ -57,7 +57,7 @@ namespace MyFileSpace.Api.Controllers
                 FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
                 fileContentResult.FileDownloadName = fileName;
 
-                MyFileSpace.SharedKernel.DTOs.FileDTO fileData = await _fileManagementService.GetFileData(fileName);
+                SharedKernel.DTOs.FileDTO fileData = await _fileManagementService.GetFileData(fileName);
                 fileContentResult.LastModified = fileData.ModifiedAt;
                 return fileContentResult;
             }

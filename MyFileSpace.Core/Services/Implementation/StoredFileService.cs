@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using MyFileSpace.Core.DTOs;
+using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
 using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
@@ -48,21 +49,21 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null)
         {
-            return _mapper.Map<FileDetailsDTO>(await ValidateAndRetrieveFileInfo(fileId, accessKey));
+            return _mapper.Map<FileDetailsDTO>(await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey));
         }
 
         public async Task<byte[]> DownloadFile(Guid fileId, string? accessKey = null)
         {
             // validates the user has access to the file
-            StoredFile storedFile = await ValidateAndRetrieveFileInfo(fileId, accessKey);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
 
             return await _fileSystemRepository.ReadFromFileSystem(StoredFilePath(storedFile));
         }
 
         public async Task AddFile(IFormFile file, Guid directoryId)
         {
-            await ValidateFileNameNotInDirectory(directoryId, file.FileName);
-            await ValidateOwnDirectoryActive(directoryId);
+            await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
+            await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
 
             StoredFile fileToStore = new StoredFile()
             {
@@ -80,10 +81,10 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId)
         {
-            StoredFile storedFile = await ValidateAndRetrieveFileInfo(fileId);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);
             if (!string.IsNullOrEmpty(fileUpdate.Name))
             {
-                await ValidateFileNameNotInDirectory(storedFile.DirectorId, fileUpdate.Name);
+                await _storedFileRepository.ValidateFileNameNotInDirectory(storedFile.DirectorId, fileUpdate.Name);
                 storedFile.Name = fileUpdate.Name;
             }
 
@@ -98,7 +99,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdateFile(IFormFile file, Guid fileId)
         {
-            StoredFile storedFile = await ValidateAndRetrieveFileInfo(fileId);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);
             string[] storedFileNameSplit = storedFile.Name.Split('.');
             if (storedFileNameSplit.Length > 1)
             {
@@ -114,8 +115,8 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task MoveToDirectory(Guid fileId, Guid directoryId)
         {
-            await ValidateOwnDirectoryActive(directoryId);
-            StoredFile storedFile = await ValidateAndRetrieveOwnActiveFileInfo(fileId);
+            await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
             storedFile.DirectorId = directoryId;
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
@@ -123,15 +124,15 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task MoveFileToBin(Guid fileId)
         {
-            StoredFile storedFile = await ValidateAndRetrieveOwnActiveFileInfo(fileId);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
             storedFile.State = false;
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
         }
 
-        public async Task RestoreFile(Guid fileGuid)
+        public async Task RestoreFile(Guid fileId)
         {
-            StoredFile storedFile = await ValidateAndRetrieveOwnDeletedFileInfo(fileGuid);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
             storedFile.State = true;
             if (storedFile.Directory.State == false)
             {
@@ -146,9 +147,9 @@ namespace MyFileSpace.Core.Services.Implementation
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
         }
 
-        public async Task DeleteFile(Guid fileGuid)
+        public async Task DeleteFile(Guid fileId)
         {
-            StoredFile storedFile = await ValidateAndRetrieveOwnDeletedFileInfo(fileGuid);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
             await _fileSystemRepository.RemoveFromFileSystem(StoredFilePath(storedFile));
             await _storedFileRepository.DeleteAsync(storedFile);
         }
@@ -158,69 +159,5 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             return $"{storedFile.OwnerId}/{storedFile.Id}";
         }
-
-        #region "Validators"
-        private async Task ValidateOwnDirectoryActive(Guid directoryId)
-        {
-            if (await _virtualDirectoryRepository.SingleOrDefaultAsync(new OwnedDirectoriesSpec(_session.UserId, directoryId)) == null)
-            {
-                throw new Exception($"User does not have the specified directory!");
-            }
-        }
-
-        private async Task ValidateFileNameNotInDirectory(Guid directoryId, string fileName)
-        {
-            if (await _storedFileRepository.FirstOrDefaultAsync(new FileNameInDirectorySpec(directoryId, fileName)) != null)
-            {
-                throw new Exception($"File with name ${fileName} already exists in the specified directory!");
-            }
-        }
-
-        private async Task<StoredFile> ValidateAndRetrieveOwnDeletedFileInfo(Guid fileId)
-        {
-            StoredFile? storedFile = await _storedFileRepository.SingleOrDefaultAsync(new OwnedFilesSpec(_session.UserId, fileId, false));
-            if (storedFile == null)
-            {
-                throw new Exception("File not in bin or already deleted");
-            }
-
-            return storedFile;
-        }
-
-        private async Task<StoredFile> ValidateAndRetrieveOwnActiveFileInfo(Guid fileId)
-        {
-            StoredFile? storedFile = await _storedFileRepository.SingleOrDefaultAsync(new OwnedFilesSpec(_session.UserId, fileId, true));
-            if (storedFile == null)
-            {
-                throw new Exception("File not found or deleted");
-            }
-
-            return storedFile;
-        }
-
-        private async Task<StoredFile> ValidateAndRetrieveFileInfo(Guid fileId, string? accessKey = null)
-        {
-            StoredFile? storedFile;
-            if (_session.IsAuthenticated)
-            {
-                storedFile = await _storedFileRepository.SingleOrDefaultAsync(new AllowedFileSpec(fileId, _session.UserId));
-                if (storedFile != null)
-                {
-                    return storedFile;
-                }
-            }
-
-            if (accessKey != null)
-            {
-                storedFile = await _storedFileRepository.SingleOrDefaultAsync(new AllowedFileSpec(fileId, accessKey));
-                if (storedFile != null)
-                {
-                    return storedFile;
-                }
-            }
-
-            throw new Exception("file not found");
-        }
-        #endregion
     }
 }
