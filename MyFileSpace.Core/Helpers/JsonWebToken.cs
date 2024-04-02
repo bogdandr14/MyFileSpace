@@ -6,13 +6,13 @@ using System.Text;
 
 namespace MyFileSpace.Core.Helpers
 {
-    public static class JsonWebToken
+    internal static class JsonWebToken
     {
         private const string PASSPHRASE = "ScdfRrGmK*&$riHDciDF*UnvoqNh3GB2Lx3p8tRLc8kkmyaHW!ATUdf4dC7Ubh%q";
         private const string ISSUER_AND_AUDIENCE = "MyFileSpace";
         public const string USER_ROLE_CLAIM = "user_role";
 
-        public static string GenerateToken(User user)
+        internal static string GenerateToken(User user)
         {
             List<Claim> authClaims = SetClaims(user);
 
@@ -36,33 +36,26 @@ namespace MyFileSpace.Core.Helpers
             return securityToken.Claims.FirstOrDefault(claim => claim.Type == claimName)?.Value ?? String.Empty;
         }
 
-        public static bool ValidateToken(string token)
+        internal static bool ValidateToken(string token)
         {
             // Token handler used in order to validate the token
             var tokenHandler = new JwtSecurityTokenHandler();
             // Get the secret key from the jwtSettings instance
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PASSPHRASE));
 
-            try
+            // Validate the token and store it in the validatedToken variable
+            tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
-                // Validate the token and store it in the validatedToken variable
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    IssuerSigningKey = key,
-                    ValidIssuer = ISSUER_AND_AUDIENCE,
-                    ValidAudience = ISSUER_AND_AUDIENCE,
-                    ClockSkew = TimeSpan.Zero // This is used so that the token expires exactly at its expiry time, not 5 minutes later
-                }, out SecurityToken validatedToken);
-                return true;
-            }
-            catch
-            {
-                // Return false if validation fails
-                return false;
-            }
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                IssuerSigningKey = key,
+                ValidIssuer = ISSUER_AND_AUDIENCE,
+                ValidAudience = ISSUER_AND_AUDIENCE,
+                ClockSkew = TimeSpan.Zero // This is used so that the token expires exactly at its expiry time, not 5 minutes later
+            }, out SecurityToken validatedToken);
+            
+            return true;
         }
 
         private static List<Claim> SetClaims(User user)

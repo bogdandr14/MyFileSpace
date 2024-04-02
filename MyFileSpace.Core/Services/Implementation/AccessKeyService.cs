@@ -101,7 +101,7 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             else
             {
-                throw new Exception("can not delete access key for this type of object");
+                throw new Exception("Can not delete access key for this type of object");
             }
         }
         #endregion

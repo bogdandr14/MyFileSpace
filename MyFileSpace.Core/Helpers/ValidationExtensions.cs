@@ -3,26 +3,36 @@ using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Helpers;
+using System.Text.RegularExpressions;
 
 namespace MyFileSpace.Core.Helpers
 {
     internal static class ValidationExtensions
     {
         #region "Simple validators"
+        public static void ValidateNotLoggedIn(this Session session)
+        {
+            if (session.IsAuthenticated)
+            {
+                throw new Exception("Forbidden. You can not do this while logged in");
+            }
+        }
 
         public static void ValidateObjectType(this ObjectType objectType)
         {
             if (objectType != ObjectType.StoredFile && objectType != ObjectType.VirtualDirectory)
             {
-                throw new Exception("can not allow this type of object");
+                throw new Exception("Object type not allowed");
             }
         }
 
         public static void ValidatePasswordStrength(this string password)
         {
-            if (password == null)
+            Regex validateGuidRegex = new Regex("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
+
+            if (!validateGuidRegex.IsMatch(password))
             {
-                throw new Exception("password too weak");
+                throw new Exception("Password must have at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 digit and 1 special character");
             }
         }
 
@@ -30,7 +40,7 @@ namespace MyFileSpace.Core.Helpers
         {
             if (await userRepo.AnyAsync(new EmailSpec(email)))
             {
-                throw new Exception("email already exists");
+                throw new Exception("Email already exists");
             }
         }
 
@@ -46,7 +56,7 @@ namespace MyFileSpace.Core.Helpers
         {
             if (await accessKeyRepo.AnyAsync(new AccessKeySpec(objectId, objectType)))
             {
-                throw new Exception("access key already exists");
+                throw new Exception("An access key already exists for this object");
             }
         }
 
@@ -63,7 +73,7 @@ namespace MyFileSpace.Core.Helpers
             List<User> users = await userRepo.ListAsync(new ExistingUsersSpec(userIds));
             if (userIds.Count() != users.Count())
             {
-                throw new Exception("one or more users do not exist");
+                throw new Exception("One or more of the specified users do not exist");
             }
         }
         #endregion
@@ -73,7 +83,7 @@ namespace MyFileSpace.Core.Helpers
         {
             if (!await storedFileRepo.AnyAsync(new OwnedFilesSpec(ownerId, fileId, true)))
             {
-                throw new Exception("User does not have the specified file");
+                throw new Exception("You do not have the specified file!");
             }
         }
 
@@ -81,7 +91,7 @@ namespace MyFileSpace.Core.Helpers
         {
             if (!await virtualDirectoryRepo.AnyAsync(new OwnedDirectoriesSpec(ownerId, directoryId)))
             {
-                throw new Exception($"User does not have the specified directory!");
+                throw new Exception($"You do not have the specified directory!");
             }
         }
         #endregion
@@ -93,20 +103,12 @@ namespace MyFileSpace.Core.Helpers
 
             if (user == null)
             {
-                throw new Exception("user not found");
-            }
-
-            if (session.IsAuthenticated)
-            {
-                if (!user.Id.Equals(session.UserId))
-                {
-                    throw new Exception("Forbidden");
-                }
+                throw new Exception("User not found");
             }
 
             if (!CryptographyUtility.VerifyKey(passwordToValidate, user.Password, user.Salt))
             {
-                throw new Exception("incorrect email or password");
+                throw new Exception("Incorrect email or password");
             }
 
             return user;
@@ -133,7 +135,7 @@ namespace MyFileSpace.Core.Helpers
                 }
             }
 
-            throw new Exception("file not found");
+            throw new Exception("File not found");
         }
 
         public static async Task<VirtualDirectory> ValidateAndRetrieveDirectoryInfo(this IVirtualDirectoryRepository virtualDirectoryRepo, Session session, Guid directoryId, string? accessKey = null)
@@ -157,7 +159,7 @@ namespace MyFileSpace.Core.Helpers
                 }
             }
 
-            throw new Exception("directory not found");
+            throw new Exception("Directory not found");
         }
 
         public static async Task<List<UserDirectoryAccess>> ValidateAndRetrieveExistingUserDirectoryAccess(this IUserDirectoryAccessRepository userDirectoryAccessRepo, Guid directoryId, List<Guid> userIds, bool shouldExist)
@@ -165,12 +167,12 @@ namespace MyFileSpace.Core.Helpers
             List<UserDirectoryAccess> existingUserDirectoryAccess = await userDirectoryAccessRepo.ListAsync(new UserDirectoryAccessSpec(directoryId, userIds));
             if (shouldExist && existingUserDirectoryAccess.Count() != userIds.Count())
             {
-                throw new Exception("One or more users do not have permission to access the specified file");
+                throw new Exception("One or more users do not have permission to access the specified directory");
             }
 
             if (!shouldExist && existingUserDirectoryAccess.Any())
             {
-                throw new Exception("One or more users already have permission to access the file");
+                throw new Exception("One or more users already have permission to access the specified directory");
             }
 
             return existingUserDirectoryAccess;
@@ -186,7 +188,7 @@ namespace MyFileSpace.Core.Helpers
 
             if (!shouldExist && existingUserFileAccess.Any())
             {
-                throw new Exception("One or more users already have permission to access the file");
+                throw new Exception("One or more users already have permission to access the specified file");
             }
 
             return existingUserFileAccess;
@@ -197,7 +199,7 @@ namespace MyFileSpace.Core.Helpers
             User? user = await userRepo.GetByIdAsync(userId);
             if (user == null)
             {
-                throw new Exception("user not found");
+                throw new Exception("User not found");
             }
 
             return user;
@@ -205,13 +207,14 @@ namespace MyFileSpace.Core.Helpers
         #endregion
 
         #region "Owner validator and retriver"
-        public static async Task<AccessKey> ValidateAndRetrieveOwnAccessKey(this IAccessKeyRepository accessKeyRepo, Guid ownerId, Guid fileId, ObjectType objectType)
+        public static async Task<AccessKey> ValidateAndRetrieveOwnAccessKey(this IAccessKeyRepository accessKeyRepo, Guid ownerId, Guid objectId, ObjectType objectType)
         {
-            AccessKey? accessKey = await accessKeyRepo.SingleOrDefaultAsync(new AccessKeySpec(fileId, objectType, ownerId));
+            AccessKey? accessKey = await accessKeyRepo.SingleOrDefaultAsync(new AccessKeySpec(objectId, objectType, ownerId));
 
             if (accessKey == null)
             {
-                throw new Exception("access key does not exist");
+                string objectName = objectType == ObjectType.StoredFile ? "file" : "directory";
+                throw new Exception($"Access key does not exist for the specified {objectName}");
             }
 
             return accessKey;
@@ -232,7 +235,7 @@ namespace MyFileSpace.Core.Helpers
             StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId, true));
             if (storedFile == null)
             {
-                throw new Exception("File not found or deleted");
+                throw new Exception("File not found or in bin");
             }
 
             return storedFile;
@@ -254,7 +257,7 @@ namespace MyFileSpace.Core.Helpers
             VirtualDirectory? virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new OwnedDirectoriesSpec(ownerId, directoryId, true));
             if (virtualDirectory == null)
             {
-                throw new Exception("Directory not found or deleted");
+                throw new Exception("Directory not found or in bin");
             }
 
             return virtualDirectory;

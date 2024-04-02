@@ -71,7 +71,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns the <see cref="UserUpdateDTO"/> object for the updated user.
         /// </returns>
-        Task UpdateUser(Guid userId, UserUpdateDTO user);
+        Task UpdateUser(UserUpdateDTO user);
 
         /// <summary>
         /// Checks if the username is available to use.

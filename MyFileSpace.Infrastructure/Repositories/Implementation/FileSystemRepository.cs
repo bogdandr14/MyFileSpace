@@ -30,7 +30,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         {
             if (!RemoveFromFileSystem(fileName).Result)
             {
-                throw new Exception("File not found to update");
+                throw new Exception("File could not be found in the file system");
             }
 
             await AddInFileSystem(fileName, file);

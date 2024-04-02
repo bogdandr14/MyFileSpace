@@ -92,7 +92,7 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 if (virtualDirectory.ParentDirectoryId == null)
                 {
-                    throw new Exception("can not change root path");
+                    throw new Exception("Forbidden. Can not change root path");
                 }
 
                 await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(virtualDirectory.ParentDirectoryId.Value, directoryUpdate.Path);

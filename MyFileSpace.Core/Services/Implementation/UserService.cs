@@ -49,12 +49,14 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<string> Login(AuthDTO userLogin)
         {
+            _session.ValidateNotLoggedIn();
             User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, userLogin.Email, userLogin.Password);
             return JsonWebToken.GenerateToken(user);
         }
 
         public async Task<UserDetailsDTO> Register(AuthDTO userRegister)
         {
+            _session.ValidateNotLoggedIn();
             await _userRepository.ValidateEmail(userRegister.Email);
             userRegister.Password.ValidatePasswordStrength();
 
@@ -88,10 +90,10 @@ namespace MyFileSpace.Core.Services.Implementation
             await _userRepository.UpdateAsync(user);
         }
 
-        public async Task UpdateUser(Guid userId, UserUpdateDTO userToUpdate)
+        public async Task UpdateUser(UserUpdateDTO userToUpdate)
         {
             User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, userToUpdate.Email, userToUpdate.Password);
-            await ValidateTagNameUnique(user, userId, userToUpdate.TagName);
+            await ValidateTagNameUnique(user, userToUpdate.TagName);
 
             string oldTagName = user.TagName;
             user.TagName = userToUpdate.TagName;
@@ -124,11 +126,11 @@ namespace MyFileSpace.Core.Services.Implementation
             return user;
         }
 
-        private async Task ValidateTagNameUnique(User existingUser, Guid userToUpdateId, string newTagName)
+        private async Task ValidateTagNameUnique(User existingUser, string newTagName)
         {
-            if (!userToUpdateId.Equals(existingUser.Id) || !userToUpdateId.Equals(_session.UserId))
+            if (!existingUser.Equals(_session.UserId))
             {
-                throw new Exception("Forbidden, can not update someone else's info");
+                throw new Exception("Forbidden. Can not modify other users' data");
             }
 
             if (!newTagName.Equals(existingUser.TagName))
@@ -136,7 +138,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 User? user = await GetUserByTagNameCached(newTagName);
                 if (user != null)
                 {
-                    throw new Exception("tagName already exists");
+                    throw new Exception("Forbidden. TagName already exists");
                 }
             }
         }
