@@ -16,8 +16,9 @@ namespace MyFileSpace.Infrastructure.Persistence
             string connectionToUse = configurationManager.GetConfigValue(USE_CONNECTION) ?? DEFAULT_CONNECTION;
             string? connectionString = configurationManager.GetConnectionString(connectionToUse);
 
-            services.AddDbContext<MyFileSpaceDbContext>(options => options.UseSqlServer(connectionString,
-                x => x.MigrationsAssembly("MyFileSpace.Infrastructure.Migrations"))); // will be created in web project root
+            services.AddDbContext<MyFileSpaceDbContext>(options => options.UseSqlServer(connectionString
+                ,x => x.MigrationsAssembly("MyFileSpace.Infrastructure.Migrations")
+                )); // will be created in web project root
         }
 
         public static void SetDbInstance(this IServiceProvider serviceProvider)//to use in program main

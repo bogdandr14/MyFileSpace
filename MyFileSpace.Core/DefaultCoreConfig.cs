@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
+using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Services;
 using MyFileSpace.Core.Services.Implementation;
 
@@ -22,6 +24,9 @@ namespace MyFileSpace.Core
 
         public static void RegisterCommonDependencies(this IServiceCollection services)
         {
+            var mappingConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProfile()); });
+            IMapper mapper = mappingConfig.CreateMapper();
+            services.AddSingleton(mapper);
             services.AddScoped<IFileManagementService, FileManagementService>();
             services.AddScoped<IAccessKeyService, AccessKeyService>();
             services.AddScoped<IStoredFileService, StoredFileService>();
