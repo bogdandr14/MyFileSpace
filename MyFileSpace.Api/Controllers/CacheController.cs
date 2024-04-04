@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
+using MyFileSpace.Api.Filters;
 using MyFileSpace.Core.Services;
+using MyFileSpace.SharedKernel.Enums;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,7 +11,8 @@ namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MyFileSpaceAuthorize]
+    [MyFileSpaceAuthorize(RoleType.Admin)]
+    [CustomExceptionFilter]
     public class CacheController : ControllerBase
     {
         private readonly ICacheService _cacheService;
@@ -24,13 +27,6 @@ namespace MyFileSpace.Api.Controllers
         public async Task<IEnumerable<string>> Get()
         {
             return await _cacheService.GetAllKeys();
-        }
-
-        // GET api/<CacheController>/contains
-        [HttpGet("contains/{key}")]
-        public async Task<bool> IsCached(string key)
-        {
-            return await _cacheService.IsObjectCached(key);
         }
 
         // PUT api/<CacheController>/usage

@@ -35,12 +35,12 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.Property(u => u.LastPasswordChange)
-                .HasDefaultValue(DateTime.UtcNow)
+                .HasDefaultValue(DateTime.MinValue)
                 .ValueGeneratedOnUpdateSometimes()
                 .IsRequired();
 
             builder.Property(u => u.Salt)
-                    .HasMaxLength(50)
+                    .HasMaxLength(64)
                     .IsRequired();
         }
     }

@@ -30,12 +30,12 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.Property(sf => sf.CreatedAt)
-                .HasDefaultValue(DateTime.UtcNow)
+                .HasDefaultValue(DateTime.MinValue)
                 .ValueGeneratedOnAdd()
                 .IsRequired();
 
             builder.Property(sf => sf.ModifiedAt)
-                .HasDefaultValue(DateTime.UtcNow)
+                .HasDefaultValue(DateTime.MinValue)
                 .ValueGeneratedOnAddOrUpdate()
                 .IsRequired();
 
@@ -48,7 +48,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.HasOne(sf => sf.Directory)
                     .WithMany(sf => sf.FilesInDirectory)
                     .HasForeignKey(sf => sf.DirectorId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

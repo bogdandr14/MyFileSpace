@@ -36,7 +36,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.HasOne(vd => vd.ParentDirectory)
                     .WithMany(pd => pd.ChildDirectories)
                     .HasForeignKey(vd => vd.ParentDirectoryId)
-                    .OnDelete(DeleteBehavior.Cascade)
+                    .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired(false);
         }
     }

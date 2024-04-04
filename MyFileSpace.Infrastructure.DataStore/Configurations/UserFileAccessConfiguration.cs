@@ -22,7 +22,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.HasOne(ufa => ufa.AllowedUser)
                     .WithMany(u => u.AllowedFiles)
                     .HasForeignKey(ufa => ufa.AllowedUserId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasOne(ufa => ufa.File)
                     .WithMany(sf => sf.AllowedUsers)

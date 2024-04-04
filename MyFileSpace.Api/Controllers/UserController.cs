@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
+using MyFileSpace.Api.Filters;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
 
@@ -7,6 +8,7 @@ namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [CustomExceptionFilter]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -15,57 +17,55 @@ namespace MyFileSpace.Api.Controllers
             _userService = userService;
         }
 
-        [HttpGet("isAvailable/email/{email:string}")]
-        public async Task<ActionResult<bool>> CheckEmailAvailable(string email)
+        [HttpGet("isAvailable/email/{email}")]
+        public async Task<bool> CheckEmailAvailable(string email)
         {
             return await _userService.CheckEmailAvailable(email);
         }
 
-        [HttpGet("isAvailable/tagname/{tagName:string}")]
+        [HttpGet("isAvailable/tagname/{tagName}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult<bool>> CheckTagNameAvailable(string tagName)
+        public async Task<bool> CheckTagNameAvailable(string tagName)
         {
             return await _userService.CheckTagNameAvailable(tagName);
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<UserDetailsDTO>> Register(AuthDTO authDTO)
+        public async Task<UserDetailsDTO> Register(AuthDTO authDTO)
         {
             return await _userService.Register(authDTO);
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login(AuthDTO authDTO)
+        public async Task<string> Login(AuthDTO authDTO)
         {
             return await _userService.Login(authDTO);
         }
 
-        [HttpGet("tagname/{tagName:string}")]
-        public async Task<ActionResult<UserDetailsDTO>> GetUserByTagName(string tagName)
+        [HttpGet("tagname/{tagName}")]
+        public async Task<UserDetailsDTO> GetUserByTagName(string tagName)
         {
             return await _userService.GetUserByTagName(tagName);
         }
 
         [HttpGet("{userId:Guid}")]
-        public async Task<ActionResult<UserDetailsDTO>> GetUserById(Guid userId)
+        public async Task<UserDetailsDTO> GetUserById(Guid userId)
         {
             return await _userService.GetUserByIdAsync(userId);
         }
 
         [HttpPut]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> UpdateUser(UserUpdateDTO userUpdateDTO)
+        public async Task UpdateUser(UserUpdateDTO userUpdateDTO)
         {
             await _userService.UpdateUser(userUpdateDTO);
-            return Ok();
         }
 
         [HttpPut("changepassword")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> UpdateUserPassword(UpdatePasswordDTO passwordChangeDTO)
+        public async Task UpdateUserPassword(UpdatePasswordDTO passwordChangeDTO)
         {
             await _userService.UpdatePassword(passwordChangeDTO);
-            return Ok();
         }
     }
 }

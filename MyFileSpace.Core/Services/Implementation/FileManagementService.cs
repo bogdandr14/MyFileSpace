@@ -3,6 +3,7 @@ using MyFileSpace.Api.Extensions;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.DTOs;
+using MyFileSpace.SharedKernel.Exceptions;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
@@ -25,11 +26,11 @@ namespace MyFileSpace.Core.Services.Implementation
             return await _cacheRepository.GetAndSetAsync(CacheKeys.ALL_FILES, () => _fileDataRepository.GetAll().Select(x => x.OriginalName).ToList());
         }
 
-        public async Task<FileDTO> GetFileData(string fileName)
+        public async Task<FileDTO_old> GetFileData(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
-                throw new Exception("No filename given");
+                throw new InvalidException("No filename given");
             }
 
             return await _cacheRepository.GetAndSetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
@@ -37,17 +38,17 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<byte[]> GetFileByName(string fileName)
         {
-            FileDTO fileObject = await _cacheRepository.GetAndSetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
+            FileDTO_old fileObject = await _cacheRepository.GetAndSetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
             Func<byte[]> fileBytesFunct = () => _fileSystemRepository.ReadFromFileSystem(fileObject.StoredFileName()).GetAwaiter().GetResult();
             return await _cacheRepository.GetAndSetBytesAsync($"{CacheKeys.FILE_BYTES_PREFIX}{fileName}", fileBytesFunct, TimeSpan.FromMinutes(1));
         }
 
         public async Task AddFile(IFormFile file)
         {
-            FileDTO fileData = file.CreateNewFileDTO();
+            FileDTO_old fileData = file.CreateNewFileDTO();
             if (_fileDataRepository.GetByName(file.FileName) != null)
             {
-                throw new Exception($"File with name ${file.FileName} already exists!");
+                throw new InvalidException($"File with name ${file.FileName} already exists!");
             }
 
             await _fileSystemRepository.AddInFileSystem(fileData.StoredFileName(), file);
@@ -59,18 +60,18 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdateFile(Guid fileGuid, IFormFile file)
         {
-            FileDTO existingFile = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
+            FileDTO_old existingFile = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
 
-            FileDTO? fileWithSameName = _fileDataRepository.GetByName(file.FileName);
+            FileDTO_old? fileWithSameName = _fileDataRepository.GetByName(file.FileName);
             if (fileWithSameName != null && fileWithSameName.Guid.Equals(existingFile.Guid))
             {
-                throw new Exception($"Can not rename file ${existingFile.OriginalName} to ${file.FileName} as it already exists!");
+                throw new InvalidException($"Can not rename file ${existingFile.OriginalName} to ${file.FileName} as it already exists!");
             }
 
             await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_DATA_PREFIX}{existingFile.OriginalName}");
             await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_BYTES_PREFIX}{existingFile.OriginalName}");
 
-            FileDTO updatedFileData = file.UpdateExistingFileDTO(existingFile);
+            FileDTO_old updatedFileData = file.UpdateExistingFileDTO(existingFile);
             await _fileSystemRepository.UpdateInFileSystem(updatedFileData.StoredFileName(), file);
             _fileDataRepository.Update(updatedFileData);
 
@@ -80,11 +81,11 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task DeleteFile(Guid fileGuid)
         {
-            FileDTO fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
+            FileDTO_old fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
             bool isFileDeleted = await _fileSystemRepository.RemoveFromFileSystem(fileObject.StoredFileName());
             if (!isFileDeleted)
             {
-                throw new Exception("Could not delete file");
+                throw new InvalidException("Could not delete file");
             }
 
             _fileDataRepository.Delete(fileGuid);
@@ -95,13 +96,13 @@ namespace MyFileSpace.Core.Services.Implementation
         }
         #endregion
 
-        private FileDTO RetrieveValidFileData(Func<FileDTO?> func)
+        private FileDTO_old RetrieveValidFileData(Func<FileDTO_old?> func)
         {
-            FileDTO? fileObject = func.Invoke();
+            FileDTO_old? fileObject = func.Invoke();
 
             if (fileObject is null)
             {
-                throw new Exception("File not found");
+                throw new NotFoundException("File not found");
             }
 
             return fileObject;

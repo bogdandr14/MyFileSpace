@@ -1,19 +1,20 @@
 ﻿
 using Microsoft.AspNetCore.Http;
 using MyFileSpace.SharedKernel.DTOs;
+using MyFileSpace.SharedKernel.Exceptions;
 
 namespace MyFileSpace.Api.Extensions
 {
     public static class ExtensionMethods
     {
-        public static FileDTO CreateNewFileDTO(this IFormFile file)
+        public static FileDTO_old CreateNewFileDTO(this IFormFile file)
         {
             if (file is null)
             {
-                throw new ArgumentNullException("The file is null");
+                throw new InvalidException("The file is null");
             }
 
-            return new FileDTO
+            return new FileDTO_old
             {
                 Guid = Guid.NewGuid(),
                 ContentType = file.ContentType,
@@ -24,16 +25,16 @@ namespace MyFileSpace.Api.Extensions
             };
         }
 
-        public static FileDTO UpdateExistingFileDTO(this IFormFile file, FileDTO fileDto)
+        public static FileDTO_old UpdateExistingFileDTO(this IFormFile file, FileDTO_old fileDto)
         {
             if (!fileDto.OriginalName.Split('.').Last().Equals(file.FileName.Split('.').Last()))
             {
-                throw new Exception("Incorrect file format");
+                throw new InvalidException("Incorrect file format");
             }
 
             if (fileDto.ContentType != file.ContentType)
             {
-                throw new Exception($"Can not change content type of the file from ${fileDto.ContentType} to ${file.ContentType}");
+                throw new InvalidException($"Can not change content type of the file from ${fileDto.ContentType} to ${file.ContentType}");
             }
 
             fileDto.OriginalName = file.FileName;
@@ -43,7 +44,7 @@ namespace MyFileSpace.Api.Extensions
             return fileDto;
         }
 
-        public static string StoredFileName(this FileDTO file)
+        public static string StoredFileName(this FileDTO_old file)
         {
             //return $"{file.Guid}.{file.OriginalName.Split(".").Last()}";
             return $"{file.Guid}";

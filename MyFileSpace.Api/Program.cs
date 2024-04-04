@@ -1,5 +1,8 @@
 using Ardalis.ListStartupServices;
+using Microsoft.AspNetCore.Mvc.Filters;
 using MyFileSpace.Api;
+using MyFileSpace.Api.Filters;
+using MyFileSpace.Infrastructure.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,6 +57,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Migrate and seed Database
-//app.Services.SetDbInstance();
+app.Services.SetDbInstance();
 
 app.Run();

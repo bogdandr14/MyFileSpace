@@ -23,7 +23,7 @@ namespace MyFileSpace.Infrastructure.Models
         [Name("SizeInBytes")]
         public long SizeInBytes { get; set; }
 
-        public static CsvFileData Adapt(FileDTO file)
+        public static CsvFileData Adapt(FileDTO_old file)
         {
             return new CsvFileData()
             {
@@ -36,9 +36,9 @@ namespace MyFileSpace.Infrastructure.Models
             };
         }
 
-        public FileDTO ToBase()
+        public FileDTO_old ToBase()
         {
-            return new FileDTO()
+            return new FileDTO_old()
             {
                 Guid = Guid,
                 OriginalName = OriginalName,

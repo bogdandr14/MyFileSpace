@@ -41,6 +41,7 @@ namespace MyFileSpace.Infrastructure.Persistence
             admin.Role = RoleType.Admin;
             admin.TagName = "FileSpaceAdmin";
             admin.Password = CryptographyUtility.HashKey("%file*SpacE20-24", out string salt);
+            admin.Email = "myfileSpace@gmail.com";
             admin.Salt = salt;
             dbContext.User.Add(admin);
             dbContext.SaveChanges();

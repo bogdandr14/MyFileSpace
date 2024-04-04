@@ -27,7 +27,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.HasOne(da => da.Directory)
                     .WithMany(vd => vd.AllowedUsers)
                     .HasForeignKey(da => da.DirectoryId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

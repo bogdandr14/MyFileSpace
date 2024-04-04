@@ -4,6 +4,7 @@ using MyFileSpace.Core.Helpers;
 using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
+using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Helpers;
 
 namespace MyFileSpace.Core.Services.Implementation
@@ -101,7 +102,7 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             else
             {
-                throw new Exception("Can not delete access key for this type of object");
+                throw new InvalidException("Can not delete access key for this type of object");
             }
         }
         #endregion

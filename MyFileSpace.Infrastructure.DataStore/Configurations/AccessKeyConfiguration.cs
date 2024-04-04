@@ -18,7 +18,6 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.Property(ak => ak.ExpiresAt)
-                .HasDefaultValue(DateTime.UtcNow.AddDays(2))
                 .IsRequired();
         }
     }

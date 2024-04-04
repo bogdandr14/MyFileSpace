@@ -1,6 +1,6 @@
 ﻿namespace MyFileSpace.SharedKernel.DTOs
 {
-    public class FileDTO
+    public class FileDTO_old
     {
         public Guid Guid { get; set; }
 

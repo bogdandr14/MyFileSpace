@@ -1,5 +1,10 @@
 ﻿using Ardalis.ListStartupServices;
+using AutoMapper;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.OpenApi.Models;
+using MyFileSpace.Api.Filters;
+using MyFileSpace.Api.Providers;
 using MyFileSpace.Core;
 using MyFileSpace.Infrastructure;
 using MyFileSpace.Infrastructure.Persistence;
@@ -25,11 +30,20 @@ namespace MyFileSpace.Api
         public static void AddModulesConfiguration(this IServiceCollection services, IWebHostEnvironment environment, IConfiguration configuration)
         {
             bool isDevelopment = environment.EnvironmentName.Equals(Constants.DEVELOPMENT, StringComparison.OrdinalIgnoreCase);
-
             services.RegisterDbContext(configuration);
+            
             services.RegisterInfrastructureServices(isDevelopment);
             services.RegisterCoreServices(isDevelopment);
+            services.AddScoped<CustomExceptionFilterAttribute>();
+            services.AddSingleton<IHttpContextProvider, HttpContextProvider>();
             services.AddScoped<Session>();
+
+            services.Configure<FormOptions>(options =>
+            {
+                options.ValueLengthLimit = int.MaxValue;
+                options.MultipartBodyLengthLimit = int.MaxValue;
+                options.MemoryBufferThreshold = int.MaxValue;
+            });
         }
 
         public static void AddSwaggerConfiguration(this IServiceCollection serviceCollection)

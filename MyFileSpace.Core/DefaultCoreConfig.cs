@@ -34,6 +34,7 @@ namespace MyFileSpace.Core
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IVirtualDirectoryService, VirtualDirectoryService>();
             services.AddScoped<ICacheService, CacheService>();
+            services.AddScoped<IAuthService, JwtAuthorizationService>();
         }
 
         private static void RegisterDevelopmentOnlyDependencies(IServiceCollection builder)

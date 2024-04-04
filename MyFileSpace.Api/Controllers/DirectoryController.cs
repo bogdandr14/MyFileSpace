@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
+using MyFileSpace.Api.Filters;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
 
@@ -7,6 +8,7 @@ namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [CustomExceptionFilter]
     public class DirectoryController : ControllerBase
     {
         private readonly IVirtualDirectoryService _virtualDirectoryService;
@@ -23,124 +25,60 @@ namespace MyFileSpace.Api.Controllers
             return await _virtualDirectoryService.GetAllDirectoriesInfo();
         }
 
-        [HttpGet("info/{directoryId: Guid}")]
+        [HttpGet("info/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult<DirectoryDetailsDTO>> GetDirectoryInfo(Guid directoryId)
+        public async Task<DirectoryDetailsDTO> GetDirectoryInfoById(Guid directoryId)
         {
-            try
-            {
-                return Ok(await _virtualDirectoryService.GetDirectoryInfo(directoryId));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            return await _virtualDirectoryService.GetDirectoryInfo(directoryId);
         }
 
-        [HttpGet("info/{directoryId: Guid}/{accessKey}")]
-        public async Task<ActionResult<DirectoryDetailsDTO>> GetDirectoryInfo(Guid directoryId, string accessKey)
+        [HttpGet("info/{directoryId:Guid}/{accessKey}")]
+        public async Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string accessKey)
         {
-            try
-            {
-
-                return Ok(await _virtualDirectoryService.GetDirectoryInfo(directoryId, accessKey));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            return await _virtualDirectoryService.GetDirectoryInfo(directoryId, accessKey);
         }
 
         [HttpPost("{parentDirectoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
+        public async Task AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
         {
-            try
-            {
-                await _virtualDirectoryService.AddDirectory(directory, parentDirectoryId);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            await _virtualDirectoryService.AddDirectory(directory, parentDirectoryId);
         }
 
         [HttpPut("{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> UpdateDirectory(DirectoryUpdateDTO directory, Guid directoryId)
+        public async Task UpdateDirectory(DirectoryUpdateDTO directory, Guid directoryId)
         {
-            try
-            {
-                await _virtualDirectoryService.UpdateDirectory(directory, directoryId);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            await _virtualDirectoryService.UpdateDirectory(directory, directoryId);
         }
 
         [HttpPut("move/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> MoveDirectory(Guid directoryId, Guid newParentDirectoryId)
+        public async Task MoveDirectory(Guid directoryId, Guid newParentDirectoryId)
         {
-            try
-            {
-                await _virtualDirectoryService.MoveToDirectory(directoryId, newParentDirectoryId);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            await _virtualDirectoryService.MoveToDirectory(directoryId, newParentDirectoryId);
         }
 
         [HttpPut("restore/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> RestoreDirectory(Guid directoryId)
+        public async Task RestoreDirectory(Guid directoryId)
         {
-            try
-            {
-                await _virtualDirectoryService.RestoreDirectory(directoryId);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            await _virtualDirectoryService.RestoreDirectory(directoryId);
         }
 
         [HttpDelete("{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> MoveToBin(Guid directoryId)
+        public async Task MoveToBin(Guid directoryId)
         {
-            try
-            {
-                await _virtualDirectoryService.MoveDirectoryToBin(directoryId);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            await _virtualDirectoryService.MoveDirectoryToBin(directoryId);
         }
-
 
         [HttpDelete("permanent/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
 
-        public async Task<ActionResult> Delete(Guid directoryId)
+        public async Task Delete(Guid directoryId)
         {
-            try
-            {
-                await _virtualDirectoryService.DeleteDirectory(directoryId);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
+            await _virtualDirectoryService.DeleteDirectory(directoryId);
         }
     }
 }

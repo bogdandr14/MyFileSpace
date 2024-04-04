@@ -31,9 +31,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ExpiresAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2024, 4, 5, 14, 36, 10, 141, DateTimeKind.Utc).AddTicks(4824));
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Key")
                         .IsRequired()
@@ -136,7 +134,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2024, 4, 3, 14, 36, 10, 143, DateTimeKind.Utc).AddTicks(8235));
+                        .HasDefaultValue(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
                     b.Property<Guid>("DirectorId")
                         .HasColumnType("uniqueidentifier");
@@ -144,7 +142,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Property<DateTime>("ModifiedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2024, 4, 3, 14, 36, 10, 143, DateTimeKind.Utc).AddTicks(8553));
+                        .HasDefaultValue(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -185,7 +183,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Property<DateTime>("LastPasswordChange")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2024, 4, 3, 14, 36, 10, 144, DateTimeKind.Utc).AddTicks(4650));
+                        .HasDefaultValue(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -199,8 +197,8 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
 
                     b.Property<string>("Salt")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("TagName")
                         .IsRequired()
@@ -332,7 +330,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", "File")
                         .WithMany("Labels")
                         .HasForeignKey("FileId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.Label", "Label")
@@ -362,7 +360,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "Directory")
                         .WithMany("FilesInDirectory")
                         .HasForeignKey("DirectorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.User", "Owner")
@@ -387,7 +385,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "Directory")
                         .WithMany("AllowedUsers")
                         .HasForeignKey("DirectoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("AllowedUser");
@@ -400,7 +398,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.User", "AllowedUser")
                         .WithMany("AllowedFiles")
                         .HasForeignKey("AllowedUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", "File")
@@ -425,7 +423,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "ParentDirectory")
                         .WithMany("ChildDirectories")
                         .HasForeignKey("ParentDirectoryId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Owner");
 

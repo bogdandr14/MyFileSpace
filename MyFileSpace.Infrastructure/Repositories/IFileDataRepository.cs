@@ -4,11 +4,11 @@ namespace MyFileSpace.Infrastructure.Repositories
 {
     public interface IFileDataRepository
     {
-        public List<FileDTO> GetAll();
-        public FileDTO? GetByGuid(Guid fileGuid);
-        public FileDTO? GetByName(string fileName);
-        public void Add(FileDTO file);
-        public void Update(FileDTO updatedFile);
+        public List<FileDTO_old> GetAll();
+        public FileDTO_old? GetByGuid(Guid fileGuid);
+        public FileDTO_old? GetByName(string fileName);
+        public void Add(FileDTO_old file);
+        public void Update(FileDTO_old updatedFile);
         public void Delete(Guid fileGuid);
     }
 }

@@ -27,7 +27,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.HasOne(fl => fl.File)
                     .WithMany(sf => sf.Labels)
                     .HasForeignKey(fl => fl.FileId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

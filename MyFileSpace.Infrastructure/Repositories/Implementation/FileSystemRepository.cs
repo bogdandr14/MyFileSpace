@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Helpers;
 
 namespace MyFileSpace.Infrastructure.Repositories.Implementation
@@ -20,7 +21,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
 
             if (!File.Exists(fullPath))
             {
-                throw new FileNotFoundException("File could not be found");
+                throw new NotFoundException("File could not be found");
             }
 
             return await File.ReadAllBytesAsync(fullPath);
@@ -30,7 +31,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         {
             if (!RemoveFromFileSystem(fileName).Result)
             {
-                throw new Exception("File could not be found in the file system");
+                throw new NotFoundException("File could not be found in the file system");
             }
 
             await AddInFileSystem(fileName, file);

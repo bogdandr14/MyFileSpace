@@ -30,10 +30,9 @@ namespace MyFileSpace.Infrastructure.Persistence
                 try
                 {
                     var context = services.GetRequiredService<MyFileSpaceDbContext>();
+                    IEnumerable<string> enumerable = context.Database.GetPendingMigrations();
+                    context.Database.Migrate();
 
-                    //context.Database.Migrate();
-
-                    context.Database.EnsureCreated();
                     SeedData.CheckDbInitialized(services);
                 }
                 catch (Exception ex)

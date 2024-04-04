@@ -5,6 +5,7 @@ using MyFileSpace.Core.Specifications;
 using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
+using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Helpers;
 
 namespace MyFileSpace.Core.Services.Implementation
@@ -120,7 +121,7 @@ namespace MyFileSpace.Core.Services.Implementation
             User? user = await GetUserByTagNameCached(tagName);
             if (user == null)
             {
-                throw new Exception("User with tagname not found");
+                throw new NotFoundException("User with tagname not found");
             }
 
             return user;
@@ -130,7 +131,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             if (!existingUser.Equals(_session.UserId))
             {
-                throw new Exception("Forbidden. Can not modify other users' data");
+                throw new InvalidException("Can not modify other users' data");
             }
 
             if (!newTagName.Equals(existingUser.TagName))
@@ -138,7 +139,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 User? user = await GetUserByTagNameCached(newTagName);
                 if (user != null)
                 {
-                    throw new Exception("Forbidden. TagName already exists");
+                    throw new InvalidException("TagName already exists");
                 }
             }
         }
