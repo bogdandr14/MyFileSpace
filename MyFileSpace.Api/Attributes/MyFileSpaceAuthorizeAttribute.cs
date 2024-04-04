@@ -35,30 +35,23 @@ namespace MyFileSpace.Api.Attributes
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            try
+            InitializeProviders(context.HttpContext.RequestServices);
+
+            // validate required headers
+            _authorizationString = _httpContextProvider.GetValueFromRequestHeader(Constants.AUTH_HEADER);
+            if (_authorizationString == null)
             {
-                InitializeProviders(context.HttpContext.RequestServices);
-
-                // validate required headers
-                _authorizationString = _httpContextProvider.GetValueFromRequestHeader(Constants.AUTH_HEADER);
-                if (_authorizationString == null)
-                {
-                    throw new UnauthorizedException($"The ${Constants.AUTH_HEADER} is missing");
-                }
-
-                // validate user authentication
-                Tuple<Guid, RoleType> test = _authService.ValidateUserAuthorization(_authorizationString, rolesAllowed);
-
-                // set session info
-                Session session = (Session)context.HttpContext.RequestServices.GetService(typeof(Session))!;
-                session.IsAuthenticated = true;
-                session.UserId = test.Item1;
-                session.Role = test.Item2;
+                throw new UnauthorizedException($"The ${Constants.AUTH_HEADER} is missing");
             }
-            catch (Exception ex)
-            {
-                context.Result = ex.HandleResult();
-            }
+
+            // validate user authentication
+            Tuple<Guid, RoleType> test = _authService.ValidateUserAuthorization(_authorizationString, rolesAllowed);
+
+            // set session info
+            Session session = (Session)context.HttpContext.RequestServices.GetService(typeof(Session))!;
+            session.IsAuthenticated = true;
+            session.UserId = test.Item1;
+            session.Role = test.Item2;
         }
 
         private void InitializeProviders(IServiceProvider serviceProvider)

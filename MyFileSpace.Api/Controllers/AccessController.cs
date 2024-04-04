@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
-using MyFileSpace.Api.Filters;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
 using MyFileSpace.SharedKernel.Enums;
@@ -10,7 +9,6 @@ namespace MyFileSpace.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [MyFileSpaceAuthorize]
-    [CustomExceptionFilter]
     public class AccessController : ControllerBase
     {
         private readonly IAccessKeyService _accessKeyService;

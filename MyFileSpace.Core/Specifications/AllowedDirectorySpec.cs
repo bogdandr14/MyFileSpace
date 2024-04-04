@@ -27,7 +27,7 @@ namespace MyFileSpace.Core.Specifications
                 .Include(x => x.FilesInDirectory)
                 .Include(x => x.ChildDirectories)
                 .Include(x => x.AllowedUsers).ThenInclude(x => x.AllowedUser)
-                .Include(x => x.DirectoryAccessKey).ThenInclude(x => x.AccessKey);
+                .Include(x => x.DirectoryAccessKey).ThenInclude(x => x!.AccessKey);
         }
 
         public AllowedDirectorySpec(Guid directoryId, string accessKey)

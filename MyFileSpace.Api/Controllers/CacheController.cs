@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
-using MyFileSpace.Api.Filters;
 using MyFileSpace.Core.Services;
 using MyFileSpace.SharedKernel.Enums;
 
@@ -12,7 +10,6 @@ namespace MyFileSpace.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [MyFileSpaceAuthorize(RoleType.Admin)]
-    [CustomExceptionFilter]
     public class CacheController : ControllerBase
     {
         private readonly ICacheService _cacheService;

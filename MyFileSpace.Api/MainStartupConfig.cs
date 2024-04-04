@@ -1,9 +1,7 @@
 ﻿using Ardalis.ListStartupServices;
-using AutoMapper;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.OpenApi.Models;
-using MyFileSpace.Api.Filters;
+using MyFileSpace.Api.Middlewares;
 using MyFileSpace.Api.Providers;
 using MyFileSpace.Core;
 using MyFileSpace.Infrastructure;
@@ -31,10 +29,10 @@ namespace MyFileSpace.Api
         {
             bool isDevelopment = environment.EnvironmentName.Equals(Constants.DEVELOPMENT, StringComparison.OrdinalIgnoreCase);
             services.RegisterDbContext(configuration);
-            
+
             services.RegisterInfrastructureServices(isDevelopment);
             services.RegisterCoreServices(isDevelopment);
-            services.AddScoped<CustomExceptionFilterAttribute>();
+            services.AddTransient<CustomExceptionHandlerMiddleware>();
             services.AddSingleton<IHttpContextProvider, HttpContextProvider>();
             services.AddScoped<Session>();
 

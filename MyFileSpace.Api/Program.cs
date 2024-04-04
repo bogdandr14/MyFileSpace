@@ -1,7 +1,6 @@
 using Ardalis.ListStartupServices;
-using Microsoft.AspNetCore.Mvc.Filters;
 using MyFileSpace.Api;
-using MyFileSpace.Api.Filters;
+using MyFileSpace.Api.Middlewares;
 using MyFileSpace.Infrastructure.Persistence;
 using Serilog;
 
@@ -49,6 +48,8 @@ app.UseStaticFiles();
 app.UseSwagger();
 
 app.UseSwaggerUIConfiguration();
+
+app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
 app.UseAuthentication();
 

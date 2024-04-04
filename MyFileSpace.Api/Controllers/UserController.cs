@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
-using MyFileSpace.Api.Filters;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
 
@@ -8,7 +7,6 @@ namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [CustomExceptionFilter]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;

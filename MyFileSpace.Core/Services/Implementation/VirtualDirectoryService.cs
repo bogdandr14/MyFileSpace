@@ -75,7 +75,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
         {
-            await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(parentDirectoryId, directory.Path);
+            await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(parentDirectoryId, directory.Path!);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, parentDirectoryId);
             VirtualDirectory virtualDirectory = _mapper.Map<VirtualDirectory>(directory);
             virtualDirectory.OwnerId = _session.UserId;
