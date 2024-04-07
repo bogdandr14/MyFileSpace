@@ -24,14 +24,8 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("info/{directoryId:Guid}")]
-        [MyFileSpaceAuthorize]
-        public async Task<DirectoryDetailsDTO> GetDirectoryInfoById(Guid directoryId)
-        {
-            return await _virtualDirectoryService.GetDirectoryInfo(directoryId);
-        }
-
-        [HttpGet("info/{directoryId:Guid}/{accessKey}")]
-        public async Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string accessKey)
+        [MyFileSpaceAuthorize(true)]
+        public async Task<DirectoryDetailsDTO> GetDirectoryInfoById(Guid directoryId, [FromQuery] string? accessKey)
         {
             return await _virtualDirectoryService.GetDirectoryInfo(directoryId, accessKey);
         }

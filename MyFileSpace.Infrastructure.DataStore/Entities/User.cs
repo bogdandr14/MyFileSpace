@@ -18,7 +18,6 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public virtual ICollection<StoredFile> Files { get; set; }
         public virtual ICollection<UserDirectoryAccess> AllowedDirectories { get; set; }
         public virtual ICollection<UserFileAccess> AllowedFiles { get; set; }
-        public virtual ICollection<Label> Labels { get; set; }
         #endregion
     }
 }

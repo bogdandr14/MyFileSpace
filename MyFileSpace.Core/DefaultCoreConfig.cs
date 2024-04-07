@@ -27,7 +27,6 @@ namespace MyFileSpace.Core
             var mappingConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProfile()); });
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
-            services.AddScoped<IFileManagementService, FileManagementService>();
             services.AddScoped<IAccessKeyService, AccessKeyService>();
             services.AddScoped<IStoredFileService, StoredFileService>();
             services.AddScoped<IUserAccessService, UserAccessService>();

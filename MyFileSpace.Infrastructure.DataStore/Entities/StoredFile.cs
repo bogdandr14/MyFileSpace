@@ -18,7 +18,6 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         #region "Navigation properties"
         public virtual User Owner { get; set; }
         public virtual VirtualDirectory Directory { get; set; }
-        public virtual ICollection<FileLabel> Labels { get; set; }
         public virtual ICollection<UserFileAccess> AllowedUsers { get; set; }
         public virtual FileAccessKey? FileAccessKey { get; set; }
         #endregion

@@ -19,46 +19,39 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpGet]
         [MyFileSpaceAuthorize]
-        public async Task<List<OwnFileDetailsDTO>> GetDirectories([FromQuery] bool? deletedFiles)
+        public async Task<List<OwnFileDetailsDTO>> GetFiles([FromQuery] bool? deletedFiles)
         {
             return await _storedFileService.GetAllFilesInfo(deletedFiles);
         }
 
-        [HttpGet("info/{fileId:Guid}")]
-        [MyFileSpaceAuthorize]
-        public async Task<FileDetailsDTO> GetFileInfo(Guid fileId)
-        {
-            return await _storedFileService.GetFileInfo(fileId);
-        }
-
-        [HttpGet("info/{fileId:Guid}/{accessKey}")]
-        public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string accessKey)
+        [HttpGet("{fileId:Guid}")]
+        [MyFileSpaceAuthorize(true)]
+        public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, [FromQuery] string? accessKey)
         {
             return await _storedFileService.GetFileInfo(fileId, accessKey);
         }
 
         [MyFileSpaceAuthorize]
-        [HttpPost("{directoryId:Guid}")]
+        [HttpPost("upload/{directoryId:Guid}")]
         public async Task<FileDTO> AddFile([FileValidation(4096)] IFormFile uploadedFile, Guid directoryId)
         {
             return await _storedFileService.AddFile(uploadedFile, directoryId);
         }
 
-        [HttpPut("{fileId:Guid}")]
+        [HttpPut("upload/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
         public async Task<FileDTO> UpdateFile([FileValidation(4096)] IFormFile uploadedFile, Guid fileId)
         {
             return await _storedFileService.UpdateFile(uploadedFile, fileId);
         }
 
-        [HttpPut("info/{fileId:Guid}")]
+        [HttpPut("{fileId:Guid}")]
         [MyFileSpaceAuthorize]
         public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdateDTO, Guid fileId)
         {
             return await _storedFileService.UpdateFileInfo(fileUpdateDTO, fileId);
         }
 
-        // GET api/<FileController>/download/5
         [HttpGet("download/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
         public async Task<ActionResult> DownloadFile(Guid fileId, [FromQuery] string accessKey = null)

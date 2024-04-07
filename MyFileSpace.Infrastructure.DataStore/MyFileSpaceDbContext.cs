@@ -17,8 +17,6 @@ namespace MyFileSpace.Infrastructure.Persistence
         public DbSet<AccessKey> AccessKey => Set<AccessKey>();
         public DbSet<DirectoryAccessKey> DirectoryAccessKey => Set<DirectoryAccessKey>();
         public DbSet<FileAccessKey> FileAccessKey => Set<FileAccessKey>();
-        public DbSet<FileLabel> FileLabel => Set<FileLabel>();
-        public DbSet<Label> Label => Set<Label>();
         public DbSet<StoredFile> StoredFile => Set<StoredFile>();
         public DbSet<User> User => Set<User>();
         public DbSet<UserDirectoryAccess> UserDirectoryAccess => Set<UserDirectoryAccess>();
