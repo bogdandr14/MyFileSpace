@@ -63,8 +63,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             // validates the user has access to the file
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
-
-            return await _fileSystemRepository.ReadDecryptedFileFromFileSystem(StoredFilePath(storedFile));
+            return await _fileSystemRepository.ReadFileFromFileSystem(StoredFilePath(storedFile));
         }
 
         public async Task<FileDTO> AddFile(IFormFile file, Guid directoryId)
@@ -81,7 +80,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 SizeInBytes = file.Length,
             };
             StoredFile storedFile = await _storedFileRepository.AddAsync(fileToStore);
-            await _fileSystemRepository.AddEncryptedFileInFileSystem(StoredFilePath(storedFile), file);
+            await _fileSystemRepository.AddFileInFileSystem(StoredFilePath(storedFile), file);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
 
             return _mapper.Map<FileDTO>(storedFile);

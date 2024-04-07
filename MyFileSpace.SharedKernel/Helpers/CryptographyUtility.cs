@@ -48,63 +48,52 @@ namespace MyFileSpace.SharedKernel.Helpers
 
         public static async Task<string> EncryptAsync(string clearText, string passphrase)
         {
-            byte[] encryptedBytes = (await EncryptAsync(Encoding.Unicode.GetBytes(clearText), passphrase));
-            return Encoding.Unicode.GetString(encryptedBytes);
+            using MemoryStream unencryptedInput = new(Convert.FromHexString(clearText));
+            return Convert.ToHexString(await EncryptAsync(unencryptedInput, passphrase));
+        }
+
+        public static async Task<byte[]> EncryptAsync(Stream inputDecryptedStream, string passphrase)
+        {
+            using MemoryStream encryptedOutput = new();
+            await EncryptAsync(inputDecryptedStream, passphrase, encryptedOutput);
+            return encryptedOutput.ToArray();
+        }
+
+        public static async Task EncryptAsync(Stream inputDecryptedStream, string passphrase, Stream outputStream)
+        {
+            using Aes aes = CreateAes(passphrase);
+            using CryptoStream cryptoStream = new CryptoStream(inputDecryptedStream, aes.CreateEncryptor(), CryptoStreamMode.Read);
+            await cryptoStream.CopyToAsync(outputStream);
         }
 
         public static async Task<string> DecryptAsync(string encryptedText, string passphrase)
         {
-            byte[] decryptedBytes = (await DecryptAsync(Encoding.Unicode.GetBytes(encryptedText), passphrase));
-            return Encoding.Unicode.GetString(decryptedBytes);
+            MemoryStream encryptedInput = new MemoryStream(Convert.FromHexString(encryptedText));
+            return Convert.ToHexString(await DecryptAsync(encryptedInput, passphrase));
         }
 
-        public static async Task<byte[]> EncryptAsync(byte[] unencryptedBytes, string passphrase)
+        public static async Task<byte[]> DecryptAsync(Stream inputEncryptedStream, string passphrase)
         {
-            using MemoryStream output = new();
-            await EncryptAsync(output, unencryptedBytes, passphrase);
-            return output.ToArray();
+            using MemoryStream decryptedOutput = new();
+            await DecryptAsync(inputEncryptedStream, passphrase, decryptedOutput);
+            return decryptedOutput.ToArray();
         }
 
-        public static async Task<byte[]> EncryptAsyncStream(byte[] unencryptedBytes, string passphrase)
+        public static async Task DecryptAsync(Stream inputEncryptedStream, string passphrase, Stream outputStream)
         {
-            using MemoryStream output = new();
-
-            await EncryptAsync(output, unencryptedBytes, passphrase);
-            return output.ToArray();
+            using Aes aes = CreateAes(passphrase);
+            using CryptoStream cryptoStream = new CryptoStream(inputEncryptedStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            await cryptoStream.CopyToAsync(outputStream);
         }
 
-        public static async Task EncryptAsync(Stream outputStream, byte[] unencryptedBytes, string passphrase)
+        #region "Helper methods"
+        private static Aes CreateAes(string passphrase)
         {
-            using CryptoStream cryptoStream = GetWriteCrytoStream(outputStream, passphrase);
-            await cryptoStream.WriteAsync(unencryptedBytes);
-            await cryptoStream.FlushFinalBlockAsync();
-        }
-
-        public static async Task<byte[]> DecryptAsync(byte[] encryptedBytes, string passphrase)
-        {
-            MemoryStream inputStream = new MemoryStream(encryptedBytes);
-            using CryptoStream cryptoStream = GetReadCrytoStream(inputStream, passphrase);
-            using MemoryStream output = new();
-            await cryptoStream.CopyToAsync(output);
-            return output.ToArray();
-        }
-
-        public static CryptoStream GetWriteCrytoStream(Stream stream, string passphrase)
-        {
-            return CreateCryptoStream(stream, CryptoStreamMode.Write, passphrase);
-        }
-
-        public static CryptoStream GetReadCrytoStream(Stream stream, string passphrase)
-        {
-            return CreateCryptoStream(stream, CryptoStreamMode.Read, passphrase);
-        }
-
-        private static CryptoStream CreateCryptoStream(Stream stream, CryptoStreamMode cryptoStreamMode, string passphrase)
-        {
-            using Aes aes = Aes.Create();
+            Aes aes = Aes.Create();
             aes.Key = HashKeyWithSalt(passphrase, Array.Empty<byte>(), 32);
             aes.IV = AES_IV;
-            return new CryptoStream(stream, aes.CreateEncryptor(), cryptoStreamMode);
+            return aes;
         }
+        #endregion
     }
 }

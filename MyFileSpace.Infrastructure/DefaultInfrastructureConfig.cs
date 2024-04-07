@@ -23,7 +23,7 @@ namespace MyFileSpace.Infrastructure
         private static void RegisterCommonDependencies(IServiceCollection services)
         {
             services.AddSingleton<ICacheRepository, CacheRepository>();
-            services.AddScoped<IFileSystemRepository, FileSystemRepository>();
+            services.AddSingleton<IFileSystemRepository, FileSystemRepository>();
             services.AddScoped<IAccessKeyRepository, AccessKeyRepository>();
             services.AddScoped<IDirectoryAccessKeyRepository, DirectoryAccessKeyRepository>();
             services.AddScoped<IFileAccessKeyRepository, FileAccessKeyRepository>();

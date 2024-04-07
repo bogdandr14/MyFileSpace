@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MyFileSpace.Infrastructure.DataStore\MyFileSpace.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\MyFileSpace.Infrastructure.Persistence\MyFileSpace.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

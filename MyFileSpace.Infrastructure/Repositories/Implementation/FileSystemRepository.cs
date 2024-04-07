@@ -8,11 +8,12 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
     internal class FileSystemRepository : IFileSystemRepository
     {
         private readonly string _fileDirectoryPath;
-        private readonly string CRYPTO_PASSPHRASE = "a";
+        private readonly string _fileEncryptionKey;
 
         public FileSystemRepository(IConfiguration configuration)
         {
             _fileDirectoryPath = configuration.GetConfigValue("FilesDirectoryPath");
+            _fileEncryptionKey = configuration.GetConfigValue("FileEncryptionKey");
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
@@ -25,23 +26,10 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
                 throw new NotFoundException("File could not be found");
             }
 
-            return await File.ReadAllBytesAsync(fullPath);
-        }
-
-        public async Task<byte[]> ReadDecryptedFileFromFileSystem(string fileName)
-        {
-            string fullPath = GetFullPath(fileName);
-
-            if (!File.Exists(fullPath))
+            using (FileStream fileStream = File.OpenRead(fullPath))
             {
-                throw new NotFoundException("File could not be found");
+                return await CryptographyUtility.DecryptAsync(fileStream, _fileEncryptionKey);
             }
-
-            using FileStream fileStream = File.OpenRead(fullPath);
-            var encryptedBytes = GetBytesFromStream(fileStream);
-            //var decryptedBytes = await CryptographyUtility.DecryptAsync(encryptedBytes, CRYPTO_PASSPHRASE);
-            //return decryptedBytes;
-            return encryptedBytes;
         }
 
         public async Task UpdateFileInFileSystem(string fileName, IFormFile file)
@@ -70,20 +58,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         {
             using (FileStream fileStream = File.Create(GetFullPath(fileName)))
             {
-                fileStream.Seek(0, SeekOrigin.Begin);
-                await file.OpenReadStream().CopyToAsync(fileStream);
-            }
-        }
-
-        public async Task AddEncryptedFileInFileSystem(string fileName, IFormFile file)
-        {
-            using (FileStream fileStream = File.Create(GetFullPath(fileName)))
-            {
-                var unencryptedBytes = GetBytesFromStream(file.OpenReadStream());
-                //byte[] encryptedBytes = await CryptographyUtility.EncryptAsync(unencryptedBytes, CRYPTO_PASSPHRASE);
-                fileStream.Seek(0, SeekOrigin.Begin);
-                //fileStream.Write(encryptedBytes);
-                fileStream.Write(unencryptedBytes);
+                await CryptographyUtility.EncryptAsync(file.OpenReadStream(), _fileEncryptionKey, fileStream);
             }
         }
 
@@ -96,14 +71,6 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         private string GetFullPath(string fileName)
         {
             return Path.Combine(_fileDirectoryPath, fileName);
-        }
-
-        private byte[] GetBytesFromStream(Stream stream)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-            var bytes = new byte[stream.Length];
-            stream.Read(bytes, 0, bytes.Length);
-            return bytes;
         }
     }
 }
