@@ -13,7 +13,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public AccessType AccessLevel { get; set; }
         public long SizeInBytes { get; set; }
 
-        public bool State { get; set; }
+        public bool IsDeleted { get; set; }
 
         #region "Navigation properties"
         public virtual User Owner { get; set; }

@@ -18,17 +18,22 @@ namespace MyFileSpace.Core.Helpers
         private void ConfigureMappings()
         {
             CreateMap<User, UserDetailsDTO>()
+                .ForMember(x => x.RoleType, y => y.MapFrom(z => z.Role))
                 .ReverseMap();
 
+            CreateMap<StoredFile, FileDTO>();
+
             CreateMap<StoredFile, FileDetailsDTO>()
-                .ForMember(x => x.Path, y => y.MapFrom(z => RecursivePathBuilder(z.Directory)));
+                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath));
+
+            CreateMap<StoredFile, OwnFileDetailsDTO>()
+                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath));
 
             CreateMap<VirtualDirectory, DirectoryDTO>()
-                .ForMember(x => x.FullPath, y => y.MapFrom(z => RecursivePathBuilder(z)));
+                .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
 
             CreateMap<VirtualDirectory, DirectoryDetailsDTO>()
-                .ForMember(x => x.FullPath, y => y.MapFrom(z => RecursivePathBuilder(z)))
-                .ForMember(x => x.FullPath, y => y.MapFrom(z => z.Owner.TagName));
+                .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
 
             CreateMap<DirectoryUpdateDTO, VirtualDirectory>()
                 .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Path));

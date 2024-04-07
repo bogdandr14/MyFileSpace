@@ -11,11 +11,11 @@ namespace MyFileSpace.Api.Attributes
     public class MyFileSpaceAuthorizeAttribute : Attribute, IAuthorizationFilter
     {
         private readonly IEnumerable<RoleType> rolesAllowed;
+        private readonly bool allowAnonymous;
         private bool _providersInitialized = false;
         private IHttpContextProvider _httpContextProvider;
         private IAuthService _authService;
         private string _authorizationString;
-
         public MyFileSpaceAuthorizeAttribute()
         {
             rolesAllowed = new List<RoleType>
@@ -23,6 +23,7 @@ namespace MyFileSpace.Api.Attributes
                 RoleType.Admin,
                 RoleType.Customer
             };
+            allowAnonymous = false;
         }
 
         public MyFileSpaceAuthorizeAttribute(RoleType role)
@@ -31,7 +32,13 @@ namespace MyFileSpace.Api.Attributes
             {
                 role
             };
+            allowAnonymous = false;
         }
+        public MyFileSpaceAuthorizeAttribute(bool allowAnonymous)
+        {
+            this.allowAnonymous = allowAnonymous;
+        }
+
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
@@ -41,6 +48,11 @@ namespace MyFileSpace.Api.Attributes
             _authorizationString = _httpContextProvider.GetValueFromRequestHeader(Constants.AUTH_HEADER);
             if (_authorizationString == null)
             {
+                if (allowAnonymous)
+                {
+                    return;
+                }
+
                 throw new UnauthorizedException($"The ${Constants.AUTH_HEADER} is missing");
             }
 

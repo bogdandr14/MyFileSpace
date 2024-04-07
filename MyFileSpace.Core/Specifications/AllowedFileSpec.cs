@@ -10,7 +10,7 @@ namespace MyFileSpace.Core.Specifications
         {
             Query.Where(f => 
                 f.Id == fileId
-                && f.State == true
+                && f.IsDeleted == false
                 && (f.OwnerId == userId
                     || f.AccessLevel == AccessType.Public
                     || (f.AccessLevel == AccessType.Restricted 
@@ -26,7 +26,7 @@ namespace MyFileSpace.Core.Specifications
 
         public AllowedFileSpec(Guid fileId, string accessKey)
         {
-            Query.Where(f => f.Id == fileId && f.AccessLevel != AccessType.Private && f.State == true
+            Query.Where(f => f.Id == fileId && f.AccessLevel != AccessType.Private && f.IsDeleted == false
                 && ((f.FileAccessKey != null && f.FileAccessKey.AccessKey.Key == accessKey)
                     || (f.Directory.DirectoryAccessKey != null && f.Directory.DirectoryAccessKey.AccessKey.Key == accessKey 
                         && f.Directory.AccessLevel != AccessType.Private))

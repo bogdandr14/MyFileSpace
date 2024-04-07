@@ -39,6 +39,12 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task ValidateEmail(this IUserRepository userRepo, string email)
         {
+            Regex validateEmailRegex = new Regex("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+
+            if (!validateEmailRegex.IsMatch(email))
+            {
+                throw new InvalidException("The email does not have a valid format");
+            }
             if (await userRepo.AnyAsync(new EmailSpec(email)))
             {
                 throw new InvalidException("Email already exists");
@@ -82,7 +88,7 @@ namespace MyFileSpace.Core.Helpers
         #region "Owner validators"
         public static async Task ValidateOwnActiveFile(this IStoredFileRepository storedFileRepo, Guid ownerId, Guid fileId)
         {
-            if (!await storedFileRepo.AnyAsync(new OwnedFilesSpec(ownerId, fileId, true)))
+            if (!await storedFileRepo.AnyAsync(new OwnedFilesSpec(ownerId, fileId)))
             {
                 throw new NotFoundException("You do not have the specified file!");
             }
@@ -98,7 +104,7 @@ namespace MyFileSpace.Core.Helpers
         #endregion
 
         #region "Validator and retriver"
-        public static async Task<User> ValidateCredentialsAndRetrieveUser(this IUserRepository userRepo, Session session, string email, string passwordToValidate)
+        public static async Task<User> ValidateCredentialsAndRetrieveUser(this IUserRepository userRepo, string email, string passwordToValidate)
         {
             User? user = await userRepo.FirstOrDefaultAsync(new EmailSpec(email));
 
@@ -163,6 +169,18 @@ namespace MyFileSpace.Core.Helpers
             throw new NotFoundException("Directory not found");
         }
 
+        public static async Task<VirtualDirectory> ValidateAndRetrieveRootDirectoryInfo(this IVirtualDirectoryRepository virtualDirectoryRepo, Guid ownerId)
+        {
+            VirtualDirectory? virtualDirectory;
+            virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new OwnedDirectoriesSpec(ownerId, true));
+            if (virtualDirectory != null)
+            {
+                return virtualDirectory;
+            }
+
+            throw new NotFoundException("Root directory not found");
+        }
+
         public static async Task<List<UserDirectoryAccess>> ValidateAndRetrieveExistingUserDirectoryAccess(this IUserDirectoryAccessRepository userDirectoryAccessRepo, Guid directoryId, List<Guid> userIds, bool shouldExist)
         {
             List<UserDirectoryAccess> existingUserDirectoryAccess = await userDirectoryAccessRepo.ListAsync(new UserDirectoryAccessSpec(directoryId, userIds));
@@ -223,7 +241,7 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<StoredFile> ValidateAndRetrieveOwnDeletedFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId)
         {
-            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId, false));
+            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId, true));
             if (storedFile == null)
             {
                 throw new NotFoundException("File not in bin or already deleted");
@@ -233,7 +251,7 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<StoredFile> ValidateAndRetrieveOwnActiveFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId)
         {
-            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId, true));
+            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId));
             if (storedFile == null)
             {
                 throw new NotFoundException("File not found or in bin");
@@ -244,7 +262,7 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<VirtualDirectory> ValidateAndRetrieveOwnDeletedDirectoryInfo(this IVirtualDirectoryRepository virtualDirectoryRepo, Guid ownerId, Guid directoryId)
         {
-            VirtualDirectory? virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new OwnedDirectoriesSpec(ownerId, directoryId, false));
+            VirtualDirectory? virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new OwnedDirectoriesSpec(ownerId, directoryId, true));
             if (virtualDirectory == null)
             {
                 throw new NotFoundException("Directory not in bin or already deleted");
@@ -255,7 +273,7 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<VirtualDirectory> ValidateAndRetrieveOwnActiveDirectoryInfo(this IVirtualDirectoryRepository virtualDirectoryRepo, Guid ownerId, Guid directoryId)
         {
-            VirtualDirectory? virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new OwnedDirectoriesSpec(ownerId, directoryId, true));
+            VirtualDirectory? virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new OwnedDirectoriesSpec(ownerId, directoryId, false));
             if (virtualDirectory == null)
             {
                 throw new NotFoundException("Directory not found or in bin");

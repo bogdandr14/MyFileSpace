@@ -38,16 +38,16 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpPost("{parentDirectoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
+        public async Task<DirectoryDTO> AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
         {
-            await _virtualDirectoryService.AddDirectory(directory, parentDirectoryId);
+            return await _virtualDirectoryService.AddDirectory(directory, parentDirectoryId);
         }
 
         [HttpPut("{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task UpdateDirectory(DirectoryUpdateDTO directory, Guid directoryId)
+        public async Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directory, Guid directoryId)
         {
-            await _virtualDirectoryService.UpdateDirectory(directory, directoryId);
+            return await _virtualDirectoryService.UpdateDirectory(directory, directoryId);
         }
 
         [HttpPut("move/{directoryId:Guid}")]

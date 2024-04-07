@@ -5,5 +5,6 @@
         internal const string ALL_FILES = "STORED_FILES";
         internal const string FILE_DATA_PREFIX = "FILE_DATA_";
         internal const string FILE_BYTES_PREFIX = "FILE_BYTES_";
+        internal const string ROOT_DIRECTORY = "$USER_ROOT";
     }
 }

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MyFileSpace.Core.DTOs;
-using MyFileSpace.Infrastructure.Persistence.Entities;
-using MyFileSpace.Infrastructure.Repositories;
 
 namespace MyFileSpace.Core.Services
 {
@@ -13,7 +11,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a list of file details.
         /// </returns>
-        Task<List<FileDetailsDTO>> GetAllFilesInfo();
+        Task<List<OwnFileDetailsDTO>> GetAllFilesInfo(bool? deletedFiles);
 
         /// <summary>
         /// Retrieves the file information.
@@ -42,20 +40,20 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved in the local system.</param>
         /// <param name="directoryId"> The directory where the file should be saved </param>
-        Task AddFile(IFormFile file, Guid directoryId);
+        Task<FileDTO> AddFile(IFormFile file, Guid directoryId);
 
         /// <summary>
         /// Updates a file in the local file system.
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved in the local system.</param>
-        Task UpdateFile(IFormFile file, Guid fileId);
+        Task<FileDTO> UpdateFile(IFormFile file, Guid fileId);
 
         /// <summary>
         /// Updates a file innformation.
         /// </summary>
         /// <param name="fileUpdate"> All the information for the file that must be saved in the local system.</param>
         /// <param name="fileUpdate"> The id of the file that needs to be updated.</param>
-        Task UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId);
+        Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId);
 
         /// <summary>
         /// Move a file to a specific directory, keeping it in the local file system.
@@ -63,7 +61,7 @@ namespace MyFileSpace.Core.Services
         /// <param name="fileId"> The file id that should be moved in the localfile system.</param>
         /// <param name="directoryId"> The directory id where the file should be moved.</param>
         Task MoveToDirectory(Guid fileId, Guid directoryId);
-        
+
         /// <summary>
         /// Marks a file as deleted, keeping it in the local file system.
         /// </summary>

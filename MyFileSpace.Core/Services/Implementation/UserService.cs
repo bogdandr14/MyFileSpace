@@ -16,14 +16,16 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly ICacheRepository _cacheRepository;
         private readonly IUserRepository _userRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
+        private readonly IFileSystemRepository _fileSystemRepository;
         private readonly Session _session;
 
-        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, Session session)
+        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileSystemRepository fileSystemRepository, Session session)
         {
             _mapper = mapper;
             _userRepository = userRepository;
             _cacheRepository = cacheRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
+            _fileSystemRepository = fileSystemRepository;
             _session = session;
         }
 
@@ -51,7 +53,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task<string> Login(AuthDTO userLogin)
         {
             _session.ValidateNotLoggedIn();
-            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, userLogin.Email, userLogin.Password);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
             return JsonWebToken.GenerateToken(user);
         }
 
@@ -74,15 +76,16 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 AccessLevel = AccessType.Private,
                 OwnerId = createUser.Id,
-                VirtualPath = "$USER_ROOT"
+                VirtualPath = CacheKeys.ROOT_DIRECTORY,
             };
             await _virtualDirectoryRepository.AddAsync(rootDirectory);
+            await _fileSystemRepository.AddDirectoryInFileSystem(user.Id.ToString());
             return _mapper.Map<UserDetailsDTO>(createUser);
         }
 
         public async Task UpdatePassword(UpdatePasswordDTO updatePassword)
         {
-            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, updatePassword.Email, updatePassword.CurrentPassword);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(updatePassword.Email, updatePassword.CurrentPassword);
 
             user.Password = CryptographyUtility.HashKey(updatePassword.NewPassword, out string salt);
             user.Salt = salt;
@@ -93,7 +96,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdateUser(UserUpdateDTO userToUpdate)
         {
-            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session, userToUpdate.Email, userToUpdate.Password);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userToUpdate.Email, userToUpdate.Password);
             await ValidateTagNameUnique(user, userToUpdate.TagName);
 
             string oldTagName = user.TagName;

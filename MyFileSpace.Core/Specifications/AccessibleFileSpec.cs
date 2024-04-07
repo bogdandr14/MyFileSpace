@@ -10,7 +10,7 @@ namespace MyFileSpace.Core.Specifications
         {
             Query.Where(ak => ak.Key == accessKey
                 && ((ak.FileAccess != null && ak.FileAccess.FileId == fileId
-                        && ak.FileAccess.AccessibleFile.AccessLevel != AccessType.Private && ak.FileAccess.AccessibleFile.State == true)
+                        && ak.FileAccess.AccessibleFile.AccessLevel != AccessType.Private && ak.FileAccess.AccessibleFile.IsDeleted == false)
                     || (ak.DirectoryAccess != null && ak.DirectoryAccess.AccessibleDirectory.AccessLevel != AccessType.Private
                         && (ak.DirectoryAccess.AccessibleDirectory.FilesInDirectory.Any(fid => fid.Id == fileId && fid.AccessLevel != AccessType.Private))
                         )

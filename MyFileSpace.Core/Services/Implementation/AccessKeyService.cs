@@ -85,7 +85,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 expiresAt = DateTime.MaxValue;
             }
             string clearKey = $"AccessKey_{keyAccess.ObjectType}_{keyAccess.ObjectId}";
-            string encryptedKey = Convert.ToHexString(await CryptographyUtility.EncryptAsync(clearKey, _session.UserId.ToString()));
+            string encryptedKey = await CryptographyUtility.EncryptAsync(clearKey, _session.UserId.ToString());
             AccessKey accessKey = await _accessKeyRepository.AddAsync(new AccessKey() { Key = encryptedKey, ExpiresAt = expiresAt });
             return accessKey;
         }

@@ -22,8 +22,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
                 .HasConversion<byte>()
                 .IsRequired();
 
-            builder.Property(sf => sf.State)
-                .HasDefaultValue(true)
+            builder.Property(sf => sf.IsDeleted)
                 .IsRequired();
 
             //Foreign keys

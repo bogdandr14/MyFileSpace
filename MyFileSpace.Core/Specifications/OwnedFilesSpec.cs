@@ -1,6 +1,5 @@
 ﻿using Ardalis.Specification;
 using MyFileSpace.Infrastructure.Persistence.Entities;
-using MyFileSpace.SharedKernel.Enums;
 
 namespace MyFileSpace.Core.Specifications
 {
@@ -8,13 +7,14 @@ namespace MyFileSpace.Core.Specifications
     {
         public OwnedFilesSpec(Guid ownerId)
         {
-            Query.Where(x => x.OwnerId.Equals(ownerId) && x.State == true);
+            Query.Where(x => x.OwnerId.Equals(ownerId))
+                .Include(x => x.Directory);
         }
 
-        public OwnedFilesSpec(Guid ownerId, Guid fileId, bool isAvailable)
+        public OwnedFilesSpec(Guid ownerId, Guid fileId, bool isDeleted = false)
         {
-            Query.Where(x => x.OwnerId.Equals(ownerId) && x.Id.Equals(fileId) && x.State == isAvailable);
+            Query.Where(x => x.OwnerId.Equals(ownerId) && x.Id.Equals(fileId) && x.IsDeleted == isDeleted)
+                .Include(x => x.Directory);
         }
-
     }
 }

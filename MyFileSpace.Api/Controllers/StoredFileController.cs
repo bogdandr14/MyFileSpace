@@ -2,6 +2,7 @@
 using MyFileSpace.Api.Attributes;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
+using MyFileSpace.Infrastructure.Persistence.Entities;
 
 namespace MyFileSpace.Api.Controllers
 {
@@ -18,9 +19,9 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpGet]
         [MyFileSpaceAuthorize]
-        public async Task<List<FileDetailsDTO>> GetDirectories()
+        public async Task<List<OwnFileDetailsDTO>> GetDirectories([FromQuery] bool? deletedFiles)
         {
-            return await _storedFileService.GetAllFilesInfo();
+            return await _storedFileService.GetAllFilesInfo(deletedFiles);
         }
 
         [HttpGet("info/{fileId:Guid}")]
@@ -38,23 +39,37 @@ namespace MyFileSpace.Api.Controllers
 
         [MyFileSpaceAuthorize]
         [HttpPost("{directoryId:Guid}")]
-        public async Task AddFile([FileValidation(4096)] IFormFile uploadedFile, Guid directoryId)
+        public async Task<FileDTO> AddFile([FileValidation(4096)] IFormFile uploadedFile, Guid directoryId)
         {
-            await _storedFileService.AddFile(uploadedFile, directoryId);
+            return await _storedFileService.AddFile(uploadedFile, directoryId);
         }
 
         [HttpPut("{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task UpdateFile([FileValidation(4096)] IFormFile uploadedFile, Guid fileId)
+        public async Task<FileDTO> UpdateFile([FileValidation(4096)] IFormFile uploadedFile, Guid fileId)
         {
-            await _storedFileService.UpdateFile(uploadedFile, fileId);
+            return await _storedFileService.UpdateFile(uploadedFile, fileId);
         }
 
         [HttpPut("info/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task UpdateFileInfo(FileUpdateDTO fileUpdateDTO, Guid fileId)
+        public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdateDTO, Guid fileId)
         {
-            await _storedFileService.UpdateFileInfo(fileUpdateDTO, fileId);
+            return await _storedFileService.UpdateFileInfo(fileUpdateDTO, fileId);
+        }
+
+        // GET api/<FileController>/download/5
+        [HttpGet("download/{fileId:Guid}")]
+        [MyFileSpaceAuthorize]
+        public async Task<ActionResult> DownloadFile(Guid fileId, [FromQuery] string accessKey = null)
+        {
+            byte[] fileContent = await _storedFileService.DownloadFile(fileId, accessKey);
+            FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
+
+            FileDetailsDTO fileDetailsDTO = await _storedFileService.GetFileInfo(fileId);
+            fileContentResult.FileDownloadName = fileDetailsDTO.Name;
+            fileContentResult.LastModified = DateTime.Now;
+            return fileContentResult;
         }
 
         [HttpPut("move/{fileId:Guid}")]

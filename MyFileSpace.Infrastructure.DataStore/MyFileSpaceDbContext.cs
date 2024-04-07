@@ -30,8 +30,6 @@ namespace MyFileSpace.Infrastructure.Persistence
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<VirtualDirectory>().Navigation(p => p.ParentDirectory).AutoInclude();
-
             modelBuilder.ApplyConfigurationsFromAssembly(
                     Assembly.GetExecutingAssembly(),
                     c => c.Namespace!.Contains(nameof(Configurations))

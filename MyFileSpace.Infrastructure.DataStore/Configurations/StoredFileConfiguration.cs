@@ -25,8 +25,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.Property(sf => sf.SizeInBytes)
                 .IsRequired();
 
-            builder.Property(sf => sf.State)
-                .HasDefaultValue(true)
+            builder.Property(sf => sf.IsDeleted)
                 .IsRequired();
 
             builder.Property(sf => sf.CreatedAt)

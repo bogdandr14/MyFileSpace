@@ -3,6 +3,6 @@
     public class FileDetailsDTO : FileDTO
     {
         public Guid DirectorId { get; set; }
-        public string Path { get; set; }
+        public string DirectoryName { get; set; }
     }
 }

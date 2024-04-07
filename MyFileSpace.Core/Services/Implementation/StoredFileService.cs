@@ -37,14 +37,21 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
-        public async Task<List<FileDetailsDTO>> GetAllFilesInfo()
+        public async Task<List<OwnFileDetailsDTO>> GetAllFilesInfo(bool? deletedFiles)
         {
-            Func<Task<List<FileDetailsDTO>>> allFilesTask = async () =>
+            Func<Task<List<OwnFileDetailsDTO>>> allFilesTask = async () =>
             {
                 List<StoredFile> storedFiles = await _storedFileRepository.ListAsync(new OwnedFilesSpec(_session.UserId));
-                return _mapper.Map<List<FileDetailsDTO>>(storedFiles);
+                return _mapper.Map<List<OwnFileDetailsDTO>>(storedFiles);
             };
-            return await _cacheRepository.GetAndSetAsync(AllFilesCacheKey, allFilesTask);
+            List<OwnFileDetailsDTO> fileDetailsDTOs = await _cacheRepository.GetAndSetAsync(AllFilesCacheKey, allFilesTask);
+
+            if (deletedFiles == null)
+            {
+                return fileDetailsDTOs;
+            }
+
+            return fileDetailsDTOs.Where(x => x.IsDeleted == deletedFiles).ToList();
         }
 
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null)
@@ -57,10 +64,10 @@ namespace MyFileSpace.Core.Services.Implementation
             // validates the user has access to the file
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
 
-            return await _fileSystemRepository.ReadFromFileSystem(StoredFilePath(storedFile));
+            return await _fileSystemRepository.ReadDecryptedFileFromFileSystem(StoredFilePath(storedFile));
         }
 
-        public async Task AddFile(IFormFile file, Guid directoryId)
+        public async Task<FileDTO> AddFile(IFormFile file, Guid directoryId)
         {
             await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
@@ -72,14 +79,15 @@ namespace MyFileSpace.Core.Services.Implementation
                 Name = file.FileName,
                 AccessLevel = AccessType.Private,
                 SizeInBytes = file.Length,
-                State = true
             };
             StoredFile storedFile = await _storedFileRepository.AddAsync(fileToStore);
-            await _fileSystemRepository.AddInFileSystem(StoredFilePath(storedFile), file);
+            await _fileSystemRepository.AddEncryptedFileInFileSystem(StoredFilePath(storedFile), file);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+
+            return _mapper.Map<FileDTO>(storedFile);
         }
 
-        public async Task UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId)
+        public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);
             if (!string.IsNullOrEmpty(fileUpdate.Name))
@@ -95,9 +103,11 @@ namespace MyFileSpace.Core.Services.Implementation
 
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
+
         }
 
-        public async Task UpdateFile(IFormFile file, Guid fileId)
+        public async Task<FileDTO> UpdateFile(IFormFile file, Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);
             string[] storedFileNameSplit = storedFile.Name.Split('.');
@@ -105,12 +115,13 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 //TODO handle different content type
             }
-            await _fileSystemRepository.UpdateInFileSystem(StoredFilePath(storedFile), file);
+            await _fileSystemRepository.UpdateFileInFileSystem(StoredFilePath(storedFile), file);
 
             storedFile.Name = file.FileName;
             storedFile.SizeInBytes = file.Length;
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
         }
 
         public async Task MoveToDirectory(Guid fileId, Guid directoryId)
@@ -125,7 +136,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task MoveFileToBin(Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
-            storedFile.State = false;
+            storedFile.IsDeleted = true;
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
         }
@@ -133,14 +144,10 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task RestoreFile(Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
-            storedFile.State = true;
-            if (storedFile.Directory.State == false)
+            storedFile.IsDeleted = false;
+            if (storedFile.Directory.IsDeleted == true)
             {
-                VirtualDirectory directory = storedFile.Directory;
-                while (directory.ParentDirectory != null)
-                {
-                    directory = directory.ParentDirectory;
-                }
+                VirtualDirectory directory = await _virtualDirectoryRepository.ValidateAndRetrieveRootDirectoryInfo(_session.UserId);
                 storedFile.DirectorId = directory.Id;
             }
             await _storedFileRepository.UpdateAsync(storedFile);
@@ -150,7 +157,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task DeleteFile(Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
-            await _fileSystemRepository.RemoveFromFileSystem(StoredFilePath(storedFile));
+            await _fileSystemRepository.RemoveFileFromFileSystem(StoredFilePath(storedFile));
             await _storedFileRepository.DeleteAsync(storedFile);
         }
         #endregion

@@ -10,7 +10,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public Guid OwnerId { get; set; }
         public string VirtualPath { get; set; }
         public AccessType AccessLevel { get; set; }
-        public bool State { get; set; }
+        public bool IsDeleted { get; set; }
 
         #region "Navigation properties"
         public virtual User Owner { get; set; }

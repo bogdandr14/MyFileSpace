@@ -39,7 +39,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task<byte[]> GetFileByName(string fileName)
         {
             FileDTO_old fileObject = await _cacheRepository.GetAndSetAsync($"{CacheKeys.FILE_DATA_PREFIX}{fileName}", () => RetrieveValidFileData(() => _fileDataRepository.GetByName(fileName)));
-            Func<byte[]> fileBytesFunct = () => _fileSystemRepository.ReadFromFileSystem(fileObject.StoredFileName()).GetAwaiter().GetResult();
+            Func<byte[]> fileBytesFunct = () => _fileSystemRepository.ReadFileFromFileSystem(fileObject.StoredFileName()).GetAwaiter().GetResult();
             return await _cacheRepository.GetAndSetBytesAsync($"{CacheKeys.FILE_BYTES_PREFIX}{fileName}", fileBytesFunct, TimeSpan.FromMinutes(1));
         }
 
@@ -51,7 +51,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 throw new InvalidException($"File with name ${file.FileName} already exists!");
             }
 
-            await _fileSystemRepository.AddInFileSystem(fileData.StoredFileName(), file);
+            await _fileSystemRepository.AddFileInFileSystem(fileData.StoredFileName(), file);
             _fileDataRepository.Add(fileData);
 
             await _cacheRepository.RemoveAsync($"{CacheKeys.ALL_FILES}");
@@ -72,7 +72,7 @@ namespace MyFileSpace.Core.Services.Implementation
             await _cacheRepository.RemoveAsync($"{CacheKeys.FILE_BYTES_PREFIX}{existingFile.OriginalName}");
 
             FileDTO_old updatedFileData = file.UpdateExistingFileDTO(existingFile);
-            await _fileSystemRepository.UpdateInFileSystem(updatedFileData.StoredFileName(), file);
+            await _fileSystemRepository.UpdateFileInFileSystem(updatedFileData.StoredFileName(), file);
             _fileDataRepository.Update(updatedFileData);
 
             await _cacheRepository.RemoveAsync($"{CacheKeys.ALL_FILES}");
@@ -82,7 +82,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task DeleteFile(Guid fileGuid)
         {
             FileDTO_old fileObject = RetrieveValidFileData(() => _fileDataRepository.GetByGuid(fileGuid));
-            bool isFileDeleted = await _fileSystemRepository.RemoveFromFileSystem(fileObject.StoredFileName());
+            bool isFileDeleted = await _fileSystemRepository.RemoveFileFromFileSystem(fileObject.StoredFileName());
             if (!isFileDeleted)
             {
                 throw new InvalidException("Could not delete file");

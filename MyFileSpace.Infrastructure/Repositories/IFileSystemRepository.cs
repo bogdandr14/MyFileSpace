@@ -4,9 +4,12 @@ namespace MyFileSpace.Infrastructure.Repositories
 {
     public interface IFileSystemRepository
     {
-        Task<byte[]> ReadFromFileSystem(string fileName);
-        Task AddInFileSystem(string fileName, IFormFile file);
-        Task UpdateInFileSystem(string fileName, IFormFile file);
-        Task<bool> RemoveFromFileSystem(string fileName);
+        Task<byte[]> ReadFileFromFileSystem(string fileName);
+        Task<byte[]> ReadDecryptedFileFromFileSystem(string fileName);
+        Task AddFileInFileSystem(string fileName, IFormFile file);
+        Task AddEncryptedFileInFileSystem(string fileName, IFormFile file);
+        Task UpdateFileInFileSystem(string fileName, IFormFile file);
+        Task<bool> RemoveFileFromFileSystem(string fileName);
+        Task AddDirectoryInFileSystem(string directoryName);
     }
 }

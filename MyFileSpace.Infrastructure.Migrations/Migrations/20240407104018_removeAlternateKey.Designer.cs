@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyFileSpace.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MyFileSpace.Infrastructure.Persistence;
 namespace MyFileSpace.Infrastructure.Migrations.Migrations
 {
     [DbContext(typeof(MyFileSpaceDbContext))]
-    partial class MyFileSpaceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240407104018_removeAlternateKey")]
+    partial class removeAlternateKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -139,9 +142,6 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Property<Guid>("DirectorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("ModifiedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
@@ -157,6 +157,11 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
 
                     b.Property<long>("SizeInBytes")
                         .HasColumnType("bigint");
+
+                    b.Property<bool>("State")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.HasKey("Id");
 
@@ -199,14 +204,14 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("TagName")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("TagName")
-                        .IsUnique()
-                        .HasFilter("[TagName] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("User");
                 });
@@ -255,9 +260,6 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("datetime2");
 
@@ -266,6 +268,11 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
 
                     b.Property<Guid?>("ParentDirectoryId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("State")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("VirtualPath")
                         .IsRequired()

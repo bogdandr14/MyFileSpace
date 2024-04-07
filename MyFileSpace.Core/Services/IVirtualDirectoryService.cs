@@ -30,13 +30,13 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="directory"> All the information for the directory that must be saved.</param>
         /// <param name="parentDirectoryId"> The directory where the directory should be saved </param>
-        Task AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId);
+        Task<DirectoryDTO> AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId);
 
         /// <summary>
         /// Updates a virtual directory.
         /// </summary>
         /// <param name="directoryUpdate"> All the information for the directory.</param>
-        Task UpdateDirectory(DirectoryUpdateDTO directoryUpdate, Guid directoryId);
+        Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directoryUpdate, Guid directoryId);
 
         /// <summary>
         /// Moves a directory to another directory.

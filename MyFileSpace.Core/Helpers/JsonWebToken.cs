@@ -54,7 +54,7 @@ namespace MyFileSpace.Core.Helpers
                 ValidAudience = ISSUER_AND_AUDIENCE,
                 ClockSkew = TimeSpan.Zero // This is used so that the token expires exactly at its expiry time, not 5 minutes later
             }, out SecurityToken validatedToken);
-            
+
             return true;
         }
 
@@ -62,11 +62,14 @@ namespace MyFileSpace.Core.Helpers
         {
             var authClaims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.TagName),
                 new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
                 new Claim(USER_ROLE_CLAIM, user.Role.ToString())
             };
 
+            if (!string.IsNullOrEmpty(user.TagName))
+            {
+                authClaims.Add(new Claim(JwtRegisteredClaimNames.UniqueName, user.TagName));
+            }
             return authClaims;
         }
     }
