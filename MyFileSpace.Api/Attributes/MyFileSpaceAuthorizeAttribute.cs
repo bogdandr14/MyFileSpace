@@ -16,6 +16,7 @@ namespace MyFileSpace.Api.Attributes
         private IHttpContextProvider _httpContextProvider;
         private IAuthService _authService;
         private string _authorizationString;
+
         public MyFileSpaceAuthorizeAttribute()
         {
             rolesAllowed = new List<RoleType>
@@ -34,11 +35,11 @@ namespace MyFileSpace.Api.Attributes
             };
             allowAnonymous = false;
         }
+
         public MyFileSpaceAuthorizeAttribute(bool allowAnonymous)
         {
             this.allowAnonymous = allowAnonymous;
         }
-
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {

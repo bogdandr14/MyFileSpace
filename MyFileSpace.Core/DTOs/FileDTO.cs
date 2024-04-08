@@ -8,5 +8,6 @@ namespace MyFileSpace.Core.DTOs
         public string Name { get; set; }
         public AccessType AccessLevel { get; set; }
         public int SizeInBytes { get; set; }
+        public string ContentType { get; set; }
     }
 }

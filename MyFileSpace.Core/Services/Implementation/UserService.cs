@@ -76,7 +76,7 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 AccessLevel = AccessType.Private,
                 OwnerId = createUser.Id,
-                VirtualPath = CacheKeys.ROOT_DIRECTORY,
+                VirtualPath = Constants.ROOT_DIRECTORY,
             };
             await _virtualDirectoryRepository.AddAsync(rootDirectory);
             await _fileSystemRepository.AddDirectoryInFileSystem(user.Id.ToString());

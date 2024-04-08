@@ -67,7 +67,6 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpDelete("permanent/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-
         public async Task Delete(Guid directoryId)
         {
             await _virtualDirectoryService.DeleteDirectory(directoryId);

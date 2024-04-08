@@ -10,15 +10,7 @@
         public static readonly string DEVELOPMENT = "Development";
 
         #region "Headers"
-        public const string APP_HEADER = "X-App";
-        public const string ENV_HEADER = "X-Env";
-        public const string AUTH_R_HEADER = "X-Auth-R";
-        public const string AUTH_N_HEADER = "X-Auth-N";
         public const string AUTH_HEADER = "Authorization";
-
-        #endregion
-
-        #region "Config paths"
         #endregion
 
         #region "Paths"

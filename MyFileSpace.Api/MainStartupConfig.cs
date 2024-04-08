@@ -84,24 +84,6 @@ namespace MyFileSpace.Api
                 In = ParameterLocation.Header,
                 Description = Constants.SWAGGER_SECURITY_DESCRIPTION
             });
-
-            options.AddSecurityDefinition(Constants.AUTH_R_HEADER, new OpenApiSecurityScheme
-            {
-                Name = Constants.AUTH_R_HEADER,
-                Type = SecuritySchemeType.Http,
-                Scheme = OpenApiConstants.Schema,
-                In = ParameterLocation.Header,
-                Description = Constants.AUTH_R_HEADER
-            });
-
-            options.AddSecurityDefinition(Constants.AUTH_N_HEADER, new OpenApiSecurityScheme
-            {
-                Name = Constants.AUTH_N_HEADER,
-                Type = SecuritySchemeType.Http,
-                Scheme = OpenApiConstants.Headers,
-                In = ParameterLocation.Header,
-                Description = Constants.AUTH_N_HEADER
-            });
         }
 
         private static void AddSwaggerSecurityRequirement(this SwaggerGenOptions options)

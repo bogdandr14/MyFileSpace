@@ -22,6 +22,9 @@ namespace MyFileSpace.Core.Helpers
                 .ReverseMap();
 
             CreateMap<StoredFile, FileDTO>();
+            CreateMap<StoredFile, FileDownloadDTO>()
+                .ForMember(x => x.DownloadName, y => y.MapFrom(z => z.Name))
+                .ForMember(x => x.LastModified, y => y.MapFrom(z => z.ModifiedAt));
 
             CreateMap<StoredFile, FileDetailsDTO>()
                 .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath));

@@ -54,15 +54,10 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpGet("download/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<ActionResult> DownloadFile(Guid fileId, [FromQuery] string accessKey = null)
+        public async Task<ActionResult> DownloadFile(Guid fileId, [FromQuery] string? accessKey = null)
         {
-            byte[] fileContent = await _storedFileService.DownloadFile(fileId, accessKey);
-            FileContentResult fileContentResult = File(fileContent, "application/octet-stream");
-
-            FileDetailsDTO fileDetailsDTO = await _storedFileService.GetFileInfo(fileId);
-            fileContentResult.FileDownloadName = fileDetailsDTO.Name;
-            fileContentResult.LastModified = DateTime.Now;
-            return fileContentResult;
+            FileDownloadDTO fileContent = await _storedFileService.DownloadFile(fileId, accessKey);
+            return File(fileContent.Content, "application/octet-stream", fileContent.DownloadName, fileContent.LastModified, null!);
         }
 
         [HttpPut("move/{fileId:Guid}")]
@@ -88,7 +83,6 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpDelete("permanent/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-
         public async Task Delete(Guid fileId)
         {
             await _storedFileService.DeleteFile(fileId);

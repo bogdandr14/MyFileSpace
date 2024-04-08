@@ -33,7 +33,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Downloads a file.
         /// </returns>
-        Task<byte[]> DownloadFile(Guid fileId, string? accessKey = null);
+        Task<FileDownloadDTO> DownloadFile(Guid fileId, string? accessKey = null);
 
         /// <summary>
         /// Saves a file in the local file system.

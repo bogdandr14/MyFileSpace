@@ -116,7 +116,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, newParentDirectoryId);
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnActiveDirectoryInfo(_session.UserId, directoryToMoveId);
-            if (virtualDirectory.ParentDirectoryId == null || virtualDirectory.VirtualPath == CacheKeys.ROOT_DIRECTORY)
+            if (virtualDirectory.ParentDirectoryId == null || virtualDirectory.VirtualPath == Constants.ROOT_DIRECTORY)
             {
                 throw new InvalidException("Can not move root directory");
             }
@@ -166,15 +166,11 @@ namespace MyFileSpace.Core.Services.Implementation
             await RecursiveDelete(directoriesToDelete, filesToDelete, virtualDirectory);
             await _storedFileRepository.DeleteRangeAsync(filesToDelete);
             await _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete);
+
             foreach (StoredFile storedFile in filesToDelete)
             {
-                await _fileSystemRepository.RemoveFileFromFileSystem(StoredFilePath(storedFile));
+                await _fileSystemRepository.RemoveFileFromFileSystem(storedFile.FilePath());
             }
-        }
-
-        private string StoredFilePath(StoredFile storedFile)
-        {
-            return $"{storedFile.OwnerId}/{storedFile.Id}";
         }
 
         private async Task RecursiveUpdateState(List<VirtualDirectory> directoriesToUpdateState, List<StoredFile> filesToUpdateState, VirtualDirectory currentDirectory, bool newDeleteState)

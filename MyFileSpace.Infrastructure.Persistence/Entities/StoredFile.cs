@@ -12,6 +12,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public string Name { get; set; }
         public AccessType AccessLevel { get; set; }
         public long SizeInBytes { get; set; }
+        public string ContentType { get; set; }
 
         public bool IsDeleted { get; set; }
 

@@ -38,6 +38,9 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
                 .ValueGeneratedOnAddOrUpdate()
                 .IsRequired();
 
+            builder.Property(sf => sf.ContentType)
+                .IsRequired();
+
             //Foreign keys
             builder.HasOne(sf => sf.Owner)
                     .WithMany(u => u.Files)
