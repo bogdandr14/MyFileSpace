@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MyFileSpace.SharedKernel.Helpers;
+using MyFileSpace.SharedKernel.Providers;
 
 namespace MyFileSpace.Infrastructure.Persistence
 {
@@ -21,7 +21,7 @@ namespace MyFileSpace.Infrastructure.Persistence
                 )); // will be created in web project root
         }
 
-        public static void SetDbInstance(this IServiceProvider serviceProvider)//to use in program main
+        public static void SetDbInstance(this IServiceProvider serviceProvider)
         {
             using (var scope = serviceProvider.CreateScope())
             {

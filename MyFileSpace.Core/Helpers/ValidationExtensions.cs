@@ -12,7 +12,7 @@ namespace MyFileSpace.Core.Helpers
     {
         public static string FilePath(this StoredFile storedFile)
         {
-            return $"{storedFile.OwnerId}/{storedFile.Id}";
+            return $"{storedFile.OwnerId}_{storedFile.Id}";
         }
 
         #region "Simple validators"

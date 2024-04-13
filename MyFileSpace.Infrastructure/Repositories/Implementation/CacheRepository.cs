@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MyFileSpace.Infrastructure.Caching;
-using MyFileSpace.SharedKernel.Helpers;
+using MyFileSpace.SharedKernel.Providers;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -19,16 +19,14 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         {
             MemoryDistributedCacheOptions distributedCacheOptions = new MemoryDistributedCacheOptions();
 
-            IConfigurationSection cacheConfiguration = configuration.GetConfigSection("DistributedCache");
+            bool.TryParse(configuration.GetConfigValue("DistributedCache:BypassCache"), out _bypassCache);
 
-            bool.TryParse(cacheConfiguration.GetConfigValue("BypassCache"), out _bypassCache);
-
-            if (TimeSpan.TryParse(cacheConfiguration.GetConfigValue("CacheLifeSpan"), out TimeSpan lifeSpan))
+            if (TimeSpan.TryParse(configuration.GetConfigValue("DistributedCache:CacheLifeSpan"), out TimeSpan lifeSpan))
             {
                 _cacheLifeSpan = lifeSpan;
             }
 
-            if (long.TryParse(cacheConfiguration.GetConfigValue("MemorySizeLimit"), out long sizeLimit))
+            if (long.TryParse(configuration.GetConfigValue("DistributedCache:MemorySizeLimit"), out long sizeLimit))
             {
                 distributedCacheOptions.SizeLimit = sizeLimit;
             }

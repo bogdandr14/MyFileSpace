@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace MyFileSpace.SharedKernel.Helpers
+namespace MyFileSpace.SharedKernel.Providers
 {
     public static class AppConfigurationProvider
     {

@@ -2,22 +2,23 @@
 using Microsoft.Extensions.Configuration;
 using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Helpers;
+using MyFileSpace.SharedKernel.Providers;
 
 namespace MyFileSpace.Infrastructure.Repositories.Implementation
 {
-    internal class FileSystemRepository : IFileSystemRepository
+    internal class SystemStorageRepository : IFileStorageRepository
     {
         private readonly string _fileDirectoryPath;
         private readonly string _fileEncryptionKey;
 
-        public FileSystemRepository(IConfiguration configuration)
+        public SystemStorageRepository(IConfiguration configuration, ISecretProvider secretProvider)
         {
             _fileDirectoryPath = configuration.GetConfigValue("FilesDirectoryPath");
-            _fileEncryptionKey = configuration.GetConfigValue("FileEncryptionKey");
+            _fileEncryptionKey = secretProvider.GetSecret("FileEncryptionKey").GetAwaiter().GetResult();
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
-        public async Task<byte[]> ReadFileFromFileSystem(string fileName)
+        public async Task<byte[]> ReadFileFromFileStorage(string fileName)
         {
             string fullPath = GetFullPath(fileName);
 
@@ -32,17 +33,17 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             }
         }
 
-        public async Task UpdateFileInFileSystem(string fileName, IFormFile file)
+        public async Task UpdateFileInFileStorage(string fileName, IFormFile file)
         {
-            if (!RemoveFileFromFileSystem(fileName).Result)
+            if (!RemoveFileFromFileStorage(fileName).Result)
             {
                 throw new NotFoundException("File could not be found in the file system");
             }
 
-            await AddFileInFileSystem(fileName, file);
+            await AddFileInFileStorage(fileName, file);
         }
 
-        public async Task<bool> RemoveFileFromFileSystem(string fileName)
+        public async Task<bool> RemoveFileFromFileStorage(string fileName)
         {
             string fullPath = GetFullPath(fileName);
 
@@ -54,18 +55,12 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             return await Task.FromResult(false);
         }
 
-        public async Task AddFileInFileSystem(string fileName, IFormFile file)
+        public async Task AddFileInFileStorage(string fileName, IFormFile file)
         {
             using (FileStream fileStream = File.Create(GetFullPath(fileName)))
             {
                 await CryptographyUtility.EncryptAsync(file.OpenReadStream(), _fileEncryptionKey, fileStream);
             }
-        }
-
-        public Task AddDirectoryInFileSystem(string directoryName)
-        {
-            Directory.CreateDirectory(Path.Combine(_fileDirectoryPath, directoryName));
-            return Task.CompletedTask;
         }
 
         private string GetFullPath(string fileName)
