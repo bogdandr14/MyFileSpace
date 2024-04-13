@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MyFileSpace.Api.Attributes;
 using MyFileSpace.Core.Services;
+using MyFileSpace.SharedKernel.Enums;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -7,6 +9,7 @@ namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [MyFileSpaceAuthorize(RoleType.Admin)]
     public class CacheController : ControllerBase
     {
         private readonly ICacheService _cacheService;
@@ -18,30 +21,23 @@ namespace MyFileSpace.Api.Controllers
 
         // GET: api/<CacheController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IEnumerable<string>> Get()
         {
-            return _cacheService.GetAllKeys();
-        }
-
-        // GET api/<CacheController>/contains
-        [HttpGet("contains/{key}")]
-        public bool IsCached(string key)
-        {
-            return _cacheService.IsObjectCached(key);
+            return await _cacheService.GetAllKeys();
         }
 
         // PUT api/<CacheController>/usage
         [HttpGet("usage")]
-        public string GetMemoryUsage()
+        public async Task<string> GetMemoryUsage()
         {
-            return _cacheService.GetMemoryUsed();
+            return await _cacheService.GetMemoryUsed();
         }
 
         // DELETE api/<CacheController>
         [HttpDelete("clear")]
-        public void Delete()
+        public async Task Delete()
         {
-            _cacheService.ClearCache();
+            await _cacheService.ClearCache();
         }
     }
 }

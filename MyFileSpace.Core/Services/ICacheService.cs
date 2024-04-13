@@ -2,9 +2,9 @@
 {
     public interface ICacheService
     {
-        public IEnumerable<string> GetAllKeys();
-        public bool IsObjectCached(string key);
-        public string GetMemoryUsed();
-        public void ClearCache();
+        public Task<IEnumerable<string>> GetAllKeys();
+        public Task<bool> IsObjectCached(string key);
+        public Task<string> GetMemoryUsed();
+        public Task ClearCache();
     }
 }
