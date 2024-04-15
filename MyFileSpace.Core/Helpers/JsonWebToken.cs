@@ -1,5 +1,7 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.SharedKernel.Providers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -8,19 +10,47 @@ namespace MyFileSpace.Core.Helpers
 {
     internal static class JsonWebToken
     {
-        private const string PASSPHRASE = "ScdfRrGmK*&$riHDciDF*UnvoqNh3GB2Lx3p8tRLc8kkmyaHW!ATUdf4dC7Ubh%q";
-        private const string ISSUER_AND_AUDIENCE = "MyFileSpace";
-        public const string USER_ROLE_CLAIM = "user_role";
+        private static string _passphrase;
+        private static string _issuer;
+        private static string _audience;
+
+        private static string GetPassphrase()
+        {
+            if (string.IsNullOrEmpty(_passphrase))
+            {
+                _passphrase = AppServicesProvider.GetService<ISecretProvider>().GetSecret("TokenGenerator:Passphrase").GetAwaiter().GetResult();
+            }
+            return _passphrase;
+        }
+
+        private static string GetIssuer()
+        {
+            if (string.IsNullOrEmpty(_issuer))
+            {
+                _issuer = AppServicesProvider.GetService<IConfiguration>().GetConfigValue("TokenGenerator:Issuer");
+            }
+            return _issuer;
+        }
+
+        private static string GetAudience()
+        {
+            if (string.IsNullOrEmpty(_audience))
+            {
+                _audience = AppServicesProvider.GetService<IConfiguration>().GetConfigValue("TokenGenerator:Audience");
+            }
+            return _audience;
+        }
 
         internal static string GenerateToken(User user)
         {
             List<Claim> authClaims = SetClaims(user);
+            AppServicesProvider.GetService<IConfiguration>();
 
-            var authSignIngKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PASSPHRASE));
+            var authSignIngKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetPassphrase()));
 
             var token = new JwtSecurityToken(
-                ISSUER_AND_AUDIENCE,
-                ISSUER_AND_AUDIENCE,
+                GetIssuer(),
+                GetAudience(),
                 authClaims,
                 expires: DateTime.UtcNow.AddMinutes(104),
                 signingCredentials: new SigningCredentials(authSignIngKey, SecurityAlgorithms.HmacSha256)
@@ -41,7 +71,7 @@ namespace MyFileSpace.Core.Helpers
             // Token handler used in order to validate the token
             var tokenHandler = new JwtSecurityTokenHandler();
             // Get the secret key from the jwtSettings instance
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PASSPHRASE));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetPassphrase()));
 
             // Validate the token and store it in the validatedToken variable
             tokenHandler.ValidateToken(token, new TokenValidationParameters
@@ -50,8 +80,8 @@ namespace MyFileSpace.Core.Helpers
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 IssuerSigningKey = key,
-                ValidIssuer = ISSUER_AND_AUDIENCE,
-                ValidAudience = ISSUER_AND_AUDIENCE,
+                ValidIssuer = GetIssuer(),
+                ValidAudience = GetAudience(),
                 ClockSkew = TimeSpan.Zero // This is used so that the token expires exactly at its expiry time, not 5 minutes later
             }, out SecurityToken validatedToken);
 
@@ -63,7 +93,7 @@ namespace MyFileSpace.Core.Helpers
             var authClaims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
-                new Claim(USER_ROLE_CLAIM, user.Role.ToString())
+                new Claim(Constants.USER_ROLE_CLAIM, user.Role.ToString())
             };
 
             if (!string.IsNullOrEmpty(user.TagName))

@@ -37,7 +37,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 throw new NotFoundException("The token provided does not containt a valid user id");
             }
 
-            string roleString = JsonWebToken.GetClaim(tokenGroup.Value, JsonWebToken.USER_ROLE_CLAIM);
+            string roleString = JsonWebToken.GetClaim(tokenGroup.Value, Constants.USER_ROLE_CLAIM);
             if (string.IsNullOrEmpty(userIdString) || !Enum.TryParse(roleString, out RoleType userRole) || !allowedRoles.Contains(userRole))
             {
                 throw new ForbiddenException("User does not have permission to access this resource");

@@ -14,7 +14,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
-        private readonly IFileSystemRepository _fileSystemRepository;
+        private readonly IFileStorageRepository _fileStorageRepository;
         private readonly ICacheRepository _cacheRepository;
         private readonly Session _session;
 
@@ -26,11 +26,11 @@ namespace MyFileSpace.Core.Services.Implementation
             }
         }
 
-        public VirtualDirectoryService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileSystemRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
+        public VirtualDirectoryService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
         {
             _mapper = mapper;
             _storedFileRepository = storedFileRepository;
-            _fileSystemRepository = fileSystemRepository;
+            _fileStorageRepository = fileSystemRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
             _cacheRepository = cacheRepository;
             _session = session;
@@ -169,7 +169,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
             foreach (StoredFile storedFile in filesToDelete)
             {
-                await _fileSystemRepository.RemoveFileFromFileSystem(storedFile.FilePath());
+                await _fileStorageRepository.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
             }
         }
 

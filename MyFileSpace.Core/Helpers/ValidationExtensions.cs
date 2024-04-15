@@ -10,11 +10,6 @@ namespace MyFileSpace.Core.Helpers
 {
     internal static class ValidationExtensions
     {
-        public static string FilePath(this StoredFile storedFile)
-        {
-            return $"{storedFile.OwnerId}/{storedFile.Id}";
-        }
-
         #region "Simple validators"
         public static void ValidateNotLoggedIn(this Session session)
         {

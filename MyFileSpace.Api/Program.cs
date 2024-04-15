@@ -2,6 +2,7 @@ using Ardalis.ListStartupServices;
 using MyFileSpace.Api;
 using MyFileSpace.Api.Middlewares;
 using MyFileSpace.Infrastructure.Persistence;
+using MyFileSpace.SharedKernel.Providers;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,16 +16,11 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddSwaggerConfiguration();
-
-builder.Services.AddServiceDescriptorConfiguration();
-
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddDistributedMemoryCache();
-
 var app = builder.Build();
+
+app.Services.Initialize();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

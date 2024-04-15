@@ -57,7 +57,7 @@ namespace MyFileSpace.Api.Controllers
         public async Task<ActionResult> DownloadFile(Guid fileId, [FromQuery] string? accessKey = null)
         {
             FileDownloadDTO fileContent = await _storedFileService.DownloadFile(fileId, accessKey);
-            return File(fileContent.Content, "application/octet-stream", fileContent.DownloadName, fileContent.LastModified, null!);
+            return File(fileContent.ContentStream, "application/octet-stream", fileContent.DownloadName, fileContent.LastModified, null!);
         }
 
         [HttpPut("move/{fileId:Guid}")]

@@ -16,10 +16,10 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly ICacheRepository _cacheRepository;
         private readonly IUserRepository _userRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
-        private readonly IFileSystemRepository _fileSystemRepository;
+        private readonly IFileStorageRepository _fileSystemRepository;
         private readonly Session _session;
 
-        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileSystemRepository fileSystemRepository, Session session)
+        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, Session session)
         {
             _mapper = mapper;
             _userRepository = userRepository;
@@ -79,7 +79,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 VirtualPath = Constants.ROOT_DIRECTORY,
             };
             await _virtualDirectoryRepository.AddAsync(rootDirectory);
-            await _fileSystemRepository.AddDirectoryInFileSystem(user.Id.ToString());
+            await _fileSystemRepository.AddDirectory(user.Id.ToString());
             return _mapper.Map<UserDetailsDTO>(createUser);
         }
 
