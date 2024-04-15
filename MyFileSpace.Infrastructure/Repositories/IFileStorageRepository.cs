@@ -4,9 +4,9 @@ namespace MyFileSpace.Infrastructure.Repositories
 {
     public interface IFileStorageRepository
     {
-        Task<byte[]> ReadFileFromFileStorage(string fileName);
-        Task AddFileInFileStorage(string fileName, IFormFile file);
-        Task UpdateFileInFileStorage(string fileName, IFormFile file);
-        Task<bool> RemoveFileFromFileStorage(string fileName);
+        Task<Stream> ReadFile(string directory, string fileName);
+        Task UploadFile(string directory, string fileName, IFormFile file);
+        Task<bool> RemoveFile(string directory, string fileName);
+        Task AddDirectory(string directoryName);
     }
 }

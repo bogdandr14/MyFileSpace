@@ -16,7 +16,8 @@ namespace MyFileSpace.SharedKernel.Providers
 
         public async Task<string> GetSecret(string secretName)
         {
-            var secret = await _secretClient.GetSecretAsync(_configuration.GetConfigValue(secretName));
+            string secretKey = _configuration.GetConfigValue(secretName);
+            var secret = await _secretClient.GetSecretAsync(secretKey);
 
             if (secret.GetRawResponse().IsError)
             {

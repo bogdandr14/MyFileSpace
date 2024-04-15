@@ -79,6 +79,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 VirtualPath = Constants.ROOT_DIRECTORY,
             };
             await _virtualDirectoryRepository.AddAsync(rootDirectory);
+            await _fileSystemRepository.AddDirectory(user.Id.ToString());
             return _mapper.Map<UserDetailsDTO>(createUser);
         }
 

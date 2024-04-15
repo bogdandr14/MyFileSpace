@@ -13,7 +13,7 @@ namespace MyFileSpace.Api
 
             services.RegisterSharedKernelServices(isDevelopment, configuration);
             services.RegisterDbContext(configuration);
-            services.RegisterInfrastructureServices(isDevelopment);
+            services.RegisterInfrastructureServices(isDevelopment, configuration);
             services.RegisterCoreServices();
             services.RegisterApiServices(isDevelopment);
         }

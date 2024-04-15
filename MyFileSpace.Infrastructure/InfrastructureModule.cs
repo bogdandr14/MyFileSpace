@@ -1,12 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Azure.Identity;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.Infrastructure.Repositories.Implementation;
+using MyFileSpace.SharedKernel.Providers;
 
 namespace MyFileSpace.Infrastructure
 {
     public static class InfrastructureModule
     {
-        public static void RegisterInfrastructureServices(this IServiceCollection services, bool isDevelopment)
+        public static void RegisterInfrastructureServices(this IServiceCollection services, bool isDevelopment, IConfiguration configuration)
         {
             if (isDevelopment)
             {
@@ -14,7 +18,7 @@ namespace MyFileSpace.Infrastructure
             }
             else
             {
-                RegisterProductionOnlyDependencies(services);
+                RegisterProductionOnlyDependencies(services, configuration);
             }
 
             RegisterCommonDependencies(services);
@@ -39,7 +43,7 @@ namespace MyFileSpace.Infrastructure
             services.AddSingleton<IFileStorageRepository, SystemStorageRepository>();
         }
 
-        private static void RegisterProductionOnlyDependencies(IServiceCollection services)
+        private static void RegisterProductionOnlyDependencies(IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<IFileStorageRepository, AzureStorageRepository>();
         }

@@ -15,7 +15,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
-        private readonly IFileStorageRepository _fileSystemRepository;
+        private readonly IFileStorageRepository _fileStorageRepository;
         private readonly ICacheRepository _cacheRepository;
         private readonly Session _session;
 
@@ -31,7 +31,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             _mapper = mapper;
             _storedFileRepository = storedFileRepository;
-            _fileSystemRepository = fileSystemRepository;
+            _fileStorageRepository = fileSystemRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
             _cacheRepository = cacheRepository;
             _session = session;
@@ -65,7 +65,7 @@ namespace MyFileSpace.Core.Services.Implementation
             // validates the user has access to the file
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
             FileDownloadDTO fileDownloadDTO = _mapper.Map<FileDownloadDTO>(storedFile);
-            fileDownloadDTO.Content = await _fileSystemRepository.ReadFileFromFileStorage(storedFile.FilePath());
+            fileDownloadDTO.ContentStream = await _fileStorageRepository.ReadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
             return fileDownloadDTO;
         }
 
@@ -84,7 +84,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 ContentType = file.ContentType
             };
             StoredFile storedFile = await _storedFileRepository.AddAsync(fileToStore);
-            await _fileSystemRepository.AddFileInFileStorage(storedFile.FilePath(), file);
+            await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
             await _cacheRepository.RemoveAsync(AllFilesCacheKey);
 
             return _mapper.Map<FileDTO>(storedFile);
@@ -117,7 +117,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 throw new InvalidException("can not change the content type of the file");
             }
 
-            await _fileSystemRepository.UpdateFileInFileStorage(storedFile.FilePath(), file);
+            await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
 
             storedFile.Name = file.FileName;
             storedFile.SizeInBytes = file.Length;
@@ -159,7 +159,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task DeleteFile(Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
-            await _fileSystemRepository.RemoveFileFromFileStorage(storedFile.FilePath());
+            await _fileStorageRepository.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
             await _storedFileRepository.DeleteAsync(storedFile);
         }
         #endregion

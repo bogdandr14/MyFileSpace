@@ -13,14 +13,14 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
 
         public SystemStorageRepository(IConfiguration configuration, ISecretProvider secretProvider)
         {
-            _fileDirectoryPath = configuration.GetConfigValue("FilesDirectoryPath");
-            _fileEncryptionKey = secretProvider.GetSecret("FileEncryptionKey").GetAwaiter().GetResult();
+            _fileDirectoryPath = configuration.GetConfigValue("FileStorage:DirectoryPath");
+            _fileEncryptionKey = secretProvider.GetSecret("FileStorage:EncryptionKey").GetAwaiter().GetResult();
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
-        public async Task<byte[]> ReadFileFromFileStorage(string fileName)
+        public async Task<Stream> ReadFile(string directory, string fileName)
         {
-            string fullPath = GetFullPath(fileName);
+            string fullPath = GetFullPath(directory, fileName);
 
             if (!File.Exists(fullPath))
             {
@@ -33,19 +33,9 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             }
         }
 
-        public async Task UpdateFileInFileStorage(string fileName, IFormFile file)
+        public async Task<bool> RemoveFile(string directory, string fileName)
         {
-            if (!RemoveFileFromFileStorage(fileName).Result)
-            {
-                throw new NotFoundException("File could not be found in the file system");
-            }
-
-            await AddFileInFileStorage(fileName, file);
-        }
-
-        public async Task<bool> RemoveFileFromFileStorage(string fileName)
-        {
-            string fullPath = GetFullPath(fileName);
+            string fullPath = GetFullPath(directory, fileName);
 
             if (File.Exists(fullPath))
             {
@@ -55,17 +45,29 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             return await Task.FromResult(false);
         }
 
-        public async Task AddFileInFileStorage(string fileName, IFormFile file)
+        public async Task UploadFile(string directory, string fileName, IFormFile file)
         {
-            using (FileStream fileStream = File.Create(GetFullPath(fileName)))
+            string fullPath = GetFullPath(directory, fileName);
+
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+
+            using (FileStream fileStream = File.Create(fullPath))
             {
                 await CryptographyUtility.EncryptAsync(file.OpenReadStream(), _fileEncryptionKey, fileStream);
             }
         }
 
-        private string GetFullPath(string fileName)
+        public Task AddDirectory(string directoryName)
         {
-            return Path.Combine(_fileDirectoryPath, fileName);
+            return Task.FromResult(Directory.CreateDirectory(Path.Combine(_fileDirectoryPath, directoryName)));
+        }
+
+        private string GetFullPath(string directory, string fileName)
+        {
+            return Path.Combine(_fileDirectoryPath, directory, fileName);
         }
     }
 }

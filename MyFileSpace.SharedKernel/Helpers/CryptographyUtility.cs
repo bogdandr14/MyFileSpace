@@ -69,14 +69,14 @@ namespace MyFileSpace.SharedKernel.Helpers
         public static async Task<string> DecryptAsync(string encryptedText, string passphrase)
         {
             MemoryStream encryptedInput = new MemoryStream(Convert.FromHexString(encryptedText));
-            return Convert.ToHexString(await DecryptAsync(encryptedInput, passphrase));
+            return Convert.ToHexString((await DecryptAsync(encryptedInput, passphrase)).ToArray());
         }
 
-        public static async Task<byte[]> DecryptAsync(Stream inputEncryptedStream, string passphrase)
+        public static async Task<MemoryStream> DecryptAsync(Stream inputEncryptedStream, string passphrase)
         {
             using MemoryStream decryptedOutput = new();
             await DecryptAsync(inputEncryptedStream, passphrase, decryptedOutput);
-            return decryptedOutput.ToArray();
+            return decryptedOutput;
         }
 
         public static async Task DecryptAsync(Stream inputEncryptedStream, string passphrase, Stream outputStream)
