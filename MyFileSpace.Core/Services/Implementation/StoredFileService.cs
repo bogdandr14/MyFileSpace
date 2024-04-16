@@ -42,7 +42,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             Func<Task<List<OwnFileDetailsDTO>>> allFilesTask = async () =>
             {
-                List<StoredFile> storedFiles = await _storedFileRepository.ListAsync(new OwnedFilesSpec(_session.UserId));
+                List<StoredFile> storedFiles = await _storedFileRepository.ListAsync(new OwnedFilesWithDirectoriesSpec(_session.UserId));
                 return _mapper.Map<List<OwnFileDetailsDTO>>(storedFiles);
             };
             List<OwnFileDetailsDTO> fileDetailsDTOs = await _cacheRepository.GetAndSetAsync(AllFilesCacheKey, allFilesTask);
@@ -73,6 +73,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
+            await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length);
 
             StoredFile fileToStore = new StoredFile()
             {
@@ -116,6 +117,7 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 throw new InvalidException("can not change the content type of the file");
             }
+            await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length - storedFile.SizeInBytes);
 
             await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
 

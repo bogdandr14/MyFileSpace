@@ -17,7 +17,6 @@ namespace MyFileSpace.Infrastructure.Persistence
             using (var dbContext = new MyFileSpaceDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<MyFileSpaceDbContext>>()))
             {
-                // Look for any TODO items.
                 if (dbContext.User.Any())
                 {
                     return;   // DB has been seeded

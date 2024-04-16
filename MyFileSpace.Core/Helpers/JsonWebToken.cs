@@ -18,7 +18,7 @@ namespace MyFileSpace.Core.Helpers
         {
             if (string.IsNullOrEmpty(_passphrase))
             {
-                _passphrase = AppServicesProvider.GetService<ISecretProvider>().GetSecret("TokenGenerator:Passphrase").GetAwaiter().GetResult();
+                _passphrase = AppServicesProvider.GetService<IConfiguration>().GetConfigValue("TokenGenerator:Passphrase");
             }
             return _passphrase;
         }
@@ -44,7 +44,6 @@ namespace MyFileSpace.Core.Helpers
         internal static string GenerateToken(User user)
         {
             List<Claim> authClaims = SetClaims(user);
-            AppServicesProvider.GetService<IConfiguration>();
 
             var authSignIngKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetPassphrase()));
 
