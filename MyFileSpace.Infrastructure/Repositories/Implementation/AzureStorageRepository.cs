@@ -13,9 +13,9 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
     {
         private readonly BlobServiceClient _blobServiceClient;
 
-        public AzureStorageRepository(IConfiguration configuration, ISecretProvider secretProvider)
+        public AzureStorageRepository(IConfiguration configuration)
         {
-            string storageAccessKey = secretProvider.GetSecret("FileStorage:AzureBlobStorageAccessKey").GetAwaiter().GetResult();
+            string storageAccessKey = configuration.GetConfigValue("FileStorage:AzureBlobStorageAccessKey");
             string azureStorageName = configuration.GetConfigValue("FileStorage:AzureBlobStorageName");
             _blobServiceClient = new BlobServiceClient(
                 new Uri($"https://{azureStorageName}.blob.core.windows.net"),

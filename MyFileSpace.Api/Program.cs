@@ -7,6 +7,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.ConfigureMyFileSpaceConfiguration();
+
 // Add services to the container.
 builder.Host.UseSerilog((_, config) => config.ReadFrom.Configuration(builder.Configuration));
 

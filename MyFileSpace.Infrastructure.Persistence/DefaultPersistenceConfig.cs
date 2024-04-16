@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MyFileSpace.SharedKernel.Providers;
+using Serilog;
 
 namespace MyFileSpace.Infrastructure.Persistence
 {
@@ -37,8 +38,7 @@ namespace MyFileSpace.Infrastructure.Persistence
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger>();
-                    logger.LogError(ex, "An error occurred seeding the DB. {exceptionMessage}", ex.Message);
+                    Log.Logger.Fatal(ex, $"An error occurred seeding the DB. {ex.Message}");
                 }
             }
         }

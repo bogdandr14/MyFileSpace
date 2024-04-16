@@ -1,15 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.SharedKernel.Exceptions;
+using Serilog;
 
 namespace MyFileSpace.Api.Middlewares
 {
     public class CustomExceptionHandlerMiddleware : IMiddleware
     {
-        private readonly ILogger<CustomExceptionHandlerMiddleware> _logger;
-
-        public CustomExceptionHandlerMiddleware(ILogger<CustomExceptionHandlerMiddleware> logger)
+        public CustomExceptionHandlerMiddleware()
         {
-            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -66,13 +64,13 @@ namespace MyFileSpace.Api.Middlewares
                         Instance = context.Request.Path,
                         Detail = $"Internal server error occured, traceId : {traceId}",
                     };
-                    _logger.LogError($"Error occured while processing the request, TraceId : ${traceId}, Message : ${ex.Message}, StackTrace: ${ex.StackTrace}");
+                    Log.Logger.Error($"Error occured while processing the request, TraceId : ${traceId}, Message : ${ex.Message}, StackTrace: ${ex.StackTrace}");
                     break;
             }
 
             if (problemDetails.Status.Value != StatusCodes.Status500InternalServerError)
             {
-                _logger.LogDebug($"{problemDetails.Title} error occured while processing the request {problemDetails.Instance}, Message : ${ex.Message}, StackTrace: ${ex.StackTrace}");
+                Log.Logger.Debug($"{problemDetails.Title} error occured while processing the request {problemDetails.Instance}, Message : ${ex.Message}, StackTrace: ${ex.StackTrace}");
             }
 
             return problemDetails;

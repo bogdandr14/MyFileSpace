@@ -11,10 +11,10 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         private readonly string _fileDirectoryPath;
         private readonly string _fileEncryptionKey;
 
-        public SystemStorageRepository(IConfiguration configuration, ISecretProvider secretProvider)
+        public SystemStorageRepository(IConfiguration configuration)
         {
             _fileDirectoryPath = configuration.GetConfigValue("FileStorage:DirectoryPath");
-            _fileEncryptionKey = secretProvider.GetSecret("FileStorage:EncryptionKey").GetAwaiter().GetResult();
+            _fileEncryptionKey = configuration.GetConfigValue("FileStorage:EncryptionKey");
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 

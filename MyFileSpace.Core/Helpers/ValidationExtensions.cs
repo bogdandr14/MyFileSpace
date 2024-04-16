@@ -88,7 +88,7 @@ namespace MyFileSpace.Core.Helpers
         #region "Owner validators"
         public static async Task ValidateOwnActiveFile(this IStoredFileRepository storedFileRepo, Guid ownerId, Guid fileId)
         {
-            if (!await storedFileRepo.AnyAsync(new OwnedFilesSpec(ownerId, fileId)))
+            if (!await storedFileRepo.AnyAsync(new OwnedFilesWithDirectoriesSpec(ownerId, fileId)))
             {
                 throw new NotFoundException("You do not have the specified file!");
             }
@@ -99,6 +99,15 @@ namespace MyFileSpace.Core.Helpers
             if (!await virtualDirectoryRepo.AnyAsync(new OwnedDirectoriesSpec(ownerId, directoryId)))
             {
                 throw new NotFoundException($"You do not have the specified directory!");
+            }
+        }
+
+        public static async Task ValidateOwnFileEnoughSpace(this IStoredFileRepository storedFileRepo, Guid ownerId, long bytesToAdd)
+        {
+            List<StoredFile> ownedFiles = await storedFileRepo.ListAsync(new OwnedFilesSpec(ownerId));
+            if (ownedFiles.Sum(x => x.SizeInBytes) + bytesToAdd > Constants.MAX_ALLOWED_USER_STORAGE)
+            {
+                throw new InvalidException("You do not have enough free space to store the file!");
             }
         }
         #endregion
@@ -241,7 +250,7 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<StoredFile> ValidateAndRetrieveOwnDeletedFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId)
         {
-            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId, true));
+            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesWithDirectoriesSpec(session.UserId, fileId, true));
             if (storedFile == null)
             {
                 throw new NotFoundException("File not in bin or already deleted");
@@ -251,7 +260,7 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<StoredFile> ValidateAndRetrieveOwnActiveFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId)
         {
-            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesSpec(session.UserId, fileId));
+            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new OwnedFilesWithDirectoriesSpec(session.UserId, fileId));
             if (storedFile == null)
             {
                 throw new NotFoundException("File not found or in bin");
