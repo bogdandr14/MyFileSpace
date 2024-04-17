@@ -19,14 +19,6 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly ICacheRepository _cacheRepository;
         private readonly Session _session;
 
-        private string AllFilesCacheKey
-        {
-            get
-            {
-                return $"{nameof(FileDetailsDTO)}_owner_{_session.UserId}";
-            }
-        }
-
         public StoredFileService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
         {
             _mapper = mapper;
@@ -45,7 +37,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 List<StoredFile> storedFiles = await _storedFileRepository.ListAsync(new OwnedFilesWithDirectoriesSpec(_session.UserId));
                 return _mapper.Map<List<OwnFileDetailsDTO>>(storedFiles);
             };
-            List<OwnFileDetailsDTO> fileDetailsDTOs = await _cacheRepository.GetAndSetAsync(AllFilesCacheKey, allFilesTask);
+            List<OwnFileDetailsDTO> fileDetailsDTOs = await _cacheRepository.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask);
 
             if (deletedFiles == null)
             {
@@ -69,7 +61,7 @@ namespace MyFileSpace.Core.Services.Implementation
             return fileDownloadDTO;
         }
 
-        public async Task<FileDTO> AddFile(IFormFile file, Guid directoryId)
+        public async Task<FileDTO> UploadNewFile(IFormFile file, Guid directoryId)
         {
             await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
@@ -86,7 +78,7 @@ namespace MyFileSpace.Core.Services.Implementation
             };
             StoredFile storedFile = await _storedFileRepository.AddAsync(fileToStore);
             await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
-            await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
 
             return _mapper.Map<FileDTO>(storedFile);
         }
@@ -106,11 +98,11 @@ namespace MyFileSpace.Core.Services.Implementation
             }
 
             await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
             return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
         }
 
-        public async Task<FileDTO> UpdateFile(IFormFile file, Guid fileId)
+        public async Task<FileDTO> UploadExistingFile(IFormFile file, Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);
             if (file.ContentType != storedFile.ContentType)
@@ -124,41 +116,71 @@ namespace MyFileSpace.Core.Services.Implementation
             storedFile.Name = file.FileName;
             storedFile.SizeInBytes = file.Length;
             await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
             return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
         }
 
-        public async Task MoveToDirectory(Guid fileId, Guid directoryId)
+        public async Task MoveFile(Guid fileId, Guid directoryId, bool restore)
         {
-            await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
-            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
-            storedFile.DirectorId = directoryId;
-            await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            if (restore)
+            {
+                await RestoreFile(fileId, directoryId);
+            }
+            else
+            {
+                await MoveToDirectory(fileId, directoryId);
+            }
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
         }
 
-        public async Task MoveFileToBin(Guid fileId)
+        public async Task DeleteFile(Guid fileId, bool permanent)
         {
-            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
-            storedFile.IsDeleted = true;
-            await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(AllFilesCacheKey);
+            if (permanent)
+            {
+                await DeleteFilePermanently(fileId);
+            }
+            else
+            {
+                await MoveFileToBin(fileId);
+            }
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
         }
+        #endregion
 
-        public async Task RestoreFile(Guid fileId)
+        #region "Private methods"
+        private async Task RestoreFile(Guid fileId, Guid directoryId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
             storedFile.IsDeleted = false;
-            if (storedFile.Directory.IsDeleted == true)
+            if (!Guid.Empty.Equals(directoryId))
+            {
+                await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
+                storedFile.DirectorId = directoryId;
+            }
+            else if (storedFile.Directory.IsDeleted == true)
             {
                 VirtualDirectory directory = await _virtualDirectoryRepository.ValidateAndRetrieveRootDirectoryInfo(_session.UserId);
                 storedFile.DirectorId = directory.Id;
             }
             await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(AllFilesCacheKey);
         }
 
-        public async Task DeleteFile(Guid fileId)
+        private async Task MoveToDirectory(Guid fileId, Guid directoryId)
+        {
+            await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
+            storedFile.DirectorId = directoryId;
+            await _storedFileRepository.UpdateAsync(storedFile);
+        }
+
+        private async Task MoveFileToBin(Guid fileId)
+        {
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnActiveFileInfo(_session, fileId);
+            storedFile.IsDeleted = true;
+            await _storedFileRepository.UpdateAsync(storedFile);
+        }
+
+        private async Task DeleteFilePermanently(Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
             await _fileStorageRepository.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());

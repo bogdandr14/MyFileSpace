@@ -19,13 +19,6 @@ namespace MyFileSpace.Api.Controllers
             _cacheService = cacheService;
         }
 
-        // GET: api/<CacheController>
-        [HttpGet]
-        public async Task<IEnumerable<string>> Get()
-        {
-            return await _cacheService.GetAllKeys();
-        }
-
         // PUT api/<CacheController>/usage
         [HttpGet("usage")]
         public async Task<string> GetMemoryUsage()

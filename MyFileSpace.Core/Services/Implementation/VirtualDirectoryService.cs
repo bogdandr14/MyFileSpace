@@ -18,14 +18,6 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly ICacheRepository _cacheRepository;
         private readonly Session _session;
 
-        private string AllDirectoriesCacheKey
-        {
-            get
-            {
-                return $"{nameof(DirectoryDTO)}_owner_{_session.UserId}";
-            }
-        }
-
         public VirtualDirectoryService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
         {
             _mapper = mapper;
@@ -36,6 +28,7 @@ namespace MyFileSpace.Core.Services.Implementation
             _session = session;
         }
 
+        #region "Public methods"
         public async Task<List<DirectoryDTO>> GetAllDirectoriesInfo()
         {
             Func<Task<List<DirectoryDTO>>> allDirectoriesTask = async () =>
@@ -43,7 +36,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 List<VirtualDirectory> virtualDirectories = await _virtualDirectoryRepository.ListAsync(new OwnedDirectoriesSpec(_session.UserId));
                 return _mapper.Map<List<DirectoryDTO>>(virtualDirectories);
             };
-            return await _cacheRepository.GetAndSetAsync(AllDirectoriesCacheKey, allDirectoriesTask);
+            return await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask);
         }
 
         public async Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null)
@@ -82,7 +75,7 @@ namespace MyFileSpace.Core.Services.Implementation
             virtualDirectory.OwnerId = _session.UserId;
             virtualDirectory.ParentDirectoryId = parentDirectoryId;
             VirtualDirectory newDirectory = await _virtualDirectoryRepository.AddAsync(virtualDirectory);
-            await _cacheRepository.RemoveAsync(AllDirectoriesCacheKey);
+            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
 
@@ -107,12 +100,42 @@ namespace MyFileSpace.Core.Services.Implementation
             }
 
             await _virtualDirectoryRepository.UpdateAsync(virtualDirectory);
-            await _cacheRepository.RemoveAsync(AllDirectoriesCacheKey);
+            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
             VirtualDirectory newDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryId);
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
 
-        public async Task MoveToDirectory(Guid directoryToMoveId, Guid newParentDirectoryId)
+        public async Task MoveDirectory(Guid directoryToMoveId, Guid newParentDirectoryId, bool restore)
+        {
+            if (restore)
+            {
+                await RestoreDirectory(directoryToMoveId, newParentDirectoryId);
+                await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            }
+            else
+            {
+                await MoveToDirectory(directoryToMoveId, newParentDirectoryId);
+            }
+            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
+        }
+
+        public async Task DeleteDirectory(Guid directoryId, bool permanent)
+        {
+            if (permanent)
+            {
+                await DeleteDirectoryPermanently(directoryId);
+            }
+            else
+            {
+                await MoveDirectoryToBin(directoryId);
+            }
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
+        }
+        #endregion
+
+        #region "Private methods"
+        private async Task MoveToDirectory(Guid directoryToMoveId, Guid newParentDirectoryId)
         {
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, newParentDirectoryId);
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnActiveDirectoryInfo(_session.UserId, directoryToMoveId);
@@ -122,28 +145,18 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             virtualDirectory.ParentDirectoryId = newParentDirectoryId;
             await _virtualDirectoryRepository.UpdateAsync(virtualDirectory);
-            await _cacheRepository.RemoveAsync(AllDirectoriesCacheKey);
         }
 
-        public async Task MoveDirectoryToBin(Guid directoryId)
-        {
-            VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnActiveDirectoryInfo(_session.UserId, directoryId);
-            virtualDirectory.IsDeleted = true;
-            List<VirtualDirectory> directoriesToMoveToBin = new List<VirtualDirectory>() { virtualDirectory };
-            List<StoredFile> filesToMoveToBin = new List<StoredFile>();
-            await RecursiveUpdateState(directoriesToMoveToBin, filesToMoveToBin, virtualDirectory, true);
-            await _virtualDirectoryRepository.UpdateRangeAsync(directoriesToMoveToBin);
-            await _storedFileRepository.UpdateRangeAsync(filesToMoveToBin);
-            await _cacheRepository.RemoveAsync($"{nameof(FileDetailsDTO)}_owner_{_session.UserId}");
-            await _cacheRepository.RemoveAsync(AllDirectoriesCacheKey);
-        }
-
-        public async Task RestoreDirectory(Guid directoryId)
+        private async Task RestoreDirectory(Guid directoryId, Guid newParentDirectoryId)
         {
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnDeletedDirectoryInfo(_session.UserId, directoryId);
             virtualDirectory.IsDeleted = false;
-
-            if (virtualDirectory.ParentDirectoryId != null)
+            if (!Guid.Empty.Equals(newParentDirectoryId))
+            {
+                await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, newParentDirectoryId);
+                virtualDirectory.ParentDirectoryId = newParentDirectoryId;
+            }
+            else if (virtualDirectory.ParentDirectoryId != null)
             {
                 virtualDirectory.ParentDirectoryId = (await _virtualDirectoryRepository.SingleOrDefaultAsync(new OwnedRootDirectorySpec(_session.UserId)))!.Id;
             }
@@ -154,11 +167,21 @@ namespace MyFileSpace.Core.Services.Implementation
 
             await _virtualDirectoryRepository.UpdateRangeAsync(directoriesToRestore);
             await _storedFileRepository.UpdateRangeAsync(filesToRestore);
-            await _cacheRepository.RemoveAsync($"{nameof(FileDetailsDTO)}_owner_{_session.UserId}");
-            await _cacheRepository.RemoveAsync(AllDirectoriesCacheKey);
         }
 
-        public async Task DeleteDirectory(Guid directoryId)
+        private async Task MoveDirectoryToBin(Guid directoryId)
+        {
+            VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnActiveDirectoryInfo(_session.UserId, directoryId);
+            virtualDirectory.IsDeleted = true;
+            List<VirtualDirectory> directoriesToMoveToBin = new List<VirtualDirectory>() { virtualDirectory };
+            List<StoredFile> filesToMoveToBin = new List<StoredFile>();
+            await RecursiveUpdateState(directoriesToMoveToBin, filesToMoveToBin, virtualDirectory, true);
+            
+            await _virtualDirectoryRepository.UpdateRangeAsync(directoriesToMoveToBin);
+            await _storedFileRepository.UpdateRangeAsync(filesToMoveToBin);
+        }
+
+        private async Task DeleteDirectoryPermanently(Guid directoryId)
         {
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnDeletedDirectoryInfo(_session.UserId, directoryId);
             List<VirtualDirectory> directoriesToDelete = new List<VirtualDirectory>() { virtualDirectory };
@@ -211,5 +234,6 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             return $"{nameof(DirectoryDetailsDTO)}_{directoryId}_{_session.UserId}_{accessKey}";
         }
+        #endregion
     }
 }

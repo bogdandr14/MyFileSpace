@@ -43,24 +43,12 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="directoryToMoveId"> The directory that needs to be moved.</param>
         /// <param name="newParentDirectoryId"> The new parent directory id for the directory that should be moved.</param>
-        Task MoveToDirectory(Guid directoryToMoveId, Guid newParentDirectoryId);
-
-        /// <summary>
-        /// Marks a directory as deleted, keeping it in the database.
-        /// </summary>
-        /// <param name="directoryId"> The id of the directory that should be deleted with all its content.</param>
-        Task MoveDirectoryToBin(Guid directoryId);
-
-        /// <summary>
-        /// Restores the deleted file.
-        /// </summary>
-        /// <param name="directoryId"> The name of the directory that should be restored from the localfile system.</param>
-        Task RestoreDirectory(Guid directoryId);
+        Task MoveDirectory(Guid directoryToMoveId, Guid newParentDirectoryId, bool restore);
 
         /// <summary>
         /// Deletes a virtual directory and all its content.
         /// </summary>
         /// <param name="directoryId"> The name of the directory that should be removed.</param>
-        Task DeleteDirectory(Guid directoryId);
+        Task DeleteDirectory(Guid directoryId, bool permanent);
     }
 }

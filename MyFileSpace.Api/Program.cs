@@ -7,7 +7,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.ConfigureMyFileSpaceConfiguration();
+builder.ConfigureKeyVault();
 
 // Add services to the container.
 builder.Host.UseSerilog((_, config) => config.ReadFrom.Configuration(builder.Configuration));
@@ -45,7 +45,7 @@ app.UseStaticFiles();
 // Enable middleware to serve generated Swagger as a JSON endpoint.
 app.UseSwagger();
 
-app.UseSwaggerUIConfiguration();
+app.UseSwaggerUI();
 
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
