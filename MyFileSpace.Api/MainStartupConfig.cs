@@ -1,4 +1,5 @@
-﻿using Azure.Extensions.AspNetCore.Configuration.Secrets;
+﻿using Azure.Core;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using MyFileSpace.Core;
@@ -9,13 +10,11 @@ namespace MyFileSpace.Api
     internal static class MainStartupConfig
     {
         #region "Builder setup"
-
-        public static void ConfigureMyFileSpaceConfiguration(this WebApplicationBuilder configureHostBuilder)
+        internal static void ConfigureKeyVault(this IHostApplicationBuilder hostApplicationBuilder)
         {
-            if (configureHostBuilder.Environment.IsProduction())
-            {
-                configureHostBuilder.Configuration.ConfigureKeyVault();
-            }
+            string keyVaultEndpoint = GetEnvironmentVariable("KEYVAULT_ENDPOINT");
+            SecretClient secretClient = new SecretClient(new Uri(keyVaultEndpoint), hostApplicationBuilder.GetTokenCredential());
+            hostApplicationBuilder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
         }
 
         internal static void AddModulesConfiguration(this IServiceCollection services, IWebHostEnvironment environment, IConfiguration configuration)
@@ -30,11 +29,6 @@ namespace MyFileSpace.Api
         #endregion
 
         #region "Application setup"
-        internal static void UseSwaggerUIConfiguration(this IApplicationBuilder builder)
-        {
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), specifying the Swagger JSON endpoint.
-            builder.UseSwaggerUI();
-        }
         internal static void UserCorsConfiguration(this IApplicationBuilder applicationBuilder)
         {
             applicationBuilder.UseCors(options =>
@@ -44,21 +38,24 @@ namespace MyFileSpace.Api
                     .AllowAnyMethod();
             });
         }
+        #endregion
 
-        private static void ConfigureKeyVault(this IConfigurationBuilder builder)
+        #region "Helpers"
+        private static TokenCredential GetTokenCredential(this IHostApplicationBuilder hostApplicationBuilder)
         {
-            string keyVaultEndpoint = RetrieveEnvironmentVariable("KEYVAULT_ENDPOINT");
-            string tenantId = RetrieveEnvironmentVariable("KEYVAULT_TENANTID");
-            string clientId = RetrieveEnvironmentVariable("KEYVAULT_CLIENTID");
-            string clientSecret = RetrieveEnvironmentVariable("KEYVAULT_CLIENTSECRET");
+            if (hostApplicationBuilder.Environment.IsProduction())
+            {
+                return new DefaultAzureCredential();
+            }
 
-            ClientSecretCredential clientSecretCredential = new ClientSecretCredential(tenantId, clientId, clientSecret);
-            SecretClient secretClient = new SecretClient(new Uri(keyVaultEndpoint), clientSecretCredential);
+            string tenantId = GetEnvironmentVariable("KEYVAULT_TENANTID");
+            string clientId = GetEnvironmentVariable("KEYVAULT_CLIENTID");
+            string clientSecret = GetEnvironmentVariable("KEYVAULT_CLIENTSECRET");
 
-            builder.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+            return new ClientSecretCredential(tenantId, clientId, clientSecret);
         }
 
-        private static string RetrieveEnvironmentVariable(string key)
+        private static string GetEnvironmentVariable(string key)
         {
             string? value = Environment.GetEnvironmentVariable(key);
             if (value is null)

@@ -10,7 +10,6 @@ namespace MyFileSpace.Core.Services.Implementation
 {
     internal class UserAccessService : IUserAccessService
     {
-
         private readonly IMapper _mapper;
         private readonly IUserFileAccessRepository _userFileAccessRepository;
         private readonly IUserDirectoryAccessRepository _userDirectoryAccessRepository;
@@ -19,14 +18,6 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IUserRepository _userRepository;
         private readonly ICacheRepository _cacheRepository;
         private readonly Session _session;
-
-        private string AllObjectAccessCacheKey
-        {
-            get
-            {
-                return $"{nameof(FileDetailsDTO)}_owner_{_session.UserId}";
-            }
-        }
 
         public UserAccessService(IMapper mapper,
             IUserFileAccessRepository userFileAccessRepo,

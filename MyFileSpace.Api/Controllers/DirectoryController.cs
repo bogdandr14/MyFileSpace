@@ -46,30 +46,16 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpPut("move/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task MoveDirectory(Guid directoryId, Guid newParentDirectoryId)
+        public async Task MoveDirectory(Guid directoryId, [FromQuery]Guid newParentDirectoryId, [FromQuery] bool restore = false)
         {
-            await _virtualDirectoryService.MoveToDirectory(directoryId, newParentDirectoryId);
-        }
-
-        [HttpPut("restore/{directoryId:Guid}")]
-        [MyFileSpaceAuthorize]
-        public async Task RestoreDirectory(Guid directoryId)
-        {
-            await _virtualDirectoryService.RestoreDirectory(directoryId);
+            await _virtualDirectoryService.MoveDirectory(directoryId, newParentDirectoryId, restore);
         }
 
         [HttpDelete("{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task MoveToBin(Guid directoryId)
+        public async Task Delete(Guid directoryId, [FromQuery] bool permanent = false)
         {
-            await _virtualDirectoryService.MoveDirectoryToBin(directoryId);
-        }
-
-        [HttpDelete("permanent/{directoryId:Guid}")]
-        [MyFileSpaceAuthorize]
-        public async Task Delete(Guid directoryId)
-        {
-            await _virtualDirectoryService.DeleteDirectory(directoryId);
+            await _virtualDirectoryService.DeleteDirectory(directoryId, permanent);
         }
     }
 }

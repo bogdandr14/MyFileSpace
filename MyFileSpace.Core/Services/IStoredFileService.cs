@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MyFileSpace.Core.DTOs;
+using System.Numerics;
 
 namespace MyFileSpace.Core.Services
 {
@@ -25,7 +26,6 @@ namespace MyFileSpace.Core.Services
         /// </returns>
         Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null);
 
-
         /// <summary>
         /// Retrieves the file from the local file system.
         /// </summary>
@@ -40,13 +40,13 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved in the local system.</param>
         /// <param name="directoryId"> The directory where the file should be saved </param>
-        Task<FileDTO> AddFile(IFormFile file, Guid directoryId);
+        Task<FileDTO> UploadNewFile(IFormFile file, Guid directoryId);
 
         /// <summary>
         /// Updates a file in the local file system.
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved in the local system.</param>
-        Task<FileDTO> UpdateFile(IFormFile file, Guid fileId);
+        Task<FileDTO> UploadExistingFile(IFormFile file, Guid fileId);
 
         /// <summary>
         /// Updates a file innformation.
@@ -60,24 +60,12 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="fileId"> The file id that should be moved in the localfile system.</param>
         /// <param name="directoryId"> The directory id where the file should be moved.</param>
-        Task MoveToDirectory(Guid fileId, Guid directoryId);
-
-        /// <summary>
-        /// Marks a file as deleted, keeping it in the local file system.
-        /// </summary>
-        /// <param name="fileId"> The name of the file that should be deleted from the localfile system.</param>
-        Task MoveFileToBin(Guid fileId);
-
-        /// <summary>
-        /// Restores the deleted file.
-        /// </summary>
-        /// <param name="fileId"> The name of the file that should be restored from the localfile system.</param>
-        Task RestoreFile(Guid fileId);
+        Task MoveFile(Guid fileId, Guid directoryId, bool restore);
 
         /// <summary>
         /// Deletes a file from the local file system.
         /// </summary>
         /// <param name="fileId"> The name of the file that should be removed from the localfile system.</param>
-        Task DeleteFile(Guid fileId);
+        Task DeleteFile(Guid fileId, bool permanent);
     }
 }

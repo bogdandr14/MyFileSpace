@@ -98,7 +98,7 @@ namespace MyFileSpace.Core.Helpers
         {
             if (!await virtualDirectoryRepo.AnyAsync(new OwnedDirectoriesSpec(ownerId, directoryId)))
             {
-                throw new NotFoundException($"You do not have the specified directory!");
+                throw new NotFoundException($"You do not have the specified directory or is deleted!");
             }
         }
 

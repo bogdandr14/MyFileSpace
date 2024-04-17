@@ -4,19 +4,19 @@ namespace MyFileSpace.Api.Attributes
 {
     public class FileValidationAttribute : ValidationAttribute
     {
-        private readonly int _maxSizeKB;
+        private readonly int _maxSizeMB;
         private int MaxFileSizeBytes
         {
-            get { return _maxSizeKB * 1024; }
+            get { return _maxSizeMB * 1024 * 1024; }
         }
 
         public FileValidationAttribute() : this(40)
         {
         }
 
-        public FileValidationAttribute(int maxSizeKB)
+        public FileValidationAttribute(int maxSizeMB)
         {
-            _maxSizeKB = maxSizeKB;
+            _maxSizeMB = maxSizeMB;
         }
 
         protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
@@ -40,7 +40,7 @@ namespace MyFileSpace.Api.Attributes
 
             if (file.Length > MaxFileSizeBytes)
             {
-                return new ValidationResult($"File size exceeds {_maxSizeKB}KB.");
+                return new ValidationResult($"File size exceeds {_maxSizeMB}MB.");
             }
 
             return ValidationResult.Success!;

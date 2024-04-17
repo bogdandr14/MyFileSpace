@@ -2,7 +2,6 @@
 using MyFileSpace.Api.Attributes;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
-using MyFileSpace.Infrastructure.Persistence.Entities;
 
 namespace MyFileSpace.Api.Controllers
 {
@@ -31,18 +30,18 @@ namespace MyFileSpace.Api.Controllers
             return await _storedFileService.GetFileInfo(fileId, accessKey);
         }
 
-        [MyFileSpaceAuthorize]
         [HttpPost("upload/{directoryId:Guid}")]
-        public async Task<FileDTO> AddFile([FileValidation(4096)] IFormFile uploadedFile, Guid directoryId)
+        [MyFileSpaceAuthorize]
+        public async Task<FileDTO> UploadNewFile([FileValidation(400)] IFormFile uploadedFile, Guid directoryId)
         {
-            return await _storedFileService.AddFile(uploadedFile, directoryId);
+            return await _storedFileService.UploadNewFile(uploadedFile, directoryId);
         }
 
         [HttpPut("upload/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<FileDTO> UpdateFile([FileValidation(4096)] IFormFile uploadedFile, Guid fileId)
+        public async Task<FileDTO> UploadExistingFile([FileValidation(400)] IFormFile uploadedFile, Guid fileId)
         {
-            return await _storedFileService.UpdateFile(uploadedFile, fileId);
+            return await _storedFileService.UploadExistingFile(uploadedFile, fileId);
         }
 
         [HttpPut("{fileId:Guid}")]
@@ -62,30 +61,16 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpPut("move/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task MoveToDirectory(Guid fileId, Guid directoryId)
+        public async Task MoveFile(Guid fileId, [FromQuery] Guid directoryId, [FromQuery] bool restore = false)
         {
-            await _storedFileService.MoveToDirectory(fileId, directoryId);
-        }
-
-        [HttpPut("restore/{fileId:Guid}")]
-        [MyFileSpaceAuthorize]
-        public async Task RestoreFile(Guid fileId)
-        {
-            await _storedFileService.RestoreFile(fileId);
+            await _storedFileService.MoveFile(fileId, directoryId, restore);
         }
 
         [HttpDelete("{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task MoveToBin(Guid fileId)
+        public async Task Delete(Guid fileId, [FromQuery] bool permanent = false)
         {
-            await _storedFileService.MoveFileToBin(fileId);
-        }
-
-        [HttpDelete("permanent/{fileId:Guid}")]
-        [MyFileSpaceAuthorize]
-        public async Task Delete(Guid fileId)
-        {
-            await _storedFileService.DeleteFile(fileId);
+            await _storedFileService.DeleteFile(fileId, permanent);
         }
     }
 }
