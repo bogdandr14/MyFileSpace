@@ -50,11 +50,11 @@ namespace MyFileSpace.Core.Services.Implementation
             return _mapper.Map<UserDetailsDTO>(await _userRepository.ValidateAndRetrieveUser(userId));
         }
 
-        public async Task<string> Login(AuthDTO userLogin)
+        public async Task<TokenDTO> Login(AuthDTO userLogin)
         {
             _session.ValidateNotLoggedIn();
             User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
-            return JsonWebToken.GenerateToken(user);
+            return new TokenDTO() { Token = JsonWebToken.GenerateToken(user) };
         }
 
         public async Task<UserDetailsDTO> Register(AuthDTO userRegister)

@@ -35,7 +35,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<string> Login(AuthDTO authDTO)
+        public async Task<TokenDTO> Login(AuthDTO authDTO)
         {
             return await _userService.Login(authDTO);
         }

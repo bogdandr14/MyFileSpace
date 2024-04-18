@@ -29,6 +29,9 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseShowAllServicesMiddleware();
+    // Enable middleware to serve generated Swagger as a JSON endpoint.
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {
@@ -41,11 +44,6 @@ app.UserCorsConfiguration();
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
-
-// Enable middleware to serve generated Swagger as a JSON endpoint.
-app.UseSwagger();
-
-app.UseSwaggerUI();
 
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 

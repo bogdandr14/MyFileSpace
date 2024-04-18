@@ -17,7 +17,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a <see cref="string"/> object, which contains the the JWT token.
         /// </returns>
-        Task<string> Login(AuthDTO userLogin);
+        Task<TokenDTO> Login(AuthDTO userLogin);
 
         /// <summary>
         /// Register a user in the application with all the information for the person.
