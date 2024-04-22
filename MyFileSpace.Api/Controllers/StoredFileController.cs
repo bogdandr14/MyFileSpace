@@ -44,11 +44,11 @@ namespace MyFileSpace.Api.Controllers
             return await _storedFileService.UploadExistingFile(uploadedFile, fileId);
         }
 
-        [HttpPut("{fileId:Guid}")]
+        [HttpPut]
         [MyFileSpaceAuthorize]
-        public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdateDTO, Guid fileId)
+        public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdateDTO)
         {
-            return await _storedFileService.UpdateFileInfo(fileUpdateDTO, fileId);
+            return await _storedFileService.UpdateFileInfo(fileUpdateDTO);
         }
 
         [HttpGet("download/{fileId:Guid}")]

@@ -39,7 +39,10 @@ namespace MyFileSpace.Core.Helpers
                 .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
 
             CreateMap<DirectoryUpdateDTO, VirtualDirectory>()
-                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Path));
+                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Name));
+
+            CreateMap<DirectoryCreateDTO, VirtualDirectory>()
+                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Name));
 
             CreateMap<User, UserPublicInfoDTO>()
                 .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));

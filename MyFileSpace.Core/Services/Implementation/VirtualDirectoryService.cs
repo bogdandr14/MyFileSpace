@@ -67,31 +67,35 @@ namespace MyFileSpace.Core.Services.Implementation
 
         }
 
-        public async Task<DirectoryDTO> AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
+        public async Task<DirectoryDTO> AddDirectory(DirectoryCreateDTO directory)
         {
-            await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(parentDirectoryId, directory.Path!);
-            await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, parentDirectoryId);
+            if (directory.ParentDirectoryId == null || Guid.Empty.Equals(directory.ParentDirectoryId))
+            {
+                directory.ParentDirectoryId = (await _virtualDirectoryRepository.SingleOrDefaultAsync(new OwnedRootDirectorySpec(_session.UserId)))!.Id;
+            }
+
+            await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(directory.ParentDirectoryId.Value, directory.Name);
+            await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directory.ParentDirectoryId.Value);
             VirtualDirectory virtualDirectory = _mapper.Map<VirtualDirectory>(directory);
             virtualDirectory.OwnerId = _session.UserId;
-            virtualDirectory.ParentDirectoryId = parentDirectoryId;
             VirtualDirectory newDirectory = await _virtualDirectoryRepository.AddAsync(virtualDirectory);
             await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
 
-        public async Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directoryUpdate, Guid directoryId)
+        public async Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directoryUpdate)
         {
-            VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryId);
+            VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryUpdate.DirectoryId);
 
-            if (!string.IsNullOrEmpty(directoryUpdate.Path))
+            if (!string.IsNullOrEmpty(directoryUpdate.Name))
             {
                 if (virtualDirectory.ParentDirectoryId == null)
                 {
                     throw new InvalidException("Can not change root path");
                 }
 
-                await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(virtualDirectory.ParentDirectoryId.Value, directoryUpdate.Path);
-                virtualDirectory.VirtualPath = directoryUpdate.Path;
+                await _virtualDirectoryRepository.ValidateDirectoryNotInParentDirectory(virtualDirectory.ParentDirectoryId.Value, directoryUpdate.Name);
+                virtualDirectory.VirtualPath = directoryUpdate.Name;
             }
 
             if (directoryUpdate.AccessLevel != null)
@@ -101,7 +105,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
             await _virtualDirectoryRepository.UpdateAsync(virtualDirectory);
             await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
-            VirtualDirectory newDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryId);
+            VirtualDirectory newDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryUpdate.DirectoryId);
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
 

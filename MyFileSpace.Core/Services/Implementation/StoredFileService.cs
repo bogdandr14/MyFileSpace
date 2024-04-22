@@ -83,9 +83,9 @@ namespace MyFileSpace.Core.Services.Implementation
             return _mapper.Map<FileDTO>(storedFile);
         }
 
-        public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId)
+        public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate)
         {
-            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileUpdate.FileId);
             if (!string.IsNullOrEmpty(fileUpdate.Name))
             {
                 await _storedFileRepository.ValidateFileNameNotInDirectory(storedFile.DirectorId, fileUpdate.Name);
@@ -99,7 +99,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
-            return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
+            return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileUpdate.FileId));
         }
 
         public async Task<FileDTO> UploadExistingFile(IFormFile file, Guid fileId)

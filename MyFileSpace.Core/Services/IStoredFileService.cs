@@ -53,7 +53,7 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="fileUpdate"> All the information for the file that must be saved in the local system.</param>
         /// <param name="fileUpdate"> The id of the file that needs to be updated.</param>
-        Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate, Guid fileId);
+        Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate);
 
         /// <summary>
         /// Move a file to a specific directory, keeping it in the local file system.
