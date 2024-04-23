@@ -17,14 +17,14 @@ namespace MyFileSpace.Api.Attributes
         private IAuthService _authService;
         private string _authorizationString;
 
-        public MyFileSpaceAuthorizeAttribute()
+        public MyFileSpaceAuthorizeAttribute(bool allowAnonymous = false)
         {
             rolesAllowed = new List<RoleType>
             {
                 RoleType.Admin,
                 RoleType.Customer
             };
-            allowAnonymous = false;
+            this.allowAnonymous = allowAnonymous;
         }
 
         public MyFileSpaceAuthorizeAttribute(RoleType role)
@@ -34,11 +34,6 @@ namespace MyFileSpace.Api.Attributes
                 role
             };
             allowAnonymous = false;
-        }
-
-        public MyFileSpaceAuthorizeAttribute(bool allowAnonymous)
-        {
-            this.allowAnonymous = allowAnonymous;
         }
 
         public void OnAuthorization(AuthorizationFilterContext context)

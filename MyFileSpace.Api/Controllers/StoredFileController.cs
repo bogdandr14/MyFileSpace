@@ -32,16 +32,16 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpPost("upload/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<FileDTO> UploadNewFile([FileValidation(400)] IFormFile uploadedFile, Guid directoryId)
+        public async Task<FileDTO> UploadNewFile([FileValidation(400)] IFormFile file, Guid directoryId)
         {
-            return await _storedFileService.UploadNewFile(uploadedFile, directoryId);
+            return await _storedFileService.UploadNewFile(file, directoryId);
         }
 
         [HttpPut("upload/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task<FileDTO> UploadExistingFile([FileValidation(400)] IFormFile uploadedFile, Guid fileId)
+        public async Task<FileDTO> UploadExistingFile([FileValidation(400)] IFormFile file, Guid fileId)
         {
-            return await _storedFileService.UploadExistingFile(uploadedFile, fileId);
+            return await _storedFileService.UploadExistingFile(file, fileId);
         }
 
         [HttpPut]
