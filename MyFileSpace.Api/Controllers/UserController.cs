@@ -29,9 +29,9 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<UserDetailsDTO> Register(AuthDTO authDTO)
+        public async Task<UserDetailsDTO> Register(RegisterDTO registerDTO)
         {
-            return await _userService.Register(authDTO);
+            return await _userService.Register(registerDTO);
         }
 
         [HttpPost("login")]

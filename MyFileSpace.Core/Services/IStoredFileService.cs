@@ -7,6 +7,13 @@ namespace MyFileSpace.Core.Services
     public interface IStoredFileService
     {
         /// <summary>
+        /// </summary>
+        /// <returns>
+        /// Returns a list of file details.
+        /// </returns>
+        Task<FilesFoundDTO> SearchFiles(InfiniteScrollFilter filter);
+
+        /// <summary>
         /// Retrieves all files information for the stored files in the local file system.
         /// </summary>
         /// <returns>

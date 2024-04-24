@@ -23,6 +23,12 @@ namespace MyFileSpace.Api.Controllers
             return await _storedFileService.GetAllFilesInfo(deletedFiles);
         }
 
+        [HttpGet("search")]
+        public async Task<FilesFoundDTO> SearchFiles([FromQuery] InfiniteScrollFilter filter)
+        {
+            return await _storedFileService.SearchFiles(filter);
+        }
+
         [HttpGet("{fileId:Guid}")]
         [MyFileSpaceAuthorize(true)]
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, [FromQuery] string? accessKey)

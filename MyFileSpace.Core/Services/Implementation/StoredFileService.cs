@@ -30,6 +30,37 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
+
+        public async Task<FilesFoundDTO> SearchFiles(InfiniteScrollFilter filter)
+        {
+            if (string.IsNullOrEmpty(filter.Name))
+            {
+                filter.Name = " ";
+            }
+            //increase to check if last files
+            filter.Take++;
+            List<StoredFile> storedFiles;
+            if (_session.IsAuthenticated)
+            {
+                storedFiles = await _storedFileRepository.ListAsync(new SearchFilesSpec(filter, _session.UserId));
+            }
+            else
+            {
+                storedFiles = await _storedFileRepository.ListAsync(new SearchFilesSpec(filter));
+            }
+
+            FilesFoundDTO filesFound = new FilesFoundDTO();
+            filesFound.Skipped = filter.Skip;
+            filesFound.AreLast = storedFiles.Count < filter.Take;
+            if (!filesFound.AreLast)
+            {
+                storedFiles.RemoveAt(storedFiles.Count - 1);
+            }
+            filesFound.Taken = storedFiles.Count;
+            filesFound.Files = _mapper.Map<List<FileDTO>>(storedFiles);
+
+            return filesFound;
+        }
         public async Task<List<OwnFileDetailsDTO>> GetAllFilesInfo(bool? deletedFiles)
         {
             Func<Task<List<OwnFileDetailsDTO>>> allFilesTask = async () =>

@@ -28,7 +28,7 @@ namespace MyFileSpace.Core.Services
         /// Returns a <see cref="UserDetailsDTO"/> object, which contains all the information
         /// for the user.
         /// </returns>
-        Task<UserDetailsDTO> Register(AuthDTO userRegister);
+        Task<UserDetailsDTO> Register(RegisterDTO userRegister);
 
         /// <summary>
         /// Updated the user's password. The new password will be validated in order 

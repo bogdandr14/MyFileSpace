@@ -7,6 +7,7 @@ using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Helpers;
+using System.Text.RegularExpressions;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
@@ -57,16 +58,25 @@ namespace MyFileSpace.Core.Services.Implementation
             return new TokenDTO() { Token = JsonWebToken.GenerateToken(user) };
         }
 
-        public async Task<UserDetailsDTO> Register(AuthDTO userRegister)
+        public async Task<UserDetailsDTO> Register(RegisterDTO userRegister)
         {
             _session.ValidateNotLoggedIn();
             await _userRepository.ValidateEmail(userRegister.Email);
             userRegister.Password.ValidatePasswordStrength();
+            if (string.IsNullOrEmpty(userRegister.TagName))
+            {
+                userRegister.TagName = await GenerateTagName(userRegister.Email);
+            }
+            else if (await GetUserByTagNameCached(userRegister.TagName) != null)
+            {
+                throw new InvalidException("TagName already exists");
+            }
 
             User user = new User()
             {
                 Role = RoleType.Customer,
                 Email = userRegister.Email,
+                TagName = userRegister.TagName,
                 Password = CryptographyUtility.HashKey(userRegister.Password, out string salt)
             };
             user.Salt = salt;
@@ -118,6 +128,36 @@ namespace MyFileSpace.Core.Services.Implementation
             return $"{nameof(User)}_tagname_{tagName}";
         }
 
+        private async Task<string> GenerateTagName(string email)
+        {
+            Regex emailExtraction = new Regex("(?<target>[^,]+)@([\\w-]+\\.)+[\\w-]{2,4}$");
+            Group? tokenGroup = emailExtraction.Match(email).Groups["target"];
+            string firstPart = tokenGroup.Value;
+            Random rand = new Random();
+
+            string generatedTagName;
+            do
+            {
+                if (firstPart.Length > 8)
+                {
+                    int nrOfEmailCharacters = rand.Next(8, (firstPart.Length + 8) / 2);
+                    generatedTagName = firstPart.Substring(0, nrOfEmailCharacters);
+                }
+                else
+                {
+                    generatedTagName = firstPart;
+                }
+
+                int nrOfDigits = rand.Next(0, 3);
+                while (nrOfDigits > 0)
+                {
+                    generatedTagName = $"{generatedTagName}{rand.Next(0, 9)}";
+                    --nrOfDigits;
+                }
+            } while (!await CheckTagNameAvailable(generatedTagName));
+
+            return generatedTagName;
+        }
         #region "Validators"
         private async Task<User> ValidateTagNameAndRetrieveUser(string tagName)
         {
