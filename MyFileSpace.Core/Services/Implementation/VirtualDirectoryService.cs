@@ -6,6 +6,7 @@ using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
+using System.IO;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
@@ -79,7 +80,10 @@ namespace MyFileSpace.Core.Services.Implementation
             VirtualDirectory virtualDirectory = _mapper.Map<VirtualDirectory>(directory);
             virtualDirectory.OwnerId = _session.UserId;
             VirtualDirectory newDirectory = await _virtualDirectoryRepository.AddAsync(virtualDirectory);
-            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
+            Task.WaitAll(
+                _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey),
+                _cacheRepository.RemoveAsync(DirectoryDetailsCacheKey(newDirectory.ParentDirectoryId!.Value, null))
+            );
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
 
