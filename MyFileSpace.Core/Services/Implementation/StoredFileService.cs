@@ -108,8 +108,10 @@ namespace MyFileSpace.Core.Services.Implementation
                 ContentType = file.ContentType
             };
             StoredFile storedFile = await _storedFileRepository.AddAsync(fileToStore);
-            await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            Task.WaitAll(
+                _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file),
+                _cacheRepository.RemoveAsync(_session.AllFilesCacheKey)
+            );
 
             return _mapper.Map<FileDTO>(storedFile);
         }

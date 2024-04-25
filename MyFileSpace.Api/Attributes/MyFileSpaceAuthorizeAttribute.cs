@@ -53,13 +53,13 @@ namespace MyFileSpace.Api.Attributes
             }
 
             // validate user authentication
-            Tuple<Guid, RoleType> test = _authService.ValidateUserAuthorization(_authorizationString, rolesAllowed);
+            (Guid guid, RoleType roleType) = _authService.ValidateUserAuthorization(_authorizationString, rolesAllowed);
 
             // set session info
             Session session = (Session)context.HttpContext.RequestServices.GetService(typeof(Session))!;
             session.IsAuthenticated = true;
-            session.UserId = test.Item1;
-            session.Role = test.Item2;
+            session.UserId = guid;
+            session.Role = roleType;
         }
 
         private void InitializeProviders(IServiceProvider serviceProvider)

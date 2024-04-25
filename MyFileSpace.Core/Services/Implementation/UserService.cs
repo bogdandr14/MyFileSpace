@@ -88,8 +88,10 @@ namespace MyFileSpace.Core.Services.Implementation
                 OwnerId = createUser.Id,
                 VirtualPath = Constants.ROOT_DIRECTORY,
             };
-            await _virtualDirectoryRepository.AddAsync(rootDirectory);
-            await _fileSystemRepository.AddDirectory(user.Id.ToString());
+            Task.WaitAll(
+                _virtualDirectoryRepository.AddAsync(rootDirectory),
+                _fileSystemRepository.AddDirectory(user.Id.ToString())
+            );
             return _mapper.Map<UserDetailsDTO>(createUser);
         }
 

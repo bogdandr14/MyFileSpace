@@ -12,9 +12,12 @@ namespace MyFileSpace.Api
         #region "Builder setup"
         internal static void ConfigureKeyVault(this IHostApplicationBuilder hostApplicationBuilder)
         {
-            string keyVaultEndpoint = GetEnvironmentVariable("KEYVAULT_ENDPOINT");
-            SecretClient secretClient = new SecretClient(new Uri(keyVaultEndpoint), hostApplicationBuilder.GetTokenCredential());
-            hostApplicationBuilder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+            if (hostApplicationBuilder.Environment.IsProduction())
+            {
+                string keyVaultEndpoint = GetEnvironmentVariable("KEYVAULT_ENDPOINT");
+                SecretClient secretClient = new SecretClient(new Uri(keyVaultEndpoint), hostApplicationBuilder.GetTokenCredential());
+                hostApplicationBuilder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+            }
         }
 
         internal static void AddModulesConfiguration(this IServiceCollection services, IWebHostEnvironment environment, IConfiguration configuration)
