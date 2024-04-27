@@ -6,7 +6,6 @@ using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
-using System.IO;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
@@ -48,8 +47,8 @@ namespace MyFileSpace.Core.Services.Implementation
                 DirectoryDetailsDTO directoryDTO = _mapper.Map<DirectoryDetailsDTO>(virtualDirectory);
                 if (virtualDirectory.Owner.Id.Equals(_session.UserId))
                 {
-                    directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory);
-                    directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories);
+                    directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.OrderBy(fid => fid.Name));
+                    directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.OrderBy(cd => cd.VirtualPath));
                     directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
                     if (virtualDirectory.DirectoryAccessKey != null)
                     {
@@ -61,6 +60,8 @@ namespace MyFileSpace.Core.Services.Implementation
                     directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
                     directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
                 }
+
+                directoryDTO.PathParentDirectories = await RetrieveParentDirectories(virtualDirectory);
 
                 return directoryDTO;
             };
@@ -146,6 +147,23 @@ namespace MyFileSpace.Core.Services.Implementation
         #endregion
 
         #region "Private methods"
+
+        private async Task<List<DirectoryDTO>> RetrieveParentDirectories(VirtualDirectory directory)
+        {
+            List<DirectoryDTO> parentDirectories = new List<DirectoryDTO>();
+            while (directory.ParentDirectoryId != null)
+            {
+                directory = await _virtualDirectoryRepository.GetBySpecAsync(new AllowedDirectorySpec(directory.ParentDirectoryId.Value, _session.UserId));
+                if (directory == null)
+                {
+                    break;
+                }
+                parentDirectories.Add(_mapper.Map<DirectoryDTO>(directory));
+            }
+
+            parentDirectories.Reverse();
+            return parentDirectories;
+        }
         private async Task MoveToDirectory(Guid directoryToMoveId, Guid newParentDirectoryId)
         {
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, newParentDirectoryId);
