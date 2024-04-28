@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MyFileSpace.Core.DTOs;
+using MyFileSpace.SharedKernel.Enums;
 using System.Numerics;
 
 namespace MyFileSpace.Core.Services
@@ -47,7 +48,7 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="file"> All the information for the file that must be saved in the local system.</param>
         /// <param name="directoryId"> The directory where the file should be saved </param>
-        Task<FileDTO> UploadNewFile(IFormFile file, Guid directoryId);
+        Task<FileDTO> UploadNewFile(IFormFile file, Guid directoryId, AccessType accessLevel);
 
         /// <summary>
         /// Updates a file in the local file system.

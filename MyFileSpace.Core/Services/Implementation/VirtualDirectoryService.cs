@@ -41,32 +41,27 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null)
         {
-            Func<Task<DirectoryDetailsDTO>> directoryDetailsTask = async () =>
+            VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryId, accessKey);
+            DirectoryDetailsDTO directoryDTO = _mapper.Map<DirectoryDetailsDTO>(virtualDirectory);
+            if (virtualDirectory.Owner.Id.Equals(_session.UserId))
             {
-                VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryId, accessKey);
-                DirectoryDetailsDTO directoryDTO = _mapper.Map<DirectoryDetailsDTO>(virtualDirectory);
-                if (virtualDirectory.Owner.Id.Equals(_session.UserId))
+                directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.OrderBy(fid => fid.Name));
+                directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.OrderBy(cd => cd.VirtualPath));
+                directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
+                if (virtualDirectory.DirectoryAccessKey != null)
                 {
-                    directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.OrderBy(fid => fid.Name));
-                    directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.OrderBy(cd => cd.VirtualPath));
-                    directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
-                    if (virtualDirectory.DirectoryAccessKey != null)
-                    {
-                        directoryDTO.AccessKey = virtualDirectory.DirectoryAccessKey.AccessKey.Key;
-                    }
+                    directoryDTO.AccessKey = virtualDirectory.DirectoryAccessKey.AccessKey.Key;
                 }
-                else
-                {
-                    directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
-                    directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
-                }
+            }
+            else
+            {
+                directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
+                directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
+            }
 
-                directoryDTO.PathParentDirectories = await RetrieveParentDirectories(virtualDirectory);
+            directoryDTO.PathParentDirectories = await RetrieveParentDirectories(virtualDirectory);
 
-                return directoryDTO;
-            };
-            return await _cacheRepository.GetAndSetAsync(DirectoryDetailsCacheKey(directoryId, accessKey), directoryDetailsTask);
-
+            return directoryDTO;
         }
 
         public async Task<DirectoryDTO> AddDirectory(DirectoryCreateDTO directory)
@@ -153,7 +148,7 @@ namespace MyFileSpace.Core.Services.Implementation
             List<DirectoryDTO> parentDirectories = new List<DirectoryDTO>();
             while (directory.ParentDirectoryId != null)
             {
-                directory = await _virtualDirectoryRepository.GetBySpecAsync(new AllowedDirectorySpec(directory.ParentDirectoryId.Value, _session.UserId));
+                directory = await _virtualDirectoryRepository.GetBySpecAsync(new AllowedDirectorySpec(directory.ParentDirectoryId.Value, _session.UserId, true));
                 if (directory == null)
                 {
                     break;

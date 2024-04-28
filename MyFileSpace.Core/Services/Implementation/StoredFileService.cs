@@ -92,7 +92,7 @@ namespace MyFileSpace.Core.Services.Implementation
             return fileDownloadDTO;
         }
 
-        public async Task<FileDTO> UploadNewFile(IFormFile file, Guid directoryId)
+        public async Task<FileDTO> UploadNewFile(IFormFile file, Guid directoryId, AccessType accessLevel)
         {
             await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
@@ -103,7 +103,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 OwnerId = _session.UserId,
                 DirectorId = directoryId,
                 Name = file.FileName,
-                AccessLevel = AccessType.Private,
+                AccessLevel = accessLevel,
                 SizeInBytes = file.Length,
                 ContentType = file.ContentType
             };
