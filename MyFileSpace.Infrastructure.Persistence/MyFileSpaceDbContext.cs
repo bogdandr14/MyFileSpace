@@ -61,7 +61,7 @@ namespace MyFileSpace.Infrastructure.Persistence
                         base.Entry(entity).Property(x => x.CreatedAt).IsModified = false;
                     }
 
-                    entity.CreatedAt = now;
+                    entity.ModifiedAt = now;
                 }
             }
 
