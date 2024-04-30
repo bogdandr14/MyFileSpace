@@ -19,7 +19,9 @@ namespace MyFileSpace.Core.Specifications
         {
             Query.Where(x => x.OwnerId.Equals(ownerId) && x.Id.Equals(directoryId) && x.IsDeleted == isDeleted)
                 .Include(x=> x.ChildDirectories)
-                .Include(x=> x.FilesInDirectory);
+                .Include(x=> x.FilesInDirectory)
+                .Include(x => x.AllowedUsers).ThenInclude(x => x.AllowedUser)
+                .Include(x => x.DirectoryAccessKey).ThenInclude(x => x!.AccessKey);
         }
     }
 }

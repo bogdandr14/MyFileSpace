@@ -9,5 +9,6 @@ namespace MyFileSpace.Core.DTOs
         public AccessType AccessLevel { get; set; }
         public int SizeInBytes { get; set; }
         public string ContentType { get; set; }
+        public Guid OwnerId { get; set; }
     }
 }

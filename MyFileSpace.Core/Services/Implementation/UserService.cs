@@ -54,8 +54,15 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task<TokenDTO> Login(AuthDTO userLogin)
         {
             _session.ValidateNotLoggedIn();
-            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
-            return new TokenDTO() { Token = JsonWebToken.GenerateToken(user) };
+            try
+            {
+                User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
+                return new TokenDTO() { Token = JsonWebToken.GenerateToken(user) };
+            }
+            catch
+            {
+                throw new InvalidException("Email or password are incorrect");
+            }
         }
 
         public async Task<UserDetailsDTO> Register(RegisterDTO userRegister)

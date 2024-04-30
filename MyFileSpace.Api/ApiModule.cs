@@ -17,7 +17,7 @@ namespace MyFileSpace.Api
             services.Configure<FormOptions>(options =>
             {
                 options.ValueLengthLimit = int.MaxValue;
-                options.MultipartBodyLengthLimit = int.MaxValue;
+                options.MultipartBodyLengthLimit = long.MaxValue;
                 options.MemoryBufferThreshold = int.MaxValue;
             });
 

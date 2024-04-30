@@ -8,5 +8,6 @@ namespace MyFileSpace.Core.DTOs
         public string Name { get; set; }
         public Guid? ParentDirectoryId { get; set; }
         public AccessType AccessLevel { get; set; }
+        public Guid OwnerId { get; set; }
     }
 }

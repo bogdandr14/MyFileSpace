@@ -18,7 +18,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             Directory.CreateDirectory(_fileDirectoryPath);
         }
 
-        public async Task<Stream> ReadFile(string directory, string fileName)
+        public async Task<byte[]> ReadFile(string directory, string fileName)
         {
             string fullPath = GetFullPath(directory, fileName);
 
@@ -29,7 +29,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
 
             using (FileStream fileStream = File.OpenRead(fullPath))
             {
-                return await CryptographyUtility.DecryptAsync(fileStream, _fileEncryptionKey);
+                return (await CryptographyUtility.DecryptAsync(fileStream, _fileEncryptionKey)).ToArray();
             }
         }
 

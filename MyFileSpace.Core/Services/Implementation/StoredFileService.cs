@@ -119,7 +119,7 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task<FileDTO> UpdateFileInfo(FileUpdateDTO fileUpdate)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileUpdate.FileId);
-            if (!string.IsNullOrEmpty(fileUpdate.Name))
+            if (!string.IsNullOrEmpty(fileUpdate.Name) && storedFile.Name != fileUpdate.Name)
             {
                 await _storedFileRepository.ValidateFileNameNotInDirectory(storedFile.DirectorId, fileUpdate.Name);
                 storedFile.Name = fileUpdate.Name;

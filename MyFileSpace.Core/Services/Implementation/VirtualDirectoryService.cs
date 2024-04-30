@@ -45,8 +45,8 @@ namespace MyFileSpace.Core.Services.Implementation
             DirectoryDetailsDTO directoryDTO = _mapper.Map<DirectoryDetailsDTO>(virtualDirectory);
             if (virtualDirectory.Owner.Id.Equals(_session.UserId))
             {
-                directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.OrderBy(fid => fid.Name));
-                directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.OrderBy(cd => cd.VirtualPath));
+                directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => !x.IsDeleted).OrderBy(fid => fid.Name));
+                directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => !x.IsDeleted).OrderBy(cd => cd.VirtualPath));
                 directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
                 if (virtualDirectory.DirectoryAccessKey != null)
                 {
@@ -55,8 +55,8 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             else
             {
-                directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
-                directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
+                directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => !x.IsDeleted && x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
+                directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => !x.IsDeleted && x.AccessLevel == AccessType.Public || (x.AccessLevel == AccessType.Restricted && x.AllowedUsers.Any(w => w.AllowedUserId.Equals(_session.UserId)))));
             }
 
             directoryDTO.PathParentDirectories = await RetrieveParentDirectories(virtualDirectory);
@@ -87,7 +87,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryUpdate.DirectoryId);
 
-            if (!string.IsNullOrEmpty(directoryUpdate.Name))
+            if (!string.IsNullOrEmpty(directoryUpdate.Name) && virtualDirectory.VirtualPath != directoryUpdate.Name)
             {
                 if (virtualDirectory.ParentDirectoryId == null)
                 {
@@ -203,10 +203,8 @@ namespace MyFileSpace.Core.Services.Implementation
             List<StoredFile> filesToMoveToBin = new List<StoredFile>();
             await RecursiveUpdateState(directoriesToMoveToBin, filesToMoveToBin, virtualDirectory, true);
 
-            Task.WaitAll(
-                _virtualDirectoryRepository.UpdateRangeAsync(directoriesToMoveToBin),
-                _storedFileRepository.UpdateRangeAsync(filesToMoveToBin)
-            );
+            await _virtualDirectoryRepository.UpdateRangeAsync(directoriesToMoveToBin);
+            await _storedFileRepository.UpdateRangeAsync(filesToMoveToBin);
         }
 
         private async Task DeleteDirectoryPermanently(Guid directoryId)
