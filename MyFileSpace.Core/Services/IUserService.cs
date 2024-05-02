@@ -1,14 +1,16 @@
 ﻿using MyFileSpace.Core.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyFileSpace.Core.Services
 {
     public interface IUserService
     {
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// Returns a list of users.
+        /// </returns>
+        Task<UsersFoundDTO> SearchUsers(InfiniteScrollFilter filter);
 
         /// <summary>
         /// Logins a user in the application based on the provided information.

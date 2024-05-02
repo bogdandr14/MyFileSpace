@@ -31,6 +31,28 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
+        public async Task<UsersFoundDTO> SearchUsers(InfiniteScrollFilter filter)
+        {
+            if (string.IsNullOrEmpty(filter.Name))
+            {
+                filter.Name = " ";
+            }
+            //increase to check if last files
+            filter.Take++;
+            List<User> users = await _userRepository.ListAsync(new SearchUsersSpec(filter, _session.UserId));
+
+            UsersFoundDTO usersFound = new UsersFoundDTO();
+            usersFound.Skipped = filter.Skip;
+            usersFound.AreLast = users.Count < filter.Take;
+            if (!usersFound.AreLast)
+            {
+                users.RemoveAt(users.Count - 1);
+            }
+            usersFound.Taken = users.Count;
+            usersFound.Items = _mapper.Map<List<UserPublicInfoDTO>>(users);
+
+            return usersFound;
+        }
         public async Task<bool> CheckEmailAvailable(string email)
         {
             return await _userRepository.FirstOrDefaultAsync(new EmailSpec(email)) == null;
@@ -147,6 +169,7 @@ namespace MyFileSpace.Core.Services.Implementation
             string generatedTagName;
             do
             {
+                int nrOfDigits = rand.Next(0, 3);
                 if (firstPart.Length > 8)
                 {
                     int nrOfEmailCharacters = rand.Next(8, (firstPart.Length + 8) / 2);
@@ -155,9 +178,12 @@ namespace MyFileSpace.Core.Services.Implementation
                 else
                 {
                     generatedTagName = firstPart;
+                    while (generatedTagName.Length < 8)
+                    {
+                        generatedTagName += (char)('a' + rand.Next(0, 25));
+                    }
                 }
 
-                int nrOfDigits = rand.Next(0, 3);
                 while (nrOfDigits > 0)
                 {
                     generatedTagName = $"{generatedTagName}{rand.Next(0, 9)}";

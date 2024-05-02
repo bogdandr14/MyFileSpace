@@ -57,7 +57,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 storedFiles.RemoveAt(storedFiles.Count - 1);
             }
             filesFound.Taken = storedFiles.Count;
-            filesFound.Files = _mapper.Map<List<FileDTO>>(storedFiles);
+            filesFound.Items = _mapper.Map<List<FileDTO>>(storedFiles);
 
             return filesFound;
         }
@@ -80,7 +80,22 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null)
         {
-            return _mapper.Map<FileDetailsDTO>(await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey));
+            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
+            FileDetailsDTO fileDetailsDTO = _mapper.Map<FileDetailsDTO>(storedFile);
+            if (fileDetailsDTO.OwnerId.Equals(_session.UserId))
+            {
+                fileDetailsDTO.AllowedUsers = storedFile.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
+                if (storedFile.FileAccessKey != null)
+                {
+                    fileDetailsDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(storedFile.FileAccessKey.AccessKey);
+                    if (fileDetailsDTO.AccessKey.ExpiresAt == DateTime.MaxValue)
+                    {
+                        fileDetailsDTO.AccessKey.ExpiresAt = null;
+                    }
+                }
+            }
+                
+            return fileDetailsDTO;
         }
 
         public async Task<FileDownloadDTO> DownloadFile(Guid fileId, string? accessKey = null)

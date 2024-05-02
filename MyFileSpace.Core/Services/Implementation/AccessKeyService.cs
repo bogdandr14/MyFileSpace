@@ -37,7 +37,7 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
-        public async Task<string> CreateAccessKey(KeyAccesUpdateDTO keyAccess)
+        public async Task<KeyAccessDetailsDTO> CreateAccessKey(KeyAccesUpdateDTO keyAccess)
         {
             await ValidateOwnActiveObject(keyAccess.ObjectType, keyAccess.ObjectId);
             await _accessKeyRepository.ValidateAccessKeyInexistent(keyAccess.ObjectId, keyAccess.ObjectType);
@@ -53,20 +53,32 @@ namespace MyFileSpace.Core.Services.Implementation
                 await _directoryAccessKeyRepository.AddAsync(new DirectoryAccessKey() { AccessKeyId = accessKey.Id, DirectoryId = keyAccess.ObjectId });
             }
 
-            return accessKey.Key;
+            KeyAccessDetailsDTO keyAccessDetailsDTO = _mapper.Map<KeyAccessDetailsDTO>(accessKey);
+
+            if (keyAccessDetailsDTO.ExpiresAt == DateTime.MaxValue)
+            {
+                keyAccessDetailsDTO.ExpiresAt = null;
+            }
+            return keyAccessDetailsDTO;
         }
 
         public async Task<KeyAccessDetailsDTO> GetAccessKey(ObjectType objectType, Guid objectId)
         {
             AccessKey accessKey = await _accessKeyRepository.ValidateAndRetrieveOwnAccessKey(_session.UserId, objectId, objectType);
-            return _mapper.Map<KeyAccessDetailsDTO>(accessKey);
+            KeyAccessDetailsDTO keyAccessDetailsDTO = _mapper.Map<KeyAccessDetailsDTO>(accessKey);
+
+            if (keyAccessDetailsDTO.ExpiresAt == DateTime.MaxValue)
+            {
+                keyAccessDetailsDTO.ExpiresAt = null;
+            }
+            return keyAccessDetailsDTO;
         }
 
         public async Task DeleteAccessKey(ObjectType objectType, Guid objectId)
         {
             await ValidateOwnActiveObject(objectType, objectId);
 
-            AccessKey accessKey = await _accessKeyRepository.ValidateAndRetrieveOwnAccessKey(_session.UserId,objectId, objectType);
+            AccessKey accessKey = await _accessKeyRepository.ValidateAndRetrieveOwnAccessKey(_session.UserId, objectId, objectType);
 
             await _accessKeyRepository.DeleteAsync(accessKey);
         }
@@ -76,15 +88,16 @@ namespace MyFileSpace.Core.Services.Implementation
         private async Task<AccessKey> CreateBaseAccessKey(KeyAccesUpdateDTO keyAccess)
         {
             DateTime expiresAt;
-            if (keyAccess.ExpiresIn != null)
+            if (keyAccess.ExpiresAt != null)
             {
-                expiresAt = DateTime.UtcNow.Add(keyAccess.ExpiresIn.Value);
+                DateTime utc = DateTime.UtcNow;
+                expiresAt = keyAccess.ExpiresAt.Value;
             }
             else
             {
                 expiresAt = DateTime.MaxValue;
             }
-            string clearKey = $"AccessKey_{keyAccess.ObjectType}_{keyAccess.ObjectId}";
+            string clearKey = $"{(int)keyAccess.ObjectType}0{keyAccess.ObjectId}".Replace("-", "");
             string encryptedKey = await CryptographyUtility.EncryptAsync(clearKey, _session.UserId.ToString());
             AccessKey accessKey = await _accessKeyRepository.AddAsync(new AccessKey() { Key = encryptedKey, ExpiresAt = expiresAt });
             return accessKey;

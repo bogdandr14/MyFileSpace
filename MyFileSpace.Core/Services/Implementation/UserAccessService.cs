@@ -39,46 +39,31 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
-        public async Task AddUserAccess(UserAccessUpdateDTO userAccess)
+        public async Task EditAllowedUsers(UserAccessUpdateDTO userAccess)
         {
             userAccess.ObjectType.ValidateObjectType();
-            await _userRepository.ValidateExistingUsers(userAccess.UserGuids);
-
-            if (userAccess.ObjectType == ObjectType.StoredFile)
-            {
-                await _storedFileRepository.ValidateOwnActiveFile(_session.UserId,userAccess.ObjectId);
-                await _userFileAccessRepository.ValidateAndRetrieveExistingUserFileAccess(userAccess.ObjectId, userAccess.UserGuids, false);
-                List<UserFileAccess> allowedUsersToAdd = userAccess.UserGuids.Select(userId => new UserFileAccess() { AllowedUserId = userId, FileId = userAccess.ObjectId }).ToList();
-                await _userFileAccessRepository.AddRangeAsync(allowedUsersToAdd);
-            }
-            else if (userAccess.ObjectType == ObjectType.VirtualDirectory)
-            {
-                await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, userAccess.ObjectId);
-                await _userDirectoryAccessRepository.ValidateAndRetrieveExistingUserDirectoryAccess(userAccess.ObjectId, userAccess.UserGuids, false);
-
-                List<UserDirectoryAccess> allowedUsersToAdd = userAccess.UserGuids.Select(userId => new UserDirectoryAccess() { AllowedUserId = userId, DirectoryId = userAccess.ObjectId }).ToList();
-                await _userDirectoryAccessRepository.AddRangeAsync(allowedUsersToAdd);
-            }
-        }
-
-        public async Task RemoveUserAccess(UserAccessUpdateDTO userAccess)
-        {
-            userAccess.ObjectType.ValidateObjectType();
-            await _userRepository.ValidateExistingUsers(userAccess.UserGuids);
+            await _userRepository.ValidateExistingUsers(userAccess.AddUserIds);
+            await _userRepository.ValidateExistingUsers(userAccess.RemoveUserIds);
 
             if (userAccess.ObjectType == ObjectType.StoredFile)
             {
                 await _storedFileRepository.ValidateOwnActiveFile(_session.UserId, userAccess.ObjectId);
-
-                List<UserFileAccess> allowedUsersToRemove = await _userFileAccessRepository.ValidateAndRetrieveExistingUserFileAccess(userAccess.ObjectId, userAccess.UserGuids, true);
+                await _userFileAccessRepository.ValidateAndRetrieveExistingUserFileAccess(userAccess.ObjectId, userAccess.AddUserIds, false);
+                List<UserFileAccess> allowedUsersToAdd = userAccess.AddUserIds.Select(userId => new UserFileAccess() { AllowedUserId = userId, FileId = userAccess.ObjectId }).ToList();
+                List<UserFileAccess> allowedUsersToRemove = await _userFileAccessRepository.ValidateAndRetrieveExistingUserFileAccess(userAccess.ObjectId, userAccess.RemoveUserIds, true);
+                await _userFileAccessRepository.AddRangeAsync(allowedUsersToAdd);
                 await _userFileAccessRepository.DeleteRangeAsync(allowedUsersToRemove);
             }
             else if (userAccess.ObjectType == ObjectType.VirtualDirectory)
             {
-                await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId,userAccess.ObjectId);
+                await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, userAccess.ObjectId);
+                await _userDirectoryAccessRepository.ValidateAndRetrieveExistingUserDirectoryAccess(userAccess.ObjectId, userAccess.AddUserIds, false);
+                List<UserDirectoryAccess> allowedUsersToRemove = await _userDirectoryAccessRepository.ValidateAndRetrieveExistingUserDirectoryAccess(userAccess.ObjectId, userAccess.RemoveUserIds, true);
 
-                List<UserDirectoryAccess> allowedUsersToRemove = await _userDirectoryAccessRepository.ValidateAndRetrieveExistingUserDirectoryAccess(userAccess.ObjectId, userAccess.UserGuids, true);
+                List<UserDirectoryAccess> allowedUsersToAdd = userAccess.AddUserIds.Select(userId => new UserDirectoryAccess() { AllowedUserId = userId, DirectoryId = userAccess.ObjectId }).ToList();
+                await _userDirectoryAccessRepository.AddRangeAsync(allowedUsersToAdd);
                 await _userDirectoryAccessRepository.DeleteRangeAsync(allowedUsersToRemove);
+                await _cacheRepository.RemoveAsync(GetAllObjectAccessCacheKey(userAccess.ObjectId));
             }
         }
 

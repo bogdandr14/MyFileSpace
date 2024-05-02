@@ -27,7 +27,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpPost("key")]
-        public async Task<string> CreateAccessKey(KeyAccesUpdateDTO accessKeyDTO)
+        public async Task<KeyAccessDetailsDTO> CreateAccessKey(KeyAccesUpdateDTO accessKeyDTO)
         {
             return await _accessKeyService.CreateAccessKey(accessKeyDTO);
         }
@@ -44,16 +44,11 @@ namespace MyFileSpace.Api.Controllers
             return await _userAccessService.GetAllowedUsers(objectId, objectType);
         }
 
-        [HttpPost("user")]
-        public async Task AddUserAccess(UserAccessUpdateDTO userAccessDTO)
+        [HttpPut("user")]
+        public async Task EditUserAccess(UserAccessUpdateDTO userAccessDTO)
         {
-            await _userAccessService.AddUserAccess(userAccessDTO);
+            await _userAccessService.EditAllowedUsers(userAccessDTO);
         }
 
-        [HttpDelete("user")]
-        public async Task RemoveUserAccess(UserAccessUpdateDTO userAccessDTO)
-        {
-            await _userAccessService.RemoveUserAccess(userAccessDTO);
-        }
     }
 }

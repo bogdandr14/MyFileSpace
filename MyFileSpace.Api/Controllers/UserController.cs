@@ -15,6 +15,13 @@ namespace MyFileSpace.Api.Controllers
             _userService = userService;
         }
 
+        [HttpGet("search")]
+        [MyFileSpaceAuthorize(false)]
+        public async Task<UsersFoundDTO> SearchFiles([FromQuery] InfiniteScrollFilter filter)
+        {
+            return await _userService.SearchUsers(filter);
+        }
+
         [HttpGet("isAvailable/email/{email}")]
         public async Task<bool> CheckEmailAvailable(string email)
         {

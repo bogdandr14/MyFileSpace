@@ -2,6 +2,6 @@
 {
     public class RegisterDTO : AuthDTO
     {
-        public string TagName { get; set; }
+        public string? TagName { get; set; }
     }
 }

@@ -43,14 +43,18 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryId, accessKey);
             DirectoryDetailsDTO directoryDTO = _mapper.Map<DirectoryDetailsDTO>(virtualDirectory);
-            if (virtualDirectory.Owner.Id.Equals(_session.UserId))
+            if (virtualDirectory.OwnerId.Equals(_session.UserId))
             {
                 directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => !x.IsDeleted).OrderBy(fid => fid.Name));
                 directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => !x.IsDeleted).OrderBy(cd => cd.VirtualPath));
                 directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
                 if (virtualDirectory.DirectoryAccessKey != null)
                 {
-                    directoryDTO.AccessKey = virtualDirectory.DirectoryAccessKey.AccessKey.Key;
+                    directoryDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(virtualDirectory.DirectoryAccessKey.AccessKey);
+                    if (directoryDTO.AccessKey.ExpiresAt == DateTime.MaxValue)
+                    {
+                        directoryDTO.AccessKey.ExpiresAt = null;
+                    }
                 }
             }
             else

@@ -21,7 +21,9 @@ namespace MyFileSpace.Core.Specifications
                             )
                         )
                     )
-                ).Include(f => f.Owner);
+                ).Include(f => f.Owner)
+                .Include(x => x.AllowedUsers).ThenInclude(x => x.AllowedUser)
+                .Include(x => x.FileAccessKey).ThenInclude(x => x!.AccessKey);
         }
 
         public AllowedFileSpec(Guid fileId, string accessKey)
