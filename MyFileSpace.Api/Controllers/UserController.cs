@@ -16,7 +16,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("search")]
-        [MyFileSpaceAuthorize(false)]
+        [MyFileSpaceAuthorize(true)]
         public async Task<UsersFoundDTO> SearchFiles([FromQuery] InfiniteScrollFilter filter)
         {
             return await _userService.SearchUsers(filter);
@@ -36,7 +36,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<UserDetailsDTO> Register(RegisterDTO registerDTO)
+        public async Task<CurrentUserDTO> Register(RegisterDTO registerDTO)
         {
             return await _userService.Register(registerDTO);
         }
@@ -47,13 +47,15 @@ namespace MyFileSpace.Api.Controllers
             return await _userService.Login(authDTO);
         }
 
-        [HttpGet("tagname/{tagName}")]
-        public async Task<UserDetailsDTO> GetUserByTagName(string tagName)
+        [HttpGet]
+        [MyFileSpaceAuthorize]
+        public async Task<UserDetailsDTO> GetCurrentUser()
         {
-            return await _userService.GetUserByTagName(tagName);
+            return await _userService.GetCurrentUser();
         }
 
         [HttpGet("{userId:Guid}")]
+        [MyFileSpaceAuthorize(false)]
         public async Task<UserDetailsDTO> GetUserById(Guid userId)
         {
             return await _userService.GetUserByIdAsync(userId);

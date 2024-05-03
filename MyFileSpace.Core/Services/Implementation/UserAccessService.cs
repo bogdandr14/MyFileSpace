@@ -67,7 +67,7 @@ namespace MyFileSpace.Core.Services.Implementation
             }
         }
 
-        public async Task<List<UserPublicInfoDTO>> GetAllowedUsers(Guid objectId, ObjectType objectType)
+        public async Task<List<UserDTO>> GetAllowedUsers(Guid objectId, ObjectType objectType)
         {
             objectType.ValidateObjectType();
 
@@ -80,10 +80,10 @@ namespace MyFileSpace.Core.Services.Implementation
                 await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, objectId);
             }
 
-            Func<Task<List<UserPublicInfoDTO>>> allowedUsersTask = async () =>
+            Func<Task<List<UserDTO>>> allowedUsersTask = async () =>
             {
 
-                return _mapper.Map<List<UserPublicInfoDTO>>(await _userRepository.ListAsync(new UserWithAccessSpec(objectId)));
+                return _mapper.Map<List<UserDTO>>(await _userRepository.ListAsync(new UserWithAccessSpec(objectId)));
             };
 
             return await _cacheRepository.GetAndSetAsync(GetAllObjectAccessCacheKey(objectId), allowedUsersTask);

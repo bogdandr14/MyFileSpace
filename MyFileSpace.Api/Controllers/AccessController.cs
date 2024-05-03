@@ -39,7 +39,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("user/{objectType}/{objectId:Guid}")]
-        public async Task<List<UserPublicInfoDTO>> GetUserAccess(ObjectType objectType, Guid objectId)
+        public async Task<List<UserDTO>> GetUserAccess(ObjectType objectType, Guid objectId)
         {
             return await _userAccessService.GetAllowedUsers(objectId, objectType);
         }

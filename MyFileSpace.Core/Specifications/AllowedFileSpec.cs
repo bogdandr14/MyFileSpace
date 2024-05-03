@@ -4,7 +4,7 @@ using MyFileSpace.SharedKernel.Enums;
 
 namespace MyFileSpace.Core.Specifications
 {
-    internal class AllowedFileSpec : Specification<StoredFile>, ISingleResultSpecification<StoredFile>
+    internal class AllowedFileSpec : Specification<StoredFile>, ISingleResultSpecification<StoredFile>, ISpecification<StoredFile>
     {
         public AllowedFileSpec(Guid fileId, Guid userId)
         {

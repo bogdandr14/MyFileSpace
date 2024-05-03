@@ -18,15 +18,17 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IUserRepository _userRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
         private readonly IFileStorageRepository _fileSystemRepository;
+        private readonly IStoredFileRepository _storedFileRepository;
         private readonly Session _session;
 
-        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, Session session)
+        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, IStoredFileRepository storedFileRepository, Session session)
         {
             _mapper = mapper;
             _userRepository = userRepository;
             _cacheRepository = cacheRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
             _fileSystemRepository = fileSystemRepository;
+            _storedFileRepository = storedFileRepository;
             _session = session;
         }
 
@@ -49,7 +51,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 users.RemoveAt(users.Count - 1);
             }
             usersFound.Taken = users.Count;
-            usersFound.Items = _mapper.Map<List<UserPublicInfoDTO>>(users);
+            usersFound.Items = _mapper.Map<List<UserDTO>>(users);
 
             return usersFound;
         }
@@ -63,14 +65,35 @@ namespace MyFileSpace.Core.Services.Implementation
             return await GetUserByTagNameCached(tagName) == null;
         }
 
-        public async Task<UserDetailsDTO> GetUserByTagName(string tagName)
+        public async Task<CurrentUserDTO> GetCurrentUser()
         {
-            return _mapper.Map<UserDetailsDTO>(await ValidateTagNameAndRetrieveUser(tagName));
+            CurrentUserDTO userDetailsDTO = _mapper.Map<CurrentUserDTO>(await _userRepository.ValidateAndRetrieveUser(_session.UserId));
+            Func<Task<List<FileDTO>>> allFilesTask = async () =>
+            {
+                List<StoredFile> storedFiles = await _storedFileRepository.ListAsync(new OwnedFilesWithDirectoriesSpec(_session.UserId));
+                return _mapper.Map<List<FileDTO>>(storedFiles);
+            };
+
+            Func<Task<List<DirectoryDTO>>> allDirectoriesTask = async () =>
+            {
+                List<VirtualDirectory> virtualDirectories = await _virtualDirectoryRepository.ListAsync(new OwnedDirectoriesSpec(_session.UserId));
+                return _mapper.Map<List<DirectoryDTO>>(virtualDirectories);
+            };
+
+            userDetailsDTO.Files = await _cacheRepository.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask);
+            userDetailsDTO.Directories = await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask);
+            userDetailsDTO.AllowedDirectories = _mapper.Map<List<DirectoryDTO>>((await _virtualDirectoryRepository.ListAsync(new AccessibleUserDirectoriesSpec(_session.UserId))));
+            userDetailsDTO.AllowedFiles = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleUserFilesSpec(_session.UserId)));
+            
+            return userDetailsDTO;
         }
 
         public async Task<UserDetailsDTO> GetUserByIdAsync(Guid userId)
         {
-            return _mapper.Map<UserDetailsDTO>(await _userRepository.ValidateAndRetrieveUser(userId));
+            UserDetailsDTO userPublicDTO = _mapper.Map<UserDetailsDTO>(_userRepository.ValidateAndRetrieveUser(userId));
+            userPublicDTO.Directories = _mapper.Map<List<DirectoryDTO>>((await _virtualDirectoryRepository.ListAsync(new AccessibleUserDirectoriesSpec(userId, _session.UserId))));
+            userPublicDTO.Files = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleUserFilesSpec(userId, _session.UserId)));
+            return userPublicDTO;
         }
 
         public async Task<TokenDTO> Login(AuthDTO userLogin)
@@ -87,7 +110,7 @@ namespace MyFileSpace.Core.Services.Implementation
             }
         }
 
-        public async Task<UserDetailsDTO> Register(RegisterDTO userRegister)
+        public async Task<CurrentUserDTO> Register(RegisterDTO userRegister)
         {
             _session.ValidateNotLoggedIn();
             await _userRepository.ValidateEmail(userRegister.Email);
@@ -121,7 +144,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 _virtualDirectoryRepository.AddAsync(rootDirectory),
                 _fileSystemRepository.AddDirectory(user.Id.ToString())
             );
-            return _mapper.Map<UserDetailsDTO>(createUser);
+            return _mapper.Map<CurrentUserDTO>(createUser);
         }
 
         public async Task UpdatePassword(UpdatePasswordDTO updatePassword)
@@ -194,16 +217,6 @@ namespace MyFileSpace.Core.Services.Implementation
             return generatedTagName;
         }
         #region "Validators"
-        private async Task<User> ValidateTagNameAndRetrieveUser(string tagName)
-        {
-            User? user = await GetUserByTagNameCached(tagName);
-            if (user == null)
-            {
-                throw new NotFoundException("User with tagname not found");
-            }
-
-            return user;
-        }
 
         private async Task ValidateTagNameUnique(User existingUser, string newTagName)
         {

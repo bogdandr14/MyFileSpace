@@ -1,6 +1,6 @@
 ﻿namespace MyFileSpace.Core.DTOs
 {
-    public class UserPublicInfoDTO
+    public class UserDTO
     {
         public Guid UserId { get; set; }
         public string TagName { get; set; }
