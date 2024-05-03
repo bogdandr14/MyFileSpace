@@ -189,7 +189,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 virtualDirectory.ParentDirectoryId = (await _virtualDirectoryRepository.SingleOrDefaultAsync(new OwnedRootDirectorySpec(_session.UserId)))!.Id;
             }
 
-            List<VirtualDirectory> directoriesToRestore = new List<VirtualDirectory>() { virtualDirectory };
+            List<VirtualDirectory> directoriesToRestore = new List<VirtualDirectory>();
             List<StoredFile> filesToRestore = new List<StoredFile>();
             await RecursiveUpdateState(directoriesToRestore, filesToRestore, virtualDirectory, false);
 
@@ -201,7 +201,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnActiveDirectoryInfo(_session.UserId, directoryId);
             virtualDirectory.IsDeleted = true;
-            List<VirtualDirectory> directoriesToMoveToBin = new List<VirtualDirectory>() { virtualDirectory };
+            List<VirtualDirectory> directoriesToMoveToBin = new List<VirtualDirectory>();
             List<StoredFile> filesToMoveToBin = new List<StoredFile>();
             await RecursiveUpdateState(directoriesToMoveToBin, filesToMoveToBin, virtualDirectory, true);
 
@@ -212,7 +212,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private async Task DeleteDirectoryPermanently(Guid directoryId)
         {
             VirtualDirectory virtualDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveOwnDeletedDirectoryInfo(_session.UserId, directoryId);
-            List<VirtualDirectory> directoriesToDelete = new List<VirtualDirectory>() { virtualDirectory };
+            List<VirtualDirectory> directoriesToDelete = new List<VirtualDirectory>();
             List<StoredFile> filesToDelete = new List<StoredFile>();
             await RecursiveDelete(directoriesToDelete, filesToDelete, virtualDirectory);
 
@@ -237,9 +237,9 @@ namespace MyFileSpace.Core.Services.Implementation
                 {
                     await RecursiveUpdateState(directoriesToUpdateState, filesToUpdateState, virtualDirectory, newDeleteState);
                 }
-                childDirectory.IsDeleted = newDeleteState;
-                directoriesToUpdateState.Add(childDirectory);
             }
+            currentDirectory.IsDeleted = newDeleteState;
+            directoriesToUpdateState.Add(currentDirectory);
 
             foreach (var file in currentDirectory.FilesInDirectory.Where(fid => fid.IsDeleted != newDeleteState))
             {
@@ -256,10 +256,10 @@ namespace MyFileSpace.Core.Services.Implementation
                 if (virtualDirectory != null)
                 {
                     await RecursiveDelete(directoriesToDelete, filesToDelete, virtualDirectory);
-                    directoriesToDelete.Add(virtualDirectory);
                 }
-                filesToDelete.AddRange(currentDirectory.FilesInDirectory);
             }
+            directoriesToDelete.Add(currentDirectory);
+            filesToDelete.AddRange(currentDirectory.FilesInDirectory);
         }
 
         private string DirectoryDetailsCacheKey(Guid directoryId, string? accessKey)
