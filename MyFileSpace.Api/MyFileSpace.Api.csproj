@@ -33,4 +33,8 @@
     <ProjectReference Include="..\MyFileSpace.SharedKernel\MyFileSpace.SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Logs\" />
+  </ItemGroup>
+
 </Project>

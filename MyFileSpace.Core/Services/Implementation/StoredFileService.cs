@@ -61,21 +61,16 @@ namespace MyFileSpace.Core.Services.Implementation
 
             return filesFound;
         }
-        public async Task<List<OwnFileDetailsDTO>> GetAllFilesInfo(bool? deletedFiles)
+
+        public async Task<List<FileDTO>> GetAllFilesInfo(bool deletedFiles)
         {
-            Func<Task<List<OwnFileDetailsDTO>>> allFilesTask = async () =>
+            Func<Task<List<FileDTO>>> allFilesTask = async () =>
             {
                 List<StoredFile> storedFiles = await _storedFileRepository.ListAsync(new OwnedFilesWithDirectoriesSpec(_session.UserId));
-                return _mapper.Map<List<OwnFileDetailsDTO>>(storedFiles);
+                return _mapper.Map<List<FileDTO>>(storedFiles);
             };
-            List<OwnFileDetailsDTO> fileDetailsDTOs = await _cacheRepository.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask);
 
-            if (deletedFiles == null)
-            {
-                return fileDetailsDTOs;
-            }
-
-            return fileDetailsDTOs.Where(x => x.IsDeleted == deletedFiles).ToList();
+            return (await _cacheRepository.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask)).Where(f => f.IsDeleted == deletedFiles).ToList();
         }
 
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null)
@@ -94,7 +89,7 @@ namespace MyFileSpace.Core.Services.Implementation
                     }
                 }
             }
-                
+
             return fileDetailsDTO;
         }
 

@@ -18,9 +18,9 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpGet]
         [MyFileSpaceAuthorize]
-        public async Task<List<DirectoryDTO>> GetDirectories()
+        public async Task<List<DirectoryDTO>> GetDirectories([FromQuery] bool? deleted)
         {
-            return await _virtualDirectoryService.GetAllDirectoriesInfo();
+            return await _virtualDirectoryService.GetAllDirectoriesInfo(deleted ?? false);
         }
 
         [HttpGet("{directoryId:Guid}")]
@@ -46,7 +46,7 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpPut("move/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task MoveDirectory(Guid directoryId, [FromQuery]Guid newParentDirectoryId, [FromQuery] bool restore = false)
+        public async Task MoveDirectory(Guid directoryId, [FromQuery] Guid newParentDirectoryId, [FromQuery] bool restore = false)
         {
             await _virtualDirectoryService.MoveDirectory(directoryId, newParentDirectoryId, restore);
         }

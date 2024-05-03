@@ -19,7 +19,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a list of file details.
         /// </returns>
-        Task<List<OwnFileDetailsDTO>> GetAllFilesInfo(bool? deletedFiles);
+        Task<List<FileDTO>> GetAllFilesInfo(bool deletedFiles);
 
         /// <summary>
         /// Retrieves the file information.

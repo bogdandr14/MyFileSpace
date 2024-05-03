@@ -29,14 +29,14 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
-        public async Task<List<DirectoryDTO>> GetAllDirectoriesInfo()
+        public async Task<List<DirectoryDTO>> GetAllDirectoriesInfo(bool deletedDirectories)
         {
             Func<Task<List<DirectoryDTO>>> allDirectoriesTask = async () =>
             {
                 List<VirtualDirectory> virtualDirectories = await _virtualDirectoryRepository.ListAsync(new OwnedDirectoriesSpec(_session.UserId));
                 return _mapper.Map<List<DirectoryDTO>>(virtualDirectories);
             };
-            return await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask);
+            return (await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask)).Where(x => x.IsDeleted == deletedDirectories).ToList();
         }
 
         public async Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null)
@@ -193,10 +193,8 @@ namespace MyFileSpace.Core.Services.Implementation
             List<StoredFile> filesToRestore = new List<StoredFile>();
             await RecursiveUpdateState(directoriesToRestore, filesToRestore, virtualDirectory, false);
 
-            Task.WaitAll(
-                _virtualDirectoryRepository.UpdateRangeAsync(directoriesToRestore),
-                _storedFileRepository.UpdateRangeAsync(filesToRestore)
-            );
+            await _virtualDirectoryRepository.UpdateRangeAsync(directoriesToRestore);
+            await _storedFileRepository.UpdateRangeAsync(filesToRestore);
         }
 
         private async Task MoveDirectoryToBin(Guid directoryId)
@@ -218,10 +216,8 @@ namespace MyFileSpace.Core.Services.Implementation
             List<StoredFile> filesToDelete = new List<StoredFile>();
             await RecursiveDelete(directoriesToDelete, filesToDelete, virtualDirectory);
 
-            Task.WaitAll(
-                _storedFileRepository.DeleteRangeAsync(filesToDelete),
-                _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete)
-            );
+            await _storedFileRepository.DeleteRangeAsync(filesToDelete);
+            await _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete);
 
             IEnumerable<Task> tasks = new List<Task>();
             foreach (StoredFile storedFile in filesToDelete)
@@ -256,12 +252,12 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             foreach (var childDirectory in currentDirectory.ChildDirectories.Where(cd => cd.IsDeleted == true))
             {
-                VirtualDirectory? virtualDirectory = await _virtualDirectoryRepository.SingleOrDefaultAsync(new OwnedDirectoriesSpec(_session.UserId, childDirectory.Id, false));
+                VirtualDirectory? virtualDirectory = await _virtualDirectoryRepository.SingleOrDefaultAsync(new OwnedDirectoriesSpec(_session.UserId, childDirectory.Id, true));
                 if (virtualDirectory != null)
                 {
                     await RecursiveDelete(directoriesToDelete, filesToDelete, virtualDirectory);
+                    directoriesToDelete.Add(virtualDirectory);
                 }
-                directoriesToDelete.Add(childDirectory);
                 filesToDelete.AddRange(currentDirectory.FilesInDirectory);
             }
         }

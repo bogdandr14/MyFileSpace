@@ -11,7 +11,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a list of directory details.
         /// </returns>
-        Task<List<DirectoryDTO>> GetAllDirectoriesInfo();
+        Task<List<DirectoryDTO>> GetAllDirectoriesInfo(bool  deletedDirectories);
 
         /// <summary>
         /// Retrieves the directory information.

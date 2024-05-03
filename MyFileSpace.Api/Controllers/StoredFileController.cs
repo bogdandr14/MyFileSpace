@@ -19,9 +19,9 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpGet]
         [MyFileSpaceAuthorize]
-        public async Task<List<OwnFileDetailsDTO>> GetFiles([FromQuery] bool? deletedFiles)
+        public async Task<List<FileDTO>> GetFiles([FromQuery] bool? deleted)
         {
-            return await _storedFileService.GetAllFilesInfo(deletedFiles);
+            return await _storedFileService.GetAllFilesInfo(deleted ?? false);
         }
 
         [HttpGet("search")]
