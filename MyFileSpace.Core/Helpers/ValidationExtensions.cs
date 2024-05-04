@@ -130,6 +130,23 @@ namespace MyFileSpace.Core.Helpers
             return user;
         }
 
+        public static async Task<User> ValidateCredentialsAndRetrieveUser(this IUserRepository userRepo, Guid userId, string passwordToValidate)
+        {
+            User? user = await userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+
+            if (!CryptographyUtility.VerifyKey(passwordToValidate, user.Password, user.Salt))
+            {
+                throw new InvalidException("Incorrect email or password");
+            }
+
+            return user;
+        }
+
         public static async Task<StoredFile> ValidateAndRetrieveFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId, string? accessKey = null)
         {
             StoredFile? storedFile;

@@ -160,7 +160,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task UpdateUser(UserUpdateDTO userToUpdate)
         {
-            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userToUpdate.Email, userToUpdate.Password);
+            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session.UserId, userToUpdate.Password);
             await ValidateTagNameUnique(user, userToUpdate.TagName);
 
             string oldTagName = user.TagName;
@@ -220,7 +220,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         private async Task ValidateTagNameUnique(User existingUser, string newTagName)
         {
-            if (!existingUser.Equals(_session.UserId))
+            if (!existingUser.Id.Equals(_session.UserId))
             {
                 throw new InvalidException("Can not modify other users' data");
             }

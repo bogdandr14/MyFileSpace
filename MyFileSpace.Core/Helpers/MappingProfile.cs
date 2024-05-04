@@ -44,6 +44,12 @@ namespace MyFileSpace.Core.Helpers
             CreateMap<User, UserDTO>()
                 .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
 
+            CreateMap<User, UserDetailsDTO>()
+                .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
+
+            CreateMap<User, CurrentUserDTO>()
+                .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
+
             CreateMap<AccessKey, KeyAccessDetailsDTO>();
 
         }
