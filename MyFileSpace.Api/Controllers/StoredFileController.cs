@@ -25,6 +25,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("search")]
+        [MyFileSpaceAuthorize(true)]
         public async Task<FilesFoundDTO> SearchFiles([FromQuery] InfiniteScrollFilter filter)
         {
             return await _storedFileService.SearchFiles(filter);

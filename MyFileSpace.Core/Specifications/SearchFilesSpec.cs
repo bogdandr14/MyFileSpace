@@ -18,9 +18,9 @@ namespace MyFileSpace.Core.Specifications
         public SearchFilesSpec(InfiniteScrollFilter filter, Guid userId)
         {
             Query.Where(file => file.Name.Contains(filter.Name)
-                        && (file.AccessLevel == AccessType.Public
-                            || (file.AccessLevel == AccessType.Restricted && file.AllowedUsers.Any(au => au.AllowedUserId.Equals(userId))))
-                            || filter.IncludeOwn && file.OwnerId.Equals(userId)
+                        && ((file.AccessLevel == AccessType.Public && (filter.IncludeOwn || !file.OwnerId.Equals(userId)))
+                            || (file.AccessLevel == AccessType.Restricted && file.AllowedUsers.Any(au => au.AllowedUserId.Equals(userId)))
+                            || filter.IncludeOwn && file.OwnerId.Equals(userId))
                         )
                 .OrderBy(file => file.Name)
                 .Skip(filter.Skip)

@@ -42,7 +42,7 @@ namespace MyFileSpace.Api.Attributes
 
             // validate required headers
             _authorizationString = _httpContextProvider.GetValueFromRequestHeader(Constants.AUTH_HEADER);
-            if (_authorizationString == null)
+            if (string.IsNullOrEmpty(_authorizationString))
             {
                 if (allowAnonymous)
                 {
