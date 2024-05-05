@@ -22,14 +22,13 @@ namespace MyFileSpace.Api.Controllers
             return await _userService.SearchUsers(filter);
         }
 
-        [HttpGet("isAvailable/email/{email}")]
+        [HttpGet("availability/email/{email}")]
         public async Task<bool> CheckEmailAvailable(string email)
         {
             return await _userService.CheckEmailAvailable(email);
         }
 
-        [HttpGet("isAvailable/tagname/{tagName}")]
-        [MyFileSpaceAuthorize]
+        [HttpGet("availability/tagname/{tagName}")]
         public async Task<bool> CheckTagNameAvailable(string tagName)
         {
             return await _userService.CheckTagNameAvailable(tagName);

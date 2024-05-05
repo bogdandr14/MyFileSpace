@@ -149,14 +149,10 @@ namespace MyFileSpace.Core.Helpers
 
         public static async Task<StoredFile> ValidateAndRetrieveFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId, string? accessKey = null)
         {
-            StoredFile? storedFile;
-            if (session.IsAuthenticated)
+            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new AllowedFileSpec(fileId, session.UserId));
+            if (storedFile != null)
             {
-                storedFile = await storedFileRepo.SingleOrDefaultAsync(new AllowedFileSpec(fileId, session.UserId));
-                if (storedFile != null)
-                {
-                    return storedFile;
-                }
+                return storedFile;
             }
 
             if (accessKey != null)
