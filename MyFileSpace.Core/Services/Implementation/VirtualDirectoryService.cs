@@ -47,7 +47,6 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 directoryDTO.Files = _mapper.Map<List<FileDTO>>(virtualDirectory.FilesInDirectory.Where(x => !x.IsDeleted).OrderBy(fid => fid.Name));
                 directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(virtualDirectory.ChildDirectories.Where(x => !x.IsDeleted).OrderBy(cd => cd.VirtualPath));
-                directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
                 if (virtualDirectory.DirectoryAccessKey != null)
                 {
                     directoryDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(virtualDirectory.DirectoryAccessKey.AccessKey);
@@ -62,6 +61,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 directoryDTO.Files = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleFilesInDirectorySpec(directoryId,_session.UserId)));
                 directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(await _virtualDirectoryRepository.ListAsync(new AccessibleDirectoriesInDirectorySpec(directoryId, _session.UserId)));
             }
+            directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
 
             directoryDTO.PathParentDirectories = await RetrieveParentDirectories(virtualDirectory);
 
