@@ -60,7 +60,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("download/{fileId:Guid}")]
-        [MyFileSpaceAuthorize]
+        [MyFileSpaceAuthorize(true)]
         public async Task<ActionResult> DownloadFile(Guid fileId, [FromQuery] string? accessKey = null)
         {
             FileDownloadDTO fileContent = await _storedFileService.DownloadFile(fileId, accessKey);

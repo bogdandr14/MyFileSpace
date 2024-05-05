@@ -14,10 +14,9 @@ namespace MyFileSpace.Core.Specifications
                 && (f.OwnerId == userId
                     || f.AccessLevel == AccessType.Public
                     || (f.AccessLevel == AccessType.Restricted
-                        && (f.Owner.AllowedFiles.Any(af => af.FileId == fileId && af.AllowedUserId == userId)
-                            || f.Owner.AllowedDirectories.Any(ad => ad.Directory.AccessLevel != AccessType.Private
-                                && ad.AllowedUserId == userId && ad.Directory.FilesInDirectory.Any(fid => fid.Id == fileId)
-                                )
+                        && (f.AllowedUsers.Any(au => au.AllowedUserId == userId)
+                            || f.Directory.AccessLevel != AccessType.Private 
+                                && f.Directory.AllowedUsers.Any(au => au.AllowedUserId == userId)
                             )
                         )
                     )

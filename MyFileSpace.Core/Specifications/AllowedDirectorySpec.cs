@@ -16,12 +16,7 @@ namespace MyFileSpace.Core.Specifications
                     && (vd.OwnerId == userId
                         || vd.AccessLevel == AccessType.Public
                         || (vd.AccessLevel == AccessType.Restricted
-                            && (vd.Owner.AllowedDirectories.Any(ad =>
-                                    ad.Directory.AccessLevel != AccessType.Private
-                                    && ad.AllowedUserId == userId
-                                    && ad.DirectoryId == directoryId
-                                    )
-                                )
+                            && vd.AllowedUsers.Any(au => au.AllowedUserId == userId)
                             )
                         )
                     );
@@ -30,17 +25,12 @@ namespace MyFileSpace.Core.Specifications
             {
 
                 Query.Where(vd =>
-                    vd.Id == directoryId
+                   vd.Id == directoryId
                     && vd.IsDeleted == false
                     && (vd.OwnerId == userId
                         || vd.AccessLevel == AccessType.Public
                         || (vd.AccessLevel == AccessType.Restricted
-                            && (vd.Owner.AllowedDirectories.Any(ad =>
-                                    ad.Directory.AccessLevel != AccessType.Private
-                                    && ad.AllowedUserId == userId
-                                    && ad.DirectoryId == directoryId
-                                    )
-                                )
+                            && vd.AllowedUsers.Any(au => au.AllowedUserId == userId)
                             )
                         )
                     )
@@ -54,9 +44,9 @@ namespace MyFileSpace.Core.Specifications
 
         public AllowedDirectorySpec(Guid directoryId, string accessKey)
         {
-            Query.Where(f => f.Id == directoryId && f.IsDeleted == false
-                && (f.DirectoryAccessKey != null && f.DirectoryAccessKey.AccessKey.Key == accessKey
-                    && f.DirectoryAccessKey.AccessKey.ExpiresAt.CompareTo(DateTime.UtcNow) > 0 && f.AccessLevel != AccessType.Private
+            Query.Where(d => d.Id == directoryId && d.IsDeleted == false
+                && (d.DirectoryAccessKey != null && d.DirectoryAccessKey.AccessKey.Key == accessKey
+                    && d.DirectoryAccessKey.AccessKey.ExpiresAt.CompareTo(DateTime.UtcNow) > 0 && d.AccessLevel != AccessType.Private
                     )
                 )
                 .Include(x => x.Owner)

@@ -170,13 +170,10 @@ namespace MyFileSpace.Core.Helpers
         public static async Task<VirtualDirectory> ValidateAndRetrieveDirectoryInfo(this IVirtualDirectoryRepository virtualDirectoryRepo, Session session, Guid directoryId, string? accessKey = null)
         {
             VirtualDirectory? virtualDirectory;
-            if (session.IsAuthenticated)
+            virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new AllowedDirectorySpec(directoryId, session.UserId));
+            if (virtualDirectory != null)
             {
-                virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new AllowedDirectorySpec(directoryId, session.UserId));
-                if (virtualDirectory != null)
-                {
-                    return virtualDirectory;
-                }
+                return virtualDirectory;
             }
 
             if (accessKey != null)

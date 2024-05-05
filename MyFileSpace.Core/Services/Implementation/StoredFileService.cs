@@ -77,16 +77,12 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
             FileDetailsDTO fileDetailsDTO = _mapper.Map<FileDetailsDTO>(storedFile);
-            if (fileDetailsDTO.OwnerId.Equals(_session.UserId))
+            if (fileDetailsDTO.OwnerId.Equals(_session.UserId) && storedFile.FileAccessKey != null)
             {
-                fileDetailsDTO.AllowedUsers = storedFile.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
-                if (storedFile.FileAccessKey != null)
+                fileDetailsDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(storedFile.FileAccessKey.AccessKey);
+                if (fileDetailsDTO.AccessKey.ExpiresAt == DateTime.MaxValue)
                 {
-                    fileDetailsDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(storedFile.FileAccessKey.AccessKey);
-                    if (fileDetailsDTO.AccessKey.ExpiresAt == DateTime.MaxValue)
-                    {
-                        fileDetailsDTO.AccessKey.ExpiresAt = null;
-                    }
+                    fileDetailsDTO.AccessKey.ExpiresAt = null;
                 }
             }
 

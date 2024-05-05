@@ -27,7 +27,8 @@ namespace MyFileSpace.Core.Helpers
                 .ForMember(x => x.LastModified, y => y.MapFrom(z => z.ModifiedAt));
 
             CreateMap<StoredFile, FileDetailsDTO>()
-                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath));
+                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath))
+                .ForMember(x => x.AllowedUsers, y => y.MapFrom(z => z.AllowedUsers.Select(au => au.AllowedUser.TagName)));
 
             CreateMap<VirtualDirectory, DirectoryDTO>()
                 .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
