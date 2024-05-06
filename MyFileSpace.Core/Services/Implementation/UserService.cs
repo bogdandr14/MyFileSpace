@@ -90,7 +90,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<UserDetailsDTO> GetUserByIdAsync(Guid userId)
         {
-            UserDetailsDTO userPublicDTO = _mapper.Map<UserDetailsDTO>(_userRepository.ValidateAndRetrieveUser(userId));
+            UserDetailsDTO userPublicDTO = _mapper.Map<UserDetailsDTO>(await _userRepository.ValidateAndRetrieveUser(userId));
             userPublicDTO.Directories = _mapper.Map<List<DirectoryDTO>>((await _virtualDirectoryRepository.ListAsync(new AccessibleUserDirectoriesSpec(userId, _session.UserId))));
             userPublicDTO.Files = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleUserFilesSpec(userId, _session.UserId)));
             return userPublicDTO;

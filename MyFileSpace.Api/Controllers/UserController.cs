@@ -54,7 +54,7 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("{userId:Guid}")]
-        [MyFileSpaceAuthorize(false)]
+        [MyFileSpaceAuthorize(true)]
         public async Task<UserDetailsDTO> GetUserById(Guid userId)
         {
             return await _userService.GetUserByIdAsync(userId);
