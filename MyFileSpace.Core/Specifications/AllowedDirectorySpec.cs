@@ -50,6 +50,7 @@ namespace MyFileSpace.Core.Specifications
                     )
                 )
                 .Include(x => x.Owner)
+                .Include(x => x.AllowedUsers).ThenInclude(x => x.AllowedUser)
                 .Include(x => x.FilesInDirectory)
                 .Include(x => x.ChildDirectories);
         }

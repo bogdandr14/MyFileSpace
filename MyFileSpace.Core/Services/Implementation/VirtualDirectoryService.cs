@@ -58,7 +58,8 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             else
             {
-                directoryDTO.Files = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleFilesInDirectorySpec(directoryId,_session.UserId)));
+                AccessibleFilesInDirectorySpec filesSpec = string.IsNullOrEmpty(accessKey) ? new AccessibleFilesInDirectorySpec(directoryId, _session.UserId) : new AccessibleFilesInDirectorySpec(directoryId, _session.UserId, accessKey);
+                directoryDTO.Files = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(filesSpec));
                 directoryDTO.ChildDirectories = _mapper.Map<List<DirectoryDTO>>(await _virtualDirectoryRepository.ListAsync(new AccessibleDirectoriesInDirectorySpec(directoryId, _session.UserId)));
             }
             directoryDTO.AllowedUsers = virtualDirectory.AllowedUsers.Select(x => x.AllowedUser.TagName).ToList();
