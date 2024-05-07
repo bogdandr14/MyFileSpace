@@ -19,9 +19,9 @@ namespace MyFileSpace.Core.Services.Implementation
             return await _cacheRepository.IsObjectCachedAsync(key);
         }
 
-        public async Task<string> GetMemoryUsed()
+        public async Task<double> GetMemoryMbUsed()
         {
-            return await _cacheRepository.GetMemoryUsedAsync();
+            return await _cacheRepository.GetMemoryUsedMbAsync();
         }
 
         public async Task ClearCache()

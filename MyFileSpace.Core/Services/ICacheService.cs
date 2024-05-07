@@ -4,7 +4,7 @@
     {
         public Task<IEnumerable<string>> GetAllKeys();
         public Task<bool> IsObjectCached(string key);
-        public Task<string> GetMemoryUsed();
+        public Task<double> GetMemoryMbUsed();
         public Task ClearCache();
     }
 }

@@ -12,7 +12,7 @@
         public Task<byte[]?> GetBytesAsync(string key);
         public Task SetBytesAsync(string key, byte[] bytes, TimeSpan? timeSpan = null);
         public Task RemoveAsync(string key);
-        public Task<string> GetMemoryUsedAsync();
+        public Task<double> GetMemoryUsedMbAsync();
         public Task ClearAsync();
     }
 }

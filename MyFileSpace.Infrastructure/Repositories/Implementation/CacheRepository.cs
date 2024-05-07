@@ -163,10 +163,10 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             await _cache.RemoveAsync(key);
         }
 
-        public async Task<string> GetMemoryUsedAsync()
+        public async Task<double> GetMemoryUsedMbAsync()
         {
-            double cacheSizeKB = await _cache.GetCacheSizeAsync() / 1024 / 1024;
-            return $"{cacheSizeKB}MB used";
+            double cacheSizeMB = await _cache.GetCacheSizeAsync() / 1024 / 1024;
+            return cacheSizeMB;
         }
 
         public async Task ClearAsync()

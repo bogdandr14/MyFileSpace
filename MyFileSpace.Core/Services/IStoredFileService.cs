@@ -6,6 +6,8 @@ namespace MyFileSpace.Core.Services
 {
     public interface IStoredFileService
     {
+
+        Task<FileStatisticsDTO> GetStatistics();
         /// <summary>
         /// </summary>
         /// <returns>
@@ -74,5 +76,7 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="fileId"> The name of the file that should be removed from the localfile system.</param>
         Task DeleteFile(Guid fileId, bool permanent);
+
+        Task DeletePastBinRetention();
     }
 }

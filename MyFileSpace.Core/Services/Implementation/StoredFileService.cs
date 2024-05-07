@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
@@ -7,6 +8,7 @@ using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
+using MyFileSpace.SharedKernel.Providers;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
@@ -18,8 +20,9 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IFileStorageRepository _fileStorageRepository;
         private readonly ICacheRepository _cacheRepository;
         private readonly Session _session;
+        private readonly TimeSpan _binRetentionTime;
 
-        public StoredFileService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
+        public StoredFileService(IMapper mapper, IConfiguration configuration, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
         {
             _mapper = mapper;
             _storedFileRepository = storedFileRepository;
@@ -27,9 +30,48 @@ namespace MyFileSpace.Core.Services.Implementation
             _virtualDirectoryRepository = virtualDirectoryRepository;
             _cacheRepository = cacheRepository;
             _session = session;
+
+            if (TimeSpan.TryParse(configuration.GetConfigValue("FileStorage:BinRetentionTime"), out TimeSpan lifeSpan))
+            {
+                _binRetentionTime = lifeSpan;
+            }
         }
 
         #region "Public methods"
+        public async Task<FileStatisticsDTO> GetStatistics()
+        {
+            Func<Task<FileStatisticsDTO>> statisticsTask = async () =>
+            {
+                FileStatisticsDTO statistics = new FileStatisticsDTO();
+                List<StoredFile> allStoredFiles = await _storedFileRepository.ListAsync();
+
+                List<StoredFile> publicStoredFiles = allStoredFiles.Where(f => f.AccessLevel == AccessType.Public && f.IsDeleted == false).ToList();
+                statistics.FileTypeStatistics.Add(CreateFileTypeStatistics(publicStoredFiles, AccessType.Public));
+
+                List<StoredFile> restrictedStoredFiles = allStoredFiles.Where(f => f.AccessLevel == AccessType.Restricted && f.IsDeleted == false).ToList();
+                statistics.FileTypeStatistics.Add(CreateFileTypeStatistics(restrictedStoredFiles, AccessType.Restricted));
+
+                List<StoredFile> privateStoredFiles = allStoredFiles.Where(f => f.AccessLevel == AccessType.Private && f.IsDeleted == false).ToList();
+                statistics.FileTypeStatistics.Add(CreateFileTypeStatistics(privateStoredFiles, AccessType.Private));
+
+                List<StoredFile> deletedStoredFiles = allStoredFiles.Where(f => f.IsDeleted == true).ToList();
+                statistics.FileTypeStatistics.Add(CreateFileTypeStatistics(deletedStoredFiles, AccessType.None));
+
+                statistics.SizeMbPastRetentionTime = allStoredFiles.Where(f => f.IsDeleted == true && f.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0).Sum(f => ((double)f.SizeInBytes) / 1024 / 1024);
+                return statistics;
+            };
+            FileStatisticsDTO statistics = (await _cacheRepository.GetAndSetAsync("statistics", statisticsTask));
+            statistics.CacheUsage = await _cacheRepository.GetMemoryUsedMbAsync();
+
+            return statistics;
+        }
+
+        public async Task DeletePastBinRetention()
+        {
+            List<StoredFile> allStoredFiles = await _storedFileRepository.ListAsync();
+            IEnumerable<StoredFile> filesToDelete = allStoredFiles.Where(f => f.IsDeleted == true && f.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0);
+            await _storedFileRepository.DeleteRangeAsync(filesToDelete);
+        }
 
         public async Task<FilesFoundDTO> SearchFiles(InfiniteScrollFilter filter)
         {
@@ -187,6 +229,17 @@ namespace MyFileSpace.Core.Services.Implementation
         #endregion
 
         #region "Private methods"
+        private FileTypeStatistics CreateFileTypeStatistics(List<StoredFile> storedFiles, AccessType accessType)
+        {
+            return new FileTypeStatistics()
+            {
+                AccessType = AccessType.Public,
+                Number = storedFiles.Count(),
+                SizeMb = storedFiles.Sum(f => ((double)f.SizeInBytes) / 1024 / 1024),
+                Last30DaysAddedNumber = storedFiles.Count(f => f.CreatedAt.AddDays(30).CompareTo(DateTime.UtcNow) > 0),
+                Last30DaysAddedSizeMb = storedFiles.Where(f => f.CreatedAt.AddDays(30).CompareTo(DateTime.UtcNow) > 0).Sum(f => ((double)f.SizeInBytes) / 1024 / 1024),
+            };
+        }
         private async Task RestoreFile(Guid fileId, Guid directoryId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
