@@ -67,9 +67,9 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task DeletePastBinRetention()
         {
             List<StoredFile> allStoredFiles = await _storedFileRepository.ListAsync();
-            IEnumerable<StoredFile> filesToDelete = allStoredFiles.Where(f => f.IsDeleted == true && f.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0);
+            IEnumerable<StoredFile> filesToDelete = allStoredFiles.Where(f => f.IsDeleted == true && f.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0).ToList();
             List<VirtualDirectory> allDirectories = await _virtualDirectoryRepository.ListAsync();
-            IEnumerable<VirtualDirectory> directoriesToDelete = allDirectories.Where(d => d.IsDeleted == true && d.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0);
+            IEnumerable<VirtualDirectory> directoriesToDelete = allDirectories.Where(d => d.IsDeleted == true && d.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0).ToList();
             await _storedFileRepository.DeleteRangeAsync(filesToDelete);
             await _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete);
         }
