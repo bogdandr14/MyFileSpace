@@ -103,7 +103,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 virtualDirectory.VirtualPath = directoryUpdate.Name;
             }
 
-            if (directoryUpdate.AccessLevel != null)
+            if (directoryUpdate.AccessLevel != (int)AccessType.None)
             {
                 virtualDirectory.AccessLevel = (AccessType)directoryUpdate.AccessLevel;
             }
@@ -153,7 +153,7 @@ namespace MyFileSpace.Core.Services.Implementation
             List<DirectoryDTO> parentDirectories = new List<DirectoryDTO>();
             while (directory.ParentDirectoryId != null)
             {
-                directory = await _virtualDirectoryRepository.GetBySpecAsync(new AllowedDirectorySpec(directory.ParentDirectoryId.Value, _session.UserId, true));
+                directory = await _virtualDirectoryRepository.FirstOrDefaultAsync(new AllowedDirectorySpec(directory.ParentDirectoryId.Value, _session.UserId, true));
                 if (directory == null)
                 {
                     break;

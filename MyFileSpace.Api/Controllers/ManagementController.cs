@@ -36,9 +36,9 @@ namespace MyFileSpace.Api.Controllers
 
         // PUT api/<CacheController>/usage
         [HttpGet("cacheUsage")]
-        public async Task<string> GetMemoryUsage()
+        public async Task<MemorySizeDTO> GetMemoryUsage()
         {
-            return $"{await _cacheService.GetMemoryMbUsed()}Mb";
+            return await _cacheService.GetMemoryUsed();
         }
 
         // DELETE api/<CacheController>

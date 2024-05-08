@@ -4,7 +4,7 @@ namespace MyFileSpace.Core.Specifications
 {
     public class FileTypeStatistics
     {
-        public AccessType AccessType { get; set; }
+        public int AccessLevel { get; set; }
         public double SizeMb { get; set; }
         public long Number { get; set; }
 

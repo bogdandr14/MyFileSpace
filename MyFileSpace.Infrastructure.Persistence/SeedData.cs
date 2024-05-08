@@ -43,6 +43,16 @@ namespace MyFileSpace.Infrastructure.Persistence
             admin.Email = "myfileSpace@gmail.com";
             admin.Salt = salt;
             dbContext.User.Add(admin);
+
+            dbContext.SaveChanges();
+
+            VirtualDirectory rootDirectory = new VirtualDirectory()
+            {
+                AccessLevel = AccessType.Private,
+                OwnerId = admin.Id,
+                VirtualPath = "$USER_ROOT",
+            };
+            dbContext.VirtualDirectory.Add(rootDirectory);
             dbContext.SaveChanges();
         }
     }

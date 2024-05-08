@@ -60,17 +60,18 @@ namespace MyFileSpace.Core.Services.Implementation
                 statistics.SizeMbPastRetentionTime = allStoredFiles.Where(f => f.IsDeleted == true && f.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0).Sum(f => ((double)f.SizeInBytes) / 1024 / 1024);
                 return statistics;
             };
-            FileStatisticsDTO statistics = (await _cacheRepository.GetAndSetAsync("statistics", statisticsTask));
-            statistics.CacheUsage = await _cacheRepository.GetMemoryUsedMbAsync();
 
-            return statistics;
+            return await _cacheRepository.GetAndSetAsync("statistics", statisticsTask);
         }
 
         public async Task DeletePastBinRetention()
         {
             List<StoredFile> allStoredFiles = await _storedFileRepository.ListAsync();
             IEnumerable<StoredFile> filesToDelete = allStoredFiles.Where(f => f.IsDeleted == true && f.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0);
+            List<VirtualDirectory> allDirectories = await _virtualDirectoryRepository.ListAsync();
+            IEnumerable<VirtualDirectory> directoriesToDelete = allDirectories.Where(d => d.IsDeleted == true && d.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0);
             await _storedFileRepository.DeleteRangeAsync(filesToDelete);
+            await _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete);
         }
 
         public async Task<FilesFoundDTO> SearchFiles(InfiniteScrollFilter filter)
@@ -117,18 +118,22 @@ namespace MyFileSpace.Core.Services.Implementation
 
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null)
         {
-            StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
-            FileDetailsDTO fileDetailsDTO = _mapper.Map<FileDetailsDTO>(storedFile);
-            if (fileDetailsDTO.OwnerId.Equals(_session.UserId) && storedFile.FileAccessKey != null)
+            Func<Task<FileDetailsDTO>> fileInfoTask = async () =>
             {
-                fileDetailsDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(storedFile.FileAccessKey.AccessKey);
-                if (fileDetailsDTO.AccessKey.ExpiresAt == DateTime.MaxValue)
+                StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
+                FileDetailsDTO fileDetailsDTO = _mapper.Map<FileDetailsDTO>(storedFile);
+                if (fileDetailsDTO.OwnerId.Equals(_session.UserId) && storedFile.FileAccessKey != null)
                 {
-                    fileDetailsDTO.AccessKey.ExpiresAt = null;
+                    fileDetailsDTO.AccessKey = _mapper.Map<KeyAccessDetailsDTO>(storedFile.FileAccessKey.AccessKey);
+                    if (fileDetailsDTO.AccessKey.ExpiresAt == DateTime.MaxValue)
+                    {
+                        fileDetailsDTO.AccessKey.ExpiresAt = null;
+                    }
                 }
-            }
-
-            return fileDetailsDTO;
+                return fileDetailsDTO;
+            };
+            
+            return await _cacheRepository.GetAndSetAsync(fileId.FileCacheKey(_session, accessKey), fileInfoTask);
         }
 
         public async Task<FileDownloadDTO> DownloadFile(Guid fileId, string? accessKey = null)
@@ -173,13 +178,14 @@ namespace MyFileSpace.Core.Services.Implementation
                 storedFile.Name = fileUpdate.Name;
             }
 
-            if (fileUpdate.AccessLevel != null)
+            if (fileUpdate.AccessLevel != (int)AccessType.None)
             {
                 storedFile.AccessLevel = (AccessType)fileUpdate.AccessLevel;
             }
 
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(fileUpdate.FileId.FileCacheKeyPrefix());
             return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileUpdate.FileId));
         }
 
@@ -198,6 +204,7 @@ namespace MyFileSpace.Core.Services.Implementation
             storedFile.SizeInBytes = file.Length;
             await _storedFileRepository.UpdateAsync(storedFile);
             await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(fileId.FileCacheKeyPrefix());
             return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
         }
 
@@ -212,6 +219,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 await MoveToDirectory(fileId, directoryId);
             }
             await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(fileId.FileCacheKeyPrefix());
         }
 
         public async Task DeleteFile(Guid fileId, bool permanent)
@@ -225,6 +233,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 await MoveFileToBin(fileId);
             }
             await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheRepository.RemoveAsync(fileId.FileCacheKeyPrefix());
         }
         #endregion
 
@@ -233,7 +242,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             return new FileTypeStatistics()
             {
-                AccessType = AccessType.Public,
+                AccessLevel = (int)accessType,
                 Number = storedFiles.Count(),
                 SizeMb = storedFiles.Sum(f => ((double)f.SizeInBytes) / 1024 / 1024),
                 Last30DaysAddedNumber = storedFiles.Count(f => f.CreatedAt.AddDays(30).CompareTo(DateTime.UtcNow) > 0),

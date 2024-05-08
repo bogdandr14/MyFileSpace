@@ -1,10 +1,12 @@
-﻿using MyFileSpace.Infrastructure.Repositories;
+﻿using MyFileSpace.Core.DTOs;
+using MyFileSpace.Infrastructure.Repositories;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
     internal class CacheService : ICacheService
     {
         private readonly ICacheRepository _cacheRepository;
+        private readonly string[] _sizeScale = { "B", "KB", "MB", "GB" };
         public CacheService(ICacheRepository cacheRepository)
         {
             _cacheRepository = cacheRepository;
@@ -19,9 +21,16 @@ namespace MyFileSpace.Core.Services.Implementation
             return await _cacheRepository.IsObjectCachedAsync(key);
         }
 
-        public async Task<double> GetMemoryMbUsed()
+        public async Task<MemorySizeDTO> GetMemoryUsed()
         {
-            return await _cacheRepository.GetMemoryUsedMbAsync();
+            double size = await _cacheRepository.GetMemoryUsedAsync();
+
+            int i = 0;
+            while (size > 1024)
+            {
+                ++i; size /= 1024;
+            }
+            return new MemorySizeDTO { Scale = _sizeScale[i], Size = size };
         }
 
         public async Task ClearCache()
