@@ -5,7 +5,7 @@ namespace MyFileSpace.Core.Services
 {
     public interface IAccessKeyService
     {
-        Task<string> CreateAccessKey(KeyAccesUpdateDTO keyAccess);
+        Task<KeyAccessDetailsDTO> CreateAccessKey(KeyAccesUpdateDTO keyAccess);
         Task<KeyAccessDetailsDTO> GetAccessKey(ObjectType objectType, Guid objectId);
         Task DeleteAccessKey(ObjectType objectType, Guid objectId);
     }

@@ -74,7 +74,7 @@ namespace MyFileSpace.SharedKernel.Helpers
 
         public static async Task<MemoryStream> DecryptAsync(Stream inputEncryptedStream, string passphrase)
         {
-            using MemoryStream decryptedOutput = new();
+            MemoryStream decryptedOutput = new();
             await DecryptAsync(inputEncryptedStream, passphrase, decryptedOutput);
             return decryptedOutput;
         }

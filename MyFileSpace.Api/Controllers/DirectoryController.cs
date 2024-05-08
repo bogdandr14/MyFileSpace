@@ -18,35 +18,35 @@ namespace MyFileSpace.Api.Controllers
 
         [HttpGet]
         [MyFileSpaceAuthorize]
-        public async Task<List<DirectoryDTO>> GetDirectories()
+        public async Task<List<DirectoryDTO>> GetDirectories([FromQuery] bool? deleted)
         {
-            return await _virtualDirectoryService.GetAllDirectoriesInfo();
+            return await _virtualDirectoryService.GetAllDirectoriesInfo(deleted ?? false);
         }
 
-        [HttpGet("info/{directoryId:Guid}")]
+        [HttpGet("{directoryId:Guid}")]
         [MyFileSpaceAuthorize(true)]
         public async Task<DirectoryDetailsDTO> GetDirectoryInfoById(Guid directoryId, [FromQuery] string? accessKey)
         {
             return await _virtualDirectoryService.GetDirectoryInfo(directoryId, accessKey);
         }
 
-        [HttpPost("{parentDirectoryId:Guid}")]
+        [HttpPost]
         [MyFileSpaceAuthorize]
-        public async Task<DirectoryDTO> AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId)
+        public async Task<DirectoryDTO> AddDirectory(DirectoryCreateDTO directory)
         {
-            return await _virtualDirectoryService.AddDirectory(directory, parentDirectoryId);
+            return await _virtualDirectoryService.AddDirectory(directory);
         }
 
-        [HttpPut("{directoryId:Guid}")]
+        [HttpPut]
         [MyFileSpaceAuthorize]
-        public async Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directory, Guid directoryId)
+        public async Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directory)
         {
-            return await _virtualDirectoryService.UpdateDirectory(directory, directoryId);
+            return await _virtualDirectoryService.UpdateDirectory(directory);
         }
 
         [HttpPut("move/{directoryId:Guid}")]
         [MyFileSpaceAuthorize]
-        public async Task MoveDirectory(Guid directoryId, [FromQuery]Guid newParentDirectoryId, [FromQuery] bool restore = false)
+        public async Task MoveDirectory(Guid directoryId, [FromQuery] Guid newParentDirectoryId, [FromQuery] bool restore = false)
         {
             await _virtualDirectoryService.MoveDirectory(directoryId, newParentDirectoryId, restore);
         }

@@ -11,7 +11,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a list of directory details.
         /// </returns>
-        Task<List<DirectoryDTO>> GetAllDirectoriesInfo();
+        Task<List<DirectoryDTO>> GetAllDirectoriesInfo(bool  deletedDirectories);
 
         /// <summary>
         /// Retrieves the directory information.
@@ -30,13 +30,13 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="directory"> All the information for the directory that must be saved.</param>
         /// <param name="parentDirectoryId"> The directory where the directory should be saved </param>
-        Task<DirectoryDTO> AddDirectory(DirectoryUpdateDTO directory, Guid parentDirectoryId);
+        Task<DirectoryDTO> AddDirectory(DirectoryCreateDTO directory);
 
         /// <summary>
         /// Updates a virtual directory.
         /// </summary>
         /// <param name="directoryUpdate"> All the information for the directory.</param>
-        Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directoryUpdate, Guid directoryId);
+        Task<DirectoryDTO> UpdateDirectory(DirectoryUpdateDTO directoryUpdate);
 
         /// <summary>
         /// Moves a directory to another directory.

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
+using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
 using MyFileSpace.SharedKernel.Enums;
 
@@ -10,24 +11,38 @@ namespace MyFileSpace.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [MyFileSpaceAuthorize(RoleType.Admin)]
-    public class CacheController : ControllerBase
+    public class ManagementController : ControllerBase
     {
         private readonly ICacheService _cacheService;
+        private readonly IStoredFileService _storedFileService;
 
-        public CacheController(ICacheService cacheService)
+        public ManagementController(ICacheService cacheService, IStoredFileService storedFileService)
         {
             _cacheService = cacheService;
+            _storedFileService = storedFileService;
+        }
+
+        [HttpGet("statistics")]
+        public async Task<FileStatisticsDTO> GetStatistics()
+        {
+            return await _storedFileService.GetStatistics();
+        }
+
+        [HttpDelete("pastRetention")]
+        public async Task PermanentDelete()
+        {
+            await _storedFileService.DeletePastBinRetention();
         }
 
         // PUT api/<CacheController>/usage
-        [HttpGet("usage")]
-        public async Task<string> GetMemoryUsage()
+        [HttpGet("cacheUsage")]
+        public async Task<MemorySizeDTO> GetMemoryUsage()
         {
             return await _cacheService.GetMemoryUsed();
         }
 
         // DELETE api/<CacheController>
-        [HttpDelete("clear")]
+        [HttpDelete("cacheClear")]
         public async Task Delete()
         {
             await _cacheService.ClearCache();

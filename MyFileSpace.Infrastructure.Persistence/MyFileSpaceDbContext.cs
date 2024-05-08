@@ -2,7 +2,6 @@
 using MyFileSpace.Infrastructure.Persistence.Entities;
 using MyFileSpace.Infrastructure.Persistence.Interfaces;
 using MyFileSpace.SharedKernel.Entities;
-using System;
 using System.Reflection;
 
 namespace MyFileSpace.Infrastructure.Persistence
@@ -38,6 +37,13 @@ namespace MyFileSpace.Infrastructure.Persistence
                             && typeof(IGenericEntity).IsAssignableFrom(i.GenericTypeArguments[0])));
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+#if DEBUG
+            optionsBuilder.EnableSensitiveDataLogging(); // Enable sensitive data logging in debug mode
+#endif
+        }
+
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             var modifiedEntries = ChangeTracker.Entries()
@@ -49,7 +55,6 @@ namespace MyFileSpace.Infrastructure.Persistence
                 IAuditableEntity? entity = entry.Entity as IAuditableEntity;
                 if (entity != null)
                 {
-                    string identityName = Thread.CurrentPrincipal?.Identity?.Name ?? string.Empty;
                     DateTime now = DateTime.UtcNow;
 
                     if (entry.State == EntityState.Added)
@@ -61,7 +66,51 @@ namespace MyFileSpace.Infrastructure.Persistence
                         base.Entry(entity).Property(x => x.CreatedAt).IsModified = false;
                     }
 
-                    entity.CreatedAt = now;
+                    entity.ModifiedAt = now;
+                }
+
+                if (entry.Entity is VirtualDirectory vd)
+                {
+                    var nowDeleted = (Entry(vd).Property("IsDeleted").CurrentValue as bool?).GetValueOrDefault();
+                    var alreadyDeleted = (Entry(vd).Property("IsDeleted").OriginalValue as bool?).GetValueOrDefault();
+                    if (nowDeleted && !alreadyDeleted)
+                    {
+                        var dak = DirectoryAccessKey.FirstOrDefault(c => c.DirectoryId == vd.Id);
+                        if (dak != null)
+                        {
+                            var ak = AccessKey.First(ak => ak.Id == dak.AccessKeyId);
+                            DirectoryAccessKey.Remove(dak);
+                            AccessKey.Remove(ak);
+                        }
+
+                        var uda = UserDirectoryAccess.Where(ufa => ufa.DirectoryId == vd.Id);
+                        if (uda.Any())
+                        {
+                            UserDirectoryAccess.RemoveRange(uda);
+                        }
+                    }
+                }
+
+                if (entry.Entity is StoredFile sf)
+                {
+                    var nowDeleted = (Entry(sf).Property("IsDeleted").CurrentValue as bool?).GetValueOrDefault();
+                    var alreadyDeleted = (Entry(sf).Property("IsDeleted").OriginalValue as bool?).GetValueOrDefault();
+                    if (nowDeleted && !alreadyDeleted)
+                    {
+                        var fak = FileAccessKey.FirstOrDefault(c => c.FileId == sf.Id);
+                        if (fak != null)
+                        {
+                            var ak = AccessKey.First(ak => ak.Id == fak.AccessKeyId);
+                            FileAccessKey.Remove(fak);
+                            AccessKey.Remove(ak);
+                        }
+
+                        var ufa = UserFileAccess.Where(ufa => ufa.FileId == sf.Id);
+                        if (ufa.Any())
+                        {
+                            UserFileAccess.RemoveRange(ufa);
+                        }
+                    }
                 }
             }
 

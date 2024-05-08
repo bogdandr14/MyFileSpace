@@ -15,38 +15,46 @@ namespace MyFileSpace.Api.Controllers
             _userService = userService;
         }
 
-        [HttpGet("isAvailable/email/{email}")]
+        [HttpGet("search")]
+        [MyFileSpaceAuthorize(true)]
+        public async Task<UsersFoundDTO> SearchFiles([FromQuery] InfiniteScrollFilter filter)
+        {
+            return await _userService.SearchUsers(filter);
+        }
+
+        [HttpGet("availability/email/{email}")]
         public async Task<bool> CheckEmailAvailable(string email)
         {
             return await _userService.CheckEmailAvailable(email);
         }
 
-        [HttpGet("isAvailable/tagname/{tagName}")]
-        [MyFileSpaceAuthorize]
+        [HttpGet("availability/tagname/{tagName}")]
         public async Task<bool> CheckTagNameAvailable(string tagName)
         {
             return await _userService.CheckTagNameAvailable(tagName);
         }
 
         [HttpPost("register")]
-        public async Task<UserDetailsDTO> Register(AuthDTO authDTO)
+        public async Task<CurrentUserDTO> Register(RegisterDTO registerDTO)
         {
-            return await _userService.Register(authDTO);
+            return await _userService.Register(registerDTO);
         }
 
         [HttpPost("login")]
-        public async Task<string> Login(AuthDTO authDTO)
+        public async Task<TokenDTO> Login(AuthDTO authDTO)
         {
             return await _userService.Login(authDTO);
         }
 
-        [HttpGet("tagname/{tagName}")]
-        public async Task<UserDetailsDTO> GetUserByTagName(string tagName)
+        [HttpGet]
+        [MyFileSpaceAuthorize]
+        public async Task<UserDetailsDTO> GetCurrentUser()
         {
-            return await _userService.GetUserByTagName(tagName);
+            return await _userService.GetCurrentUser();
         }
 
         [HttpGet("{userId:Guid}")]
+        [MyFileSpaceAuthorize(true)]
         public async Task<UserDetailsDTO> GetUserById(Guid userId)
         {
             return await _userService.GetUserByIdAsync(userId);

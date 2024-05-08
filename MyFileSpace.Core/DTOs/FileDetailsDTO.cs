@@ -2,7 +2,10 @@
 {
     public class FileDetailsDTO : FileDTO
     {
-        public Guid DirectorId { get; set; }
+        public string OwnerTagName { get; set; }
+
         public string DirectoryName { get; set; }
+        public List<string> AllowedUsers { get; set; }
+        public KeyAccessDetailsDTO? AccessKey { get; set; }
     }
 }

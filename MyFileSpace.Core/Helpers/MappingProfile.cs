@@ -17,7 +17,7 @@ namespace MyFileSpace.Core.Helpers
         ///
         private void ConfigureMappings()
         {
-            CreateMap<User, UserDetailsDTO>()
+            CreateMap<User, CurrentUserDTO>()
                 .ForMember(x => x.RoleType, y => y.MapFrom(z => z.Role))
                 .ReverseMap();
 
@@ -27,10 +27,8 @@ namespace MyFileSpace.Core.Helpers
                 .ForMember(x => x.LastModified, y => y.MapFrom(z => z.ModifiedAt));
 
             CreateMap<StoredFile, FileDetailsDTO>()
-                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath));
-
-            CreateMap<StoredFile, OwnFileDetailsDTO>()
-                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath));
+                .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath))
+                .ForMember(x => x.AllowedUsers, y => y.MapFrom(z => z.AllowedUsers.Select(au => au.AllowedUser.TagName)));
 
             CreateMap<VirtualDirectory, DirectoryDTO>()
                 .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
@@ -39,9 +37,18 @@ namespace MyFileSpace.Core.Helpers
                 .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
 
             CreateMap<DirectoryUpdateDTO, VirtualDirectory>()
-                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Path));
+                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Name));
 
-            CreateMap<User, UserPublicInfoDTO>()
+            CreateMap<DirectoryCreateDTO, VirtualDirectory>()
+                .ForMember(x => x.VirtualPath, y => y.MapFrom(z => z.Name));
+
+            CreateMap<User, UserDTO>()
+                .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
+
+            CreateMap<User, UserDetailsDTO>()
+                .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
+
+            CreateMap<User, CurrentUserDTO>()
                 .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
 
             CreateMap<AccessKey, KeyAccessDetailsDTO>();

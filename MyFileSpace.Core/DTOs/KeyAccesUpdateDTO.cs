@@ -2,6 +2,6 @@
 {
     public class KeyAccesUpdateDTO : AccessDTO
     {
-        public TimeSpan? ExpiresIn { get; set; }
+        public DateTime? ExpiresAt { get; set; }
     }
 }

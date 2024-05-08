@@ -2,10 +2,10 @@
 
 namespace MyFileSpace.Core.DTOs
 {
-    public class DirectoryUpdateDTO
+    public class DirectoryCreateDTO
     {
-        public Guid DirectoryId { get; set; }
-        public string? Name { get; set; }
+        public Guid? ParentDirectoryId { get; set; }
+        public string Name { get; set; }
         public int AccessLevel { get; set; }
     }
 }

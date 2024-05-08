@@ -28,16 +28,6 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             builder.Property(sf => sf.IsDeleted)
                 .IsRequired();
 
-            builder.Property(sf => sf.CreatedAt)
-                .HasDefaultValue(DateTime.MinValue)
-                .ValueGeneratedOnAdd()
-                .IsRequired();
-
-            builder.Property(sf => sf.ModifiedAt)
-                .HasDefaultValue(DateTime.MinValue)
-                .ValueGeneratedOnAddOrUpdate()
-                .IsRequired();
-
             builder.Property(sf => sf.ContentType)
                 .IsRequired();
 

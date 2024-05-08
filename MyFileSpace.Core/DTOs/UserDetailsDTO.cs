@@ -1,9 +1,8 @@
 ﻿namespace MyFileSpace.Core.DTOs
 {
-    public class UserDetailsDTO
+    public class UserDetailsDTO : UserDTO
     {
-        public string Email { get; set; }
-        public string TagName { get; set; }
-        public string RoleType { get; set; }
+        public List<DirectoryDTO> Directories { get; set; }
+        public List<FileDTO> Files { get; set; }
     }
 }

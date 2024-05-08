@@ -1,14 +1,16 @@
 ﻿using MyFileSpace.Core.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyFileSpace.Core.Services
 {
     public interface IUserService
     {
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// Returns a list of users.
+        /// </returns>
+        Task<UsersFoundDTO> SearchUsers(InfiniteScrollFilter filter);
 
         /// <summary>
         /// Logins a user in the application based on the provided information.
@@ -17,7 +19,7 @@ namespace MyFileSpace.Core.Services
         /// <returns>
         /// Returns a <see cref="string"/> object, which contains the the JWT token.
         /// </returns>
-        Task<string> Login(AuthDTO userLogin);
+        Task<TokenDTO> Login(AuthDTO userLogin);
 
         /// <summary>
         /// Register a user in the application with all the information for the person.
@@ -25,10 +27,10 @@ namespace MyFileSpace.Core.Services
         /// <param name="userRegister">Contains all information required for the account,
         /// but also for the person that will be shown in the genealogy tree</param>
         /// <returns>
-        /// Returns a <see cref="UserDetailsDTO"/> object, which contains all the information
+        /// Returns a <see cref="CurrentUserDTO"/> object, which contains all the information
         /// for the user.
         /// </returns>
-        Task<UserDetailsDTO> Register(AuthDTO userRegister);
+        Task<CurrentUserDTO> Register(RegisterDTO userRegister);
 
         /// <summary>
         /// Updated the user's password. The new password will be validated in order 
@@ -36,7 +38,7 @@ namespace MyFileSpace.Core.Services
         /// </summary>
         /// <param name="updatePassword">Contains the user's username, old and new password.</param>
         /// <returns>
-        /// Returns a <see cref="UserDetailsDTO"/> object, which contains all the information
+        /// Returns a <see cref="CurrentUserDTO"/> object, which contains all the information
         /// of the user.
         /// </returns>
         Task UpdatePassword(UpdatePasswordDTO updatePassword);
@@ -52,14 +54,13 @@ namespace MyFileSpace.Core.Services
         Task<UserDetailsDTO> GetUserByIdAsync(Guid userId);
 
         /// <summary>
-        /// Retrieves a specific user by its username.
+        /// Retrieves the current.
         /// </summary>
-        /// <param name="username"> The username of the user that should be retrieved.</param>
         /// <returns>
-        /// Returns an <see cref="UserDetailsDTO"/> object which contains all information about the 
-        /// requested user.
+        /// Returns an <see cref="CurrentUserDTO"/> object which contains all information about the 
+        /// current user.
         /// </returns>
-        Task<UserDetailsDTO> GetUserByTagName(string username);
+        Task<CurrentUserDTO> GetCurrentUser();
 
         /// <summary>
         /// Updates the information of the specified user.

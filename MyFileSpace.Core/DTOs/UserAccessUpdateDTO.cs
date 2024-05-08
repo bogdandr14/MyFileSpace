@@ -2,6 +2,7 @@
 {
     public class UserAccessUpdateDTO : AccessDTO
     {
-        public List<Guid> UserGuids { get; set; }
+        public List<Guid> AddUserIds { get; set; }
+        public List<Guid> RemoveUserIds { get; set; }
     }
 }

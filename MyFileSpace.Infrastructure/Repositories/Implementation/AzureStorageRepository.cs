@@ -46,7 +46,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             };
         }
 
-        public async Task<Stream> ReadFile(string directory, string fileName)
+        public async Task<byte[]> ReadFile(string directory, string fileName)
         {
             BlobContainerClient blobContainerClient = _blobServiceClient.GetBlobContainerClient(directory);
             BlobClient blobClient = blobContainerClient.GetBlobClient(fileName);
@@ -59,7 +59,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
 
             var blobContent = blobDownloadResult.Value;
 
-            return blobContent.Content.ToStream();
+            return blobContent.Content.ToArray();
         }
 
         public async Task<bool> RemoveFile(string directory, string fileName)

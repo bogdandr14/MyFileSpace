@@ -17,14 +17,14 @@ namespace MyFileSpace.Api.Attributes
         private IAuthService _authService;
         private string _authorizationString;
 
-        public MyFileSpaceAuthorizeAttribute()
+        public MyFileSpaceAuthorizeAttribute(bool allowAnonymous = false)
         {
             rolesAllowed = new List<RoleType>
             {
                 RoleType.Admin,
                 RoleType.Customer
             };
-            allowAnonymous = false;
+            this.allowAnonymous = allowAnonymous;
         }
 
         public MyFileSpaceAuthorizeAttribute(RoleType role)
@@ -36,18 +36,13 @@ namespace MyFileSpace.Api.Attributes
             allowAnonymous = false;
         }
 
-        public MyFileSpaceAuthorizeAttribute(bool allowAnonymous)
-        {
-            this.allowAnonymous = allowAnonymous;
-        }
-
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             InitializeProviders(context.HttpContext.RequestServices);
 
             // validate required headers
             _authorizationString = _httpContextProvider.GetValueFromRequestHeader(Constants.AUTH_HEADER);
-            if (_authorizationString == null)
+            if (string.IsNullOrEmpty(_authorizationString))
             {
                 if (allowAnonymous)
                 {
@@ -58,13 +53,13 @@ namespace MyFileSpace.Api.Attributes
             }
 
             // validate user authentication
-            Tuple<Guid, RoleType> test = _authService.ValidateUserAuthorization(_authorizationString, rolesAllowed);
+            (Guid guid, RoleType roleType) = _authService.ValidateUserAuthorization(_authorizationString, rolesAllowed);
 
             // set session info
             Session session = (Session)context.HttpContext.RequestServices.GetService(typeof(Session))!;
             session.IsAuthenticated = true;
-            session.UserId = test.Item1;
-            session.Role = test.Item2;
+            session.UserId = guid;
+            session.Role = roleType;
         }
 
         private void InitializeProviders(IServiceProvider serviceProvider)

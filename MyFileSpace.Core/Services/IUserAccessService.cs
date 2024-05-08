@@ -5,8 +5,7 @@ namespace MyFileSpace.Core.Services
 {
     public interface IUserAccessService
     {
-        Task AddUserAccess(UserAccessUpdateDTO userAccess);
-        Task RemoveUserAccess(UserAccessUpdateDTO userAccess);
-        Task<List<UserPublicInfoDTO>> GetAllowedUsers(Guid objectId, ObjectType objectType);
+        Task EditAllowedUsers(UserAccessUpdateDTO userAccess);
+        Task<List<UserDTO>> GetAllowedUsers(Guid objectId, ObjectType objectType);
     }
 }

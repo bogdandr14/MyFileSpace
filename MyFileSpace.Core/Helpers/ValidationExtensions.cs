@@ -130,16 +130,29 @@ namespace MyFileSpace.Core.Helpers
             return user;
         }
 
+        public static async Task<User> ValidateCredentialsAndRetrieveUser(this IUserRepository userRepo, Guid userId, string passwordToValidate)
+        {
+            User? user = await userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+
+            if (!CryptographyUtility.VerifyKey(passwordToValidate, user.Password, user.Salt))
+            {
+                throw new InvalidException("Incorrect email or password");
+            }
+
+            return user;
+        }
+
         public static async Task<StoredFile> ValidateAndRetrieveFileInfo(this IStoredFileRepository storedFileRepo, Session session, Guid fileId, string? accessKey = null)
         {
-            StoredFile? storedFile;
-            if (session.IsAuthenticated)
+            StoredFile? storedFile = await storedFileRepo.SingleOrDefaultAsync(new AllowedFileSpec(fileId, session.UserId));
+            if (storedFile != null)
             {
-                storedFile = await storedFileRepo.SingleOrDefaultAsync(new AllowedFileSpec(fileId, session.UserId));
-                if (storedFile != null)
-                {
-                    return storedFile;
-                }
+                return storedFile;
             }
 
             if (accessKey != null)
@@ -157,13 +170,10 @@ namespace MyFileSpace.Core.Helpers
         public static async Task<VirtualDirectory> ValidateAndRetrieveDirectoryInfo(this IVirtualDirectoryRepository virtualDirectoryRepo, Session session, Guid directoryId, string? accessKey = null)
         {
             VirtualDirectory? virtualDirectory;
-            if (session.IsAuthenticated)
+            virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new AllowedDirectorySpec(directoryId, session.UserId));
+            if (virtualDirectory != null)
             {
-                virtualDirectory = await virtualDirectoryRepo.SingleOrDefaultAsync(new AllowedDirectorySpec(directoryId, session.UserId));
-                if (virtualDirectory != null)
-                {
-                    return virtualDirectory;
-                }
+                return virtualDirectory;
             }
 
             if (accessKey != null)
