@@ -232,6 +232,7 @@ namespace MyFileSpace.Core.Services.Implementation
             FavoriteFile favoriteFile = new FavoriteFile() { FileId = fileId, UserId = _session.UserId };
             await _favoriteFileRepository.AddAsync(favoriteFile);
             await _cacheRepository.RemoveAsync(fileId.FileCacheKey(_session, null));
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
         }
 
         public async Task RemoveFromFavorites(Guid fileId)
@@ -239,6 +240,7 @@ namespace MyFileSpace.Core.Services.Implementation
             FavoriteFile favoriteFile = await _favoriteFileRepository.ValidateAndRetrieveFavoriteFile(fileId, _session.UserId);
             await _favoriteFileRepository.DeleteAsync(favoriteFile);
             await _cacheRepository.RemoveAsync(fileId.FileCacheKey(_session, null));
+            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
         }
 
         public async Task DeleteFile(Guid fileId, bool permanent)
