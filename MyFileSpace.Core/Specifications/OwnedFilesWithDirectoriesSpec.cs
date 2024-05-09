@@ -8,7 +8,8 @@ namespace MyFileSpace.Core.Specifications
         public OwnedFilesWithDirectoriesSpec(Guid ownerId)
         {
             Query.Where(x => x.OwnerId.Equals(ownerId))
-                .Include(x => x.Directory);
+                .Include(x => x.Directory)
+                .Include(x=> x.UsersFavorite);
         }
 
         public OwnedFilesWithDirectoriesSpec(Guid ownerId, Guid fileId, bool isDeleted = false)

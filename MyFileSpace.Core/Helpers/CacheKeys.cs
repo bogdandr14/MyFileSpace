@@ -7,7 +7,7 @@
             return $"File_{fileId}_";
         }
 
-        public static string FileCacheKey(this Guid fileId, Session session, string accessKey)
+        public static string FileCacheKey(this Guid fileId, Session session, string? accessKey)
         {
             return $"File_{fileId}_{session.UserId}_{accessKey}";
         }

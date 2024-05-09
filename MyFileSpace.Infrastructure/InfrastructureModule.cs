@@ -36,6 +36,7 @@ namespace MyFileSpace.Infrastructure
             services.AddScoped<IUserFileAccessRepository, UserFileAccessRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IVirtualDirectoryRepository, VirtualDirectoryRepository>();
+            services.AddScoped<IFavoriteFileRepository, FavoriteFileRepository>();
         }
 
         private static void RegisterDevelopmentOnlyDependencies(IServiceCollection services)

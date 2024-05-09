@@ -163,6 +163,13 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
             await _cache.RemoveAsync(key);
         }
 
+        public async Task RemoveByPrefixAsync(string prefix)
+        {
+            foreach (string key in (await GetAllKeysAsync()).Where(k => k.StartsWith(prefix)))
+            {
+                await _cache.RemoveAsync(key);
+            }
+        }
         public async Task<double> GetMemoryUsedAsync()
         {
             return await _cache.GetCacheSizeAsync();

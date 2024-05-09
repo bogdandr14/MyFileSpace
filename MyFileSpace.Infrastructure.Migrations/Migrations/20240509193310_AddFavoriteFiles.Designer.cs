@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyFileSpace.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MyFileSpace.Infrastructure.Persistence;
 namespace MyFileSpace.Infrastructure.Migrations.Migrations
 {
     [DbContext(typeof(MyFileSpaceDbContext))]
-    partial class MyFileSpaceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240509193310_AddFavoriteFiles")]
+    partial class AddFavoriteFiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -176,16 +179,14 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("TagName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("TagName");
-
                     b.HasIndex("TagName")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[TagName] IS NOT NULL");
 
                     b.ToTable("User");
                 });

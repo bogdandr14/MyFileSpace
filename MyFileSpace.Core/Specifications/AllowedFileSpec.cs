@@ -15,12 +15,13 @@ namespace MyFileSpace.Core.Specifications
                     || f.AccessLevel == AccessType.Public
                     || (f.AccessLevel == AccessType.Restricted
                         && (f.AllowedUsers.Any(au => au.AllowedUserId == userId)
-                            || f.Directory.AccessLevel != AccessType.Private 
+                            || f.Directory.AccessLevel != AccessType.Private
                                 && f.Directory.AllowedUsers.Any(au => au.AllowedUserId == userId)
                             )
                         )
                     )
                 ).Include(f => f.Owner)
+                .Include(f => f.UsersFavorite)
                 .Include(x => x.AllowedUsers).ThenInclude(x => x.AllowedUser)
                 .Include(x => x.FileAccessKey).ThenInclude(x => x!.AccessKey);
         }

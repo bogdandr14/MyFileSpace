@@ -74,6 +74,20 @@ namespace MyFileSpace.Api.Controllers
             await _storedFileService.MoveFile(fileId, directoryId, restore);
         }
 
+        [HttpPost("favorite/{fileId:Guid}")]
+        [MyFileSpaceAuthorize]
+        public async Task AddFavorite(Guid fileId)
+        {
+            await _storedFileService.AddToFavorites(fileId);
+        }
+
+        [HttpDelete("favorite/{fileId:Guid}")]
+        [MyFileSpaceAuthorize]
+        public async Task RemoveFavorite(Guid fileId)
+        {
+            await _storedFileService.RemoveFromFavorites(fileId);
+        }
+
         [HttpDelete("{fileId:Guid}")]
         [MyFileSpaceAuthorize]
         public async Task Delete(Guid fileId, [FromQuery] bool permanent = false)

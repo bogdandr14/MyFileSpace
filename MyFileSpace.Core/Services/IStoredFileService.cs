@@ -71,6 +71,10 @@ namespace MyFileSpace.Core.Services
         /// <param name="directoryId"> The directory id where the file should be moved.</param>
         Task MoveFile(Guid fileId, Guid directoryId, bool restore);
 
+        Task AddToFavorites(Guid fileId);
+
+        Task RemoveFromFavorites(Guid fileId);
+
         /// <summary>
         /// Deletes a file from the local file system.
         /// </summary>

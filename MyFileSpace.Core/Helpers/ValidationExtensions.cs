@@ -83,6 +83,15 @@ namespace MyFileSpace.Core.Helpers
                 throw new NotFoundException("One or more of the specified users do not exist");
             }
         }
+
+        public static async Task ValidateFileNotFavorite(this IFavoriteFileRepository favoriteFileRepo, Guid fileId, Guid userId)
+        {
+            if (await favoriteFileRepo.AnyAsync(new FavoriteFileSpec(fileId, userId)))
+            {
+                throw new InvalidException($"File is already marked as favorite!");
+            }
+        }
+
         #endregion
 
         #region "Owner validators"
@@ -241,6 +250,17 @@ namespace MyFileSpace.Core.Helpers
             }
 
             return user;
+        }
+
+        public static async Task<FavoriteFile> ValidateAndRetrieveFavoriteFile(this IFavoriteFileRepository favoriteFileRepo, Guid fileId, Guid userId)
+        {
+            FavoriteFile? favoriteFile = await favoriteFileRepo.SingleOrDefaultAsync(new FavoriteFileSpec(fileId, userId));
+            if (favoriteFile == null)
+            {
+                throw new InvalidException($"File is not marked as favorite!");
+            }
+
+            return favoriteFile;
         }
         #endregion
 
