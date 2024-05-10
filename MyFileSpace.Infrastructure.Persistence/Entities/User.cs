@@ -18,6 +18,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public virtual ICollection<StoredFile> Files { get; set; }
         public virtual ICollection<UserDirectoryAccess> AllowedDirectories { get; set; }
         public virtual ICollection<UserFileAccess> AllowedFiles { get; set; }
+        public virtual ICollection<FavoriteFile> FavoriteFiles { get; set; }
         #endregion
     }
 }

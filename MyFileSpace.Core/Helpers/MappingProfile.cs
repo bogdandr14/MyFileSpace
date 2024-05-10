@@ -21,14 +21,16 @@ namespace MyFileSpace.Core.Helpers
                 .ForMember(x => x.RoleType, y => y.MapFrom(z => z.Role))
                 .ReverseMap();
 
-            CreateMap<StoredFile, FileDTO>();
+            CreateMap<StoredFile, FileDTO>()
+                .ForMember(x => x.WatchingUsers, y => y.MapFrom(z => z.UsersFavorite.Select(lu => lu.UserId)));
             CreateMap<StoredFile, FileDownloadDTO>()
                 .ForMember(x => x.DownloadName, y => y.MapFrom(z => z.Name))
                 .ForMember(x => x.LastModified, y => y.MapFrom(z => z.ModifiedAt));
 
             CreateMap<StoredFile, FileDetailsDTO>()
                 .ForMember(x => x.DirectoryName, y => y.MapFrom(z => z.Directory.VirtualPath))
-                .ForMember(x => x.AllowedUsers, y => y.MapFrom(z => z.AllowedUsers.Select(au => au.AllowedUser.TagName)));
+                .ForMember(x => x.AllowedUsers, y => y.MapFrom(z => z.AllowedUsers.Select(au => au.AllowedUser.TagName)))
+                .ForMember(x => x.WatchingUsers, y => y.MapFrom(z => z.UsersFavorite.Select(lu => lu.UserId)));
 
             CreateMap<VirtualDirectory, DirectoryDTO>()
                 .ForMember(x => x.Name, y => y.MapFrom(z => z.VirtualPath));
@@ -52,7 +54,6 @@ namespace MyFileSpace.Core.Helpers
                 .ForMember(x => x.UserId, y => y.MapFrom(z => z.Id));
 
             CreateMap<AccessKey, KeyAccessDetailsDTO>();
-
         }
 
         private string RecursivePathBuilder(VirtualDirectory directory)

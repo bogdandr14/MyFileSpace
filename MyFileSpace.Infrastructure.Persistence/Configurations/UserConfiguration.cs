@@ -11,6 +11,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
         {
             //Primary key
             builder.HasKey(u => u.Id);
+            builder.HasAlternateKey(u => u.TagName);
 
             //Index
             builder.HasIndex(u => u.TagName).IsUnique();
@@ -18,7 +19,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
             //Properties
             builder.Property(u => u.TagName)
                     .HasMaxLength(50)
-                    .IsRequired(false);
+                    .IsRequired(true);
 
             builder.Property(u => u.Email)
                     .HasMaxLength(321)

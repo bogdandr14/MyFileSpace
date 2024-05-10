@@ -35,7 +35,7 @@ namespace MyFileSpace.Core.Specifications
                         )
                     )
                     .Include(x => x.Owner)
-                    .Include(x => x.FilesInDirectory)
+                    .Include(x => x.FilesInDirectory).ThenInclude(x => x.UsersFavorite)
                     .Include(x => x.ChildDirectories)
                     .Include(x => x.AllowedUsers).ThenInclude(x => x.AllowedUser)
                     .Include(x => x.DirectoryAccessKey).ThenInclude(x => x!.AccessKey);

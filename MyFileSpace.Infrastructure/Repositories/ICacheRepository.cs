@@ -12,6 +12,7 @@
         public Task<byte[]?> GetBytesAsync(string key);
         public Task SetBytesAsync(string key, byte[] bytes, TimeSpan? timeSpan = null);
         public Task RemoveAsync(string key);
+        public Task RemoveByPrefixAsync(string prefix);
         public Task<double> GetMemoryUsedAsync();
         public Task ClearAsync();
     }

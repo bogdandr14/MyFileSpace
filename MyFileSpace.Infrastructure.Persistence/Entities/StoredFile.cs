@@ -20,6 +20,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public virtual User Owner { get; set; }
         public virtual VirtualDirectory Directory { get; set; }
         public virtual ICollection<UserFileAccess> AllowedUsers { get; set; }
+        public virtual ICollection<FavoriteFile> UsersFavorite{ get; set; }
         public virtual FileAccessKey? FileAccessKey { get; set; }
         #endregion
     }
