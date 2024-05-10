@@ -8,6 +8,8 @@ namespace MyFileSpace.Core.Services
     {
 
         Task<FileStatisticsDTO> GetStatistics();
+
+        Task<MemorySizeDTO> GetAllowedStorage();
         /// <summary>
         /// </summary>
         /// <returns>

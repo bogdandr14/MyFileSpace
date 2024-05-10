@@ -10,7 +10,6 @@ namespace MyFileSpace.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [MyFileSpaceAuthorize(RoleType.Admin)]
     public class ManagementController : ControllerBase
     {
         private readonly ICacheService _cacheService;
@@ -23,12 +22,23 @@ namespace MyFileSpace.Api.Controllers
         }
 
         [HttpGet("statistics")]
+        [MyFileSpaceAuthorize(RoleType.Admin)]
+
         public async Task<FileStatisticsDTO> GetStatistics()
         {
             return await _storedFileService.GetStatistics();
         }
+        [HttpGet("allowedStorage")]
+        [MyFileSpaceAuthorize]
+
+        public async Task<MemorySizeDTO> GetAllowedStorage()
+        {
+            return await _storedFileService.GetAllowedStorage();
+        }
 
         [HttpDelete("pastRetention")]
+        [MyFileSpaceAuthorize(RoleType.Admin)]
+
         public async Task PermanentDelete()
         {
             await _storedFileService.DeletePastBinRetention();
@@ -36,6 +46,8 @@ namespace MyFileSpace.Api.Controllers
 
         // PUT api/<CacheController>/usage
         [HttpGet("cacheUsage")]
+        [MyFileSpaceAuthorize(RoleType.Admin)]
+
         public async Task<MemorySizeDTO> GetMemoryUsage()
         {
             return await _cacheService.GetMemoryUsed();
@@ -43,6 +55,8 @@ namespace MyFileSpace.Api.Controllers
 
         // DELETE api/<CacheController>
         [HttpDelete("cacheClear")]
+        [MyFileSpaceAuthorize(RoleType.Admin)]
+
         public async Task Delete()
         {
             await _cacheService.ClearCache();

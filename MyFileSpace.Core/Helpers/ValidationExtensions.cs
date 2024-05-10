@@ -111,10 +111,10 @@ namespace MyFileSpace.Core.Helpers
             }
         }
 
-        public static async Task ValidateOwnFileEnoughSpace(this IStoredFileRepository storedFileRepo, Guid ownerId, long bytesToAdd)
+        public static async Task ValidateOwnFileEnoughSpace(this IStoredFileRepository storedFileRepo, Guid ownerId, long bytesToAdd, long maxAllowedStorage)
         {
             List<StoredFile> ownedFiles = await storedFileRepo.ListAsync(new OwnedFilesSpec(ownerId));
-            if (ownedFiles.Sum(x => x.SizeInBytes) + bytesToAdd > Constants.MAX_ALLOWED_USER_STORAGE)
+            if (ownedFiles.Sum(x => x.SizeInBytes) + bytesToAdd > maxAllowedStorage)
             {
                 throw new InvalidException("You do not have enough free space to store the file!");
             }

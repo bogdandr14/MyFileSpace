@@ -20,6 +20,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
         private readonly IFileStorageRepository _fileStorageRepository;
         private readonly ICacheRepository _cacheRepository;
+        private readonly IConfiguration _configuration;
         private readonly Session _session;
         private readonly TimeSpan _binRetentionTime;
 
@@ -31,6 +32,7 @@ namespace MyFileSpace.Core.Services.Implementation
             _favoriteFileRepository = favoriteFileRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
             _cacheRepository = cacheRepository;
+            _configuration = configuration;
             _session = session;
 
             if (TimeSpan.TryParse(configuration.GetConfigValue("FileStorage:BinRetentionTime"), out TimeSpan lifeSpan))
@@ -40,6 +42,15 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
+        public async Task<MemorySizeDTO> GetAllowedStorage()
+        {
+            if (int.TryParse(_configuration.GetConfigValue("FileStorage:MaxStorageGB"), out int maxStorageGB))
+            {
+                return new MemorySizeDTO() { Scale = "GB", Size = maxStorageGB };
+            }
+            return new MemorySizeDTO() { Scale = "GB", Size = 1 };
+        }
+
         public async Task<FileStatisticsDTO> GetStatistics()
         {
             Func<Task<FileStatisticsDTO>> statisticsTask = async () =>
@@ -151,7 +162,8 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
-            await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length);
+           
+            await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length, RetrieveMaxAllowedStorage());
 
             StoredFile fileToStore = new StoredFile()
             {
@@ -198,7 +210,7 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 throw new InvalidException("can not change the content type of the file");
             }
-            await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length - storedFile.SizeInBytes);
+            await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length - storedFile.SizeInBytes, RetrieveMaxAllowedStorage());
 
             await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
 
@@ -259,6 +271,16 @@ namespace MyFileSpace.Core.Services.Implementation
         #endregion
 
         #region "Private methods"
+        private long RetrieveMaxAllowedStorage()
+        {
+            long maxAllowedSize = Constants.MAX_ALLOWED_USER_STORAGE;
+            if (int.TryParse(_configuration.GetConfigValue("FileStorage:MaxStorageGB"), out int maxStorageGB))
+            {
+                maxAllowedSize = maxStorageGB * 1024 * 1024 * 1024;
+            }
+
+            return maxAllowedSize;
+        }
         private FileTypeStatistics CreateFileTypeStatistics(List<StoredFile> storedFiles, AccessType accessType)
         {
             return new FileTypeStatistics()
