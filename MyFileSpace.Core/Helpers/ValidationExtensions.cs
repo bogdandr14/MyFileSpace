@@ -139,6 +139,30 @@ namespace MyFileSpace.Core.Helpers
             return user;
         }
 
+        public static async Task<User> ValidateResetKeyAndRetrieveUser(this IUserRepository userRepo, string email, string resetKey)
+        {
+            User? user = await userRepo.FirstOrDefaultAsync(new EmailSpec(email,resetKey));
+
+            if (user == null)
+            {
+                throw new InvalidException("Reset link invalid or expired");
+            }
+
+            return user;
+        }
+
+        public static async Task<User> ValidateConfirmKeyAndRetrieveUser(this IUserRepository userRepo, string confirmKey)
+        {
+            User? user = await userRepo.FirstOrDefaultAsync(new UserWithAccessKeySpec(confirmKey, UserKeyType.Confirmation));
+
+            if (user == null)
+            {
+                throw new InvalidException("Confirmation link invalid or expired");
+            }
+
+            return user;
+        }
+
         public static async Task<User> ValidateCredentialsAndRetrieveUser(this IUserRepository userRepo, Guid userId, string passwordToValidate)
         {
             User? user = await userRepo.GetByIdAsync(userId);
@@ -261,6 +285,24 @@ namespace MyFileSpace.Core.Helpers
             }
 
             return favoriteFile;
+        }
+
+        public static async Task<User> ValidateAndRetrieveUserEmail(this IUserRepository userRepo, string email)
+        {
+            Regex validateEmailRegex = new Regex("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+
+            if (!validateEmailRegex.IsMatch(email))
+            {
+                throw new InvalidException("The email does not have a valid format");
+            }
+
+            User? user = await userRepo.FirstOrDefaultAsync(new EmailSpec(email, true));
+            if (user == null)
+            {
+                throw new InvalidException("Email does not exist");
+            }
+
+            return user;
         }
         #endregion
 

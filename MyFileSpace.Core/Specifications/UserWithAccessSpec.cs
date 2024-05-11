@@ -7,7 +7,7 @@ namespace MyFileSpace.Core.Specifications
     {
         public UserWithAccessSpec(Guid objectId)
         {
-            Query.Where(u => u.AllowedFiles.Any(af => af.FileId == objectId) || u.AllowedDirectories.Any(ad => ad.DirectoryId == objectId));
+            Query.Where(u => u.IsConfirmed && (u.AllowedFiles.Any(af => af.FileId == objectId) || u.AllowedDirectories.Any(ad => ad.DirectoryId == objectId)));
         }
     }
 }

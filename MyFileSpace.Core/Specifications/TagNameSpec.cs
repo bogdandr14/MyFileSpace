@@ -7,7 +7,7 @@ namespace MyFileSpace.Core.Specifications
     {
         public TagNameSpec(string tagName)
         {
-            Query.Where(a => a.TagName == tagName);
+            Query.Where(a => a.TagName == tagName && a.IsConfirmed);
         }
     }
 }

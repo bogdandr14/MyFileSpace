@@ -9,7 +9,7 @@ namespace MyFileSpace.Core.Specifications
     {
         public SearchUsersSpec(InfiniteScrollFilter filter, Guid requestUserId)
         {
-            Query.Where(user => user.TagName.Contains(filter.Name) && user.Role == RoleType.Customer && !user.Id.Equals(requestUserId))
+            Query.Where(user => user.TagName.Contains(filter.Name) && user.Role == RoleType.Customer && user.IsConfirmed && (filter.IncludeOwn || !user.Id.Equals(requestUserId)))
                 .OrderBy(file => file.TagName)
                 .Skip(filter.Skip)
                 .Take(filter.Take);

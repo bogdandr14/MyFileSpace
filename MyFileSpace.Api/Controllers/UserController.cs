@@ -10,9 +10,11 @@ namespace MyFileSpace.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService)
+        private readonly IEmailService _emailService;
+        public UserController(IUserService userService, IEmailService emailService)
         {
             _userService = userService;
+            _emailService = emailService;
         }
 
         [HttpGet("search")]
@@ -60,6 +62,18 @@ namespace MyFileSpace.Api.Controllers
             return await _userService.GetUserByIdAsync(userId);
         }
 
+        [HttpPost("sendMail")]
+        public async Task SendMail(MailRequestDTO mailRequest)
+        {
+            await _emailService.RequestSendMail(mailRequest);
+        }
+
+        [HttpPut("confirmMail")]
+        public async Task ConfirmEmail([FromBody] string confirmKey)
+        {
+            await _userService.ConfirmEmail(confirmKey);
+        }
+
         [HttpPut]
         [MyFileSpaceAuthorize]
         public async Task UpdateUser(UserUpdateDTO userUpdateDTO)
@@ -67,8 +81,8 @@ namespace MyFileSpace.Api.Controllers
             await _userService.UpdateUser(userUpdateDTO);
         }
 
-        [HttpPut("changepassword")]
-        [MyFileSpaceAuthorize]
+        [HttpPut("changePassword")]
+        [MyFileSpaceAuthorize(true)]
         public async Task UpdateUserPassword(UpdatePasswordDTO passwordChangeDTO)
         {
             await _userService.UpdatePassword(passwordChangeDTO);

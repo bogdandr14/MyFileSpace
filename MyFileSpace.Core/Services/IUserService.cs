@@ -91,5 +91,7 @@ namespace MyFileSpace.Core.Services
         /// Returns true if the email is available, or false if the username is already taken.
         /// </returns>
         Task<bool> CheckEmailAvailable(string email);
+
+        Task ConfirmEmail(string confirmKey);
     }
 }

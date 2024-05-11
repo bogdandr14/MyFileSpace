@@ -9,6 +9,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public string TagName { get; set; }
         public string Password { get; set; }
         public string Email { get; set; }
+        public bool IsConfirmed {  get; set; }
         public RoleType Role { get; set; }
         public DateTime LastPasswordChange { get; set; }
         public string Salt { get; set; }
@@ -19,6 +20,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         public virtual ICollection<UserDirectoryAccess> AllowedDirectories { get; set; }
         public virtual ICollection<UserFileAccess> AllowedFiles { get; set; }
         public virtual ICollection<FavoriteFile> FavoriteFiles { get; set; }
+        public virtual ICollection<UserAccessKey> UserAccessKeys { get; set; }
         #endregion
     }
 }
