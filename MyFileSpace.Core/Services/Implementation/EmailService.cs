@@ -143,7 +143,7 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 expiresAt = DateTime.UtcNow.AddDays(1);
             }
-            string clearKey = $"{userId}{(int)userKeyType}0{expiresAt}".Replace("-", "").Replace(":","").Replace("/","").Replace(" ", "");
+            string clearKey = $"{userId}{(int)userKeyType}{expiresAt}".Replace("-", "").Replace(":","").Replace("/","").Replace(" ", "");
 
             string encryptedKey = await CryptographyUtility.EncryptAsync(clearKey, userId.ToString());
             AccessKey accessKey = await _accessKeyRepository.AddAsync(new AccessKey() { Key = encryptedKey, ExpiresAt = expiresAt });
