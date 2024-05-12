@@ -146,7 +146,7 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 expiresAt = DateTime.UtcNow.AddDays(1);
             }
-            string clearKey = $"{userId}{(int)userKeyType}{expiresAt}".Replace("-", "").Replace(":", "").Replace("/", "").Replace(" ", "");
+            string clearKey = $"{userId}{(int)userKeyType}{expiresAt.ToBinary()}".Replace("-", "").Replace(" ", "");
             Log.Logger.Information($"Creating user access key for :{clearKey}");
 
             string encryptedKey = await CryptographyUtility.EncryptAsync(clearKey, userId.ToString());
