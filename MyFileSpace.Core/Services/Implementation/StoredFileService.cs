@@ -85,6 +85,7 @@ namespace MyFileSpace.Core.Services.Implementation
             IEnumerable<VirtualDirectory> directoriesToDelete = allDirectories.Where(d => d.IsDeleted == true && d.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0).ToList();
             await _storedFileRepository.DeleteRangeAsync(filesToDelete);
             await _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete);
+            await _cacheRepository.RemoveAsync("statistics");
         }
 
         public async Task<FilesFoundDTO> SearchFiles(InfiniteScrollFilter filter)

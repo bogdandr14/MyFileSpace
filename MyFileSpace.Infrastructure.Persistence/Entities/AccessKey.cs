@@ -11,6 +11,7 @@ namespace MyFileSpace.Infrastructure.Persistence.Entities
         #region "Navigation properties"
         public virtual FileAccessKey? FileAccess { get; set; }
         public virtual DirectoryAccessKey? DirectoryAccess { get; set; }
+        public virtual UserAccessKey? UserAccess { get; set; }
         #endregion
     }
 }

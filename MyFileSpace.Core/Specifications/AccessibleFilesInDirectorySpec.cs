@@ -30,7 +30,8 @@ namespace MyFileSpace.Core.Specifications
                     && (f.OwnerId == userId
                         || f.AccessLevel == AccessType.Public
                         || (f.AccessLevel == AccessType.Restricted
-                            && ((f.Directory.DirectoryAccessKey != null && f.Directory.DirectoryAccessKey.AccessKey.Key == accessKey)
+                            && ((f.Directory.DirectoryAccessKey != null && f.Directory.DirectoryAccessKey.AccessKey.Key == accessKey
+                                    && f.Directory.DirectoryAccessKey.AccessKey.ExpiresAt.CompareTo(DateTime.UtcNow) > 0)
                                 || (f.AllowedUsers.Any(au => au.AllowedUserId == userId)
                                     || (f.Directory.AccessLevel != AccessType.Private
                                         && f.Directory.AllowedUsers.Any(au => au.AllowedUserId == userId))

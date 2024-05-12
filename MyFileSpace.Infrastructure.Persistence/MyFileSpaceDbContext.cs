@@ -21,6 +21,8 @@ namespace MyFileSpace.Infrastructure.Persistence
         public DbSet<UserDirectoryAccess> UserDirectoryAccess => Set<UserDirectoryAccess>();
         public DbSet<UserFileAccess> UserFileAccess => Set<UserFileAccess>();
         public DbSet<VirtualDirectory> VirtualDirectory => Set<VirtualDirectory>();
+        public DbSet<FavoriteFile> FavoriteFile => Set<FavoriteFile>();
+        public DbSet<UserAccessKey> UserAccessKey => Set<UserAccessKey>();
 
         #endregion
         protected override void OnModelCreating(ModelBuilder modelBuilder)

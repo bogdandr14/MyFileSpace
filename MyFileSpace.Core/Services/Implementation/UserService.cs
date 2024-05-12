@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
@@ -7,6 +8,7 @@ using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Helpers;
+using MyFileSpace.SharedKernel.Providers;
 using System.Text.RegularExpressions;
 
 namespace MyFileSpace.Core.Services.Implementation
@@ -19,16 +21,24 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
         private readonly IFileStorageRepository _fileSystemRepository;
         private readonly IStoredFileRepository _storedFileRepository;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
+        private readonly IUserAccessKeyRepository _userAccessKeyRepository;
+        private readonly IAccessKeyRepository _accessKeyRepository;
         private readonly Session _session;
 
-        public UserService(IMapper mapper, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, IStoredFileRepository storedFileRepository, Session session)
+        public UserService(IMapper mapper, IConfiguration configuration, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, IStoredFileRepository storedFileRepository, IEmailService emailService, IUserAccessKeyRepository userAccessKeyRepository, IAccessKeyRepository accessKeyRepository, Session session)
         {
             _mapper = mapper;
+            _configuration = configuration;
             _userRepository = userRepository;
             _cacheRepository = cacheRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
             _fileSystemRepository = fileSystemRepository;
             _storedFileRepository = storedFileRepository;
+            _emailService = emailService;
+            _userAccessKeyRepository = userAccessKeyRepository;
+            _accessKeyRepository = accessKeyRepository;
             _session = session;
         }
 
@@ -84,7 +94,7 @@ namespace MyFileSpace.Core.Services.Implementation
             userDetailsDTO.Directories = await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask);
             userDetailsDTO.AllowedDirectories = _mapper.Map<List<DirectoryDTO>>((await _virtualDirectoryRepository.ListAsync(new AccessibleUserDirectoriesSpec(_session.UserId))));
             userDetailsDTO.AllowedFiles = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleUserFilesSpec(_session.UserId)));
-            
+
             return userDetailsDTO;
         }
 
@@ -99,15 +109,32 @@ namespace MyFileSpace.Core.Services.Implementation
         public async Task<TokenDTO> Login(AuthDTO userLogin)
         {
             _session.ValidateNotLoggedIn();
+            User user;
             try
             {
-                User user = await _userRepository.ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
-                return new TokenDTO() { Token = JsonWebToken.GenerateToken(user) };
+                user = await _userRepository.ValidateCredentialsAndRetrieveUser(userLogin.Email, userLogin.Password);
             }
             catch
             {
                 throw new InvalidException("Email or password are incorrect");
             }
+
+            if (!user.IsConfirmed)
+            {
+                if (!bool.TryParse(_configuration.GetConfigValue("DisableConfirmation"), out bool disableConfirmation) || !disableConfirmation)
+                {
+                    throw new InvalidException("Email is not confirmed");
+                }
+            }
+            return new TokenDTO() { Token = JsonWebToken.GenerateToken(user) };
+        }
+
+        public async Task ConfirmEmail(string confirmKey)
+        {
+            User user = await _userRepository.ValidateConfirmKeyAndRetrieveUser(confirmKey);
+            user.IsConfirmed = true;
+            await _userRepository.UpdateAsync(user);
+            await RemoveUserAccessKey(user.Id, confirmKey);
         }
 
         public async Task<CurrentUserDTO> Register(RegisterDTO userRegister)
@@ -140,22 +167,45 @@ namespace MyFileSpace.Core.Services.Implementation
                 OwnerId = createUser.Id,
                 VirtualPath = Constants.ROOT_DIRECTORY,
             };
-            Task.WaitAll(
+
+            List<Task> tasks = new List<Task>() {
                 _virtualDirectoryRepository.AddAsync(rootDirectory),
-                _fileSystemRepository.AddDirectory(user.Id.ToString())
-            );
+                _fileSystemRepository.AddDirectory(user.Id.ToString()) };
+
+            bool.TryParse(_configuration.GetConfigValue("DisableConfirmation"), out bool disableConfirmation);
+            if (!disableConfirmation)
+            {
+                tasks.Add(_emailService.SendWelcomeMail(userRegister.Email, userRegister.Language));
+            }
+            Task.WaitAll(tasks.ToArray());
             return _mapper.Map<CurrentUserDTO>(createUser);
         }
 
         public async Task UpdatePassword(UpdatePasswordDTO updatePassword)
         {
-            User user = await _userRepository.ValidateCredentialsAndRetrieveUser(updatePassword.Email, updatePassword.CurrentPassword);
+            User user;
+            if (updatePassword.IsReset)
+            {
+                user = await _userRepository.ValidateResetKeyAndRetrieveUser(updatePassword.Email, updatePassword.CurrentPassword);
+            }
+            else if (_session.IsAuthenticated)
+            {
+                user = await _userRepository.ValidateCredentialsAndRetrieveUser(updatePassword.Email, updatePassword.CurrentPassword);
+            }
+            else
+            {
+                throw new UnauthorizedException("Cannot change password when not logged in");
+            }
 
             user.Password = CryptographyUtility.HashKey(updatePassword.NewPassword, out string salt);
             user.Salt = salt;
             user.LastPasswordChange = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
+            if (updatePassword.IsReset)
+            {
+                await RemoveUserAccessKey(user.Id, updatePassword.CurrentPassword);
+            }
         }
 
         public async Task UpdateUser(UserUpdateDTO userToUpdate)
@@ -170,6 +220,17 @@ namespace MyFileSpace.Core.Services.Implementation
             await _cacheRepository.RemoveAsync(TagNameCacheKey(oldTagName));
         }
         #endregion
+
+        private async Task RemoveUserAccessKey(Guid userId, string accessKey)
+        {
+            UserAccessKey? userAccessKey = await _userAccessKeyRepository.SingleOrDefaultAsync(new UserAccessKeySpec(userId, accessKey));
+
+            if (userAccessKey != null)
+            {
+                await _userAccessKeyRepository.DeleteAsync(userAccessKey);
+                await _accessKeyRepository.DeleteAsync(userAccessKey.AccessKey);
+            }
+        }
 
         private async Task<User?> GetUserByTagNameCached(string tagName)
         {
