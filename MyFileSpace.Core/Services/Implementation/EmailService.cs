@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.Communication.Email;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Infrastructure.Persistence.Entities;
@@ -17,12 +18,14 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IUserRepository _userRepository;
         private readonly IAccessKeyRepository _accessKeyRepository;
         private readonly IUserAccessKeyRepository _userAccessKeyRepository;
-        public EmailService(IConfiguration configuration, IUserRepository userRepository, IAccessKeyRepository accessKeyRepository, IUserAccessKeyRepository userAccessKeyRepository)
+        private readonly ILogger _logger;
+        public EmailService(IConfiguration configuration, IUserRepository userRepository, IAccessKeyRepository accessKeyRepository, IUserAccessKeyRepository userAccessKeyRepository, ILogger logger)
         {
             _configuration = configuration;
             _userRepository = userRepository;
             _accessKeyRepository = accessKeyRepository;
             _userAccessKeyRepository = userAccessKeyRepository;
+            _logger = logger;
         }
 
         public async Task RequestSendMail(MailRequestDTO mailRequest)
@@ -93,6 +96,7 @@ namespace MyFileSpace.Core.Services.Implementation
             string sCurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string sFile = Path.Combine(sCurrentDirectory, @".\EmailTemplates\" + fileTemplateName);
             string sFilePath = Path.GetFullPath(sFile);
+            _logger.LogInformation($"Accessing file in path:{sFilePath}");
             string template = File.ReadAllText(sFilePath);
 
             string clientUrl = _configuration.GetConfigValue("CommunicationEmail:ClientAppUrl");
@@ -106,7 +110,7 @@ namespace MyFileSpace.Core.Services.Implementation
             string connectionString = _configuration.GetConfigValue("CommunicationEmail:ConnectionString");
             string senderEmail = _configuration.GetConfigValue("CommunicationEmail:SenderEmail");
             string useDebugRecipient = _configuration.GetConfigValue("CommunicationEmail:UseDebugRecipient");
-            
+
             if (bool.TryParse(useDebugRecipient, out bool useDebug) && useDebug)
             {
                 emailAddress = _configuration.GetConfigValue("CommunicationEmail:DebugRecipient");
@@ -143,7 +147,8 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 expiresAt = DateTime.UtcNow.AddDays(1);
             }
-            string clearKey = $"{userId}{(int)userKeyType}{expiresAt}".Replace("-", "").Replace(":","").Replace("/","").Replace(" ", "");
+            string clearKey = $"{userId}{(int)userKeyType}{expiresAt}".Replace("-", "").Replace(":", "").Replace("/", "").Replace(" ", "");
+            _logger.LogInformation($"Creating user access key for :{clearKey}");
 
             string encryptedKey = await CryptographyUtility.EncryptAsync(clearKey, userId.ToString());
             AccessKey accessKey = await _accessKeyRepository.AddAsync(new AccessKey() { Key = encryptedKey, ExpiresAt = expiresAt });
