@@ -6,6 +6,7 @@ using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MyFileSpace.SharedKernel.Providers;
+using Serilog;
 
 namespace MyFileSpace.Infrastructure.Repositories.Implementation
 {
@@ -17,6 +18,7 @@ namespace MyFileSpace.Infrastructure.Repositories.Implementation
         {
             string storageAccessKey = configuration.GetConfigValue("FileStorage:AzureBlobStorageAccessKey");
             string azureStorageName = configuration.GetConfigValue("FileStorage:AzureBlobStorageName");
+            Log.Logger.Debug($"Creating storage connection with:{storageAccessKey}, {azureStorageName}");
             _blobServiceClient = new BlobServiceClient(
                 new Uri($"https://{azureStorageName}.blob.core.windows.net"),
                 new StorageSharedKeyCredential(azureStorageName, storageAccessKey));
