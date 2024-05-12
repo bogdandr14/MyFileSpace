@@ -48,6 +48,10 @@ namespace MyFileSpace.SharedKernel.Helpers
 
         public static async Task<string> EncryptAsync(string clearText, string passphrase)
         {
+            if (clearText.Length / 2 == 1)
+            {
+                clearText = clearText + '0';
+            }
             using MemoryStream unencryptedInput = new(Convert.FromHexString(clearText));
             return Convert.ToHexString(await EncryptAsync(unencryptedInput, passphrase));
         }
