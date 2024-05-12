@@ -9,6 +9,7 @@ using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Helpers;
 using MyFileSpace.SharedKernel.Providers;
+using Serilog;
 
 namespace MyFileSpace.Core.Services.Implementation
 {
@@ -18,14 +19,12 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IUserRepository _userRepository;
         private readonly IAccessKeyRepository _accessKeyRepository;
         private readonly IUserAccessKeyRepository _userAccessKeyRepository;
-        private readonly ILogger _logger;
-        public EmailService(IConfiguration configuration, IUserRepository userRepository, IAccessKeyRepository accessKeyRepository, IUserAccessKeyRepository userAccessKeyRepository, ILogger logger)
+        public EmailService(IConfiguration configuration, IUserRepository userRepository, IAccessKeyRepository accessKeyRepository, IUserAccessKeyRepository userAccessKeyRepository)
         {
             _configuration = configuration;
             _userRepository = userRepository;
             _accessKeyRepository = accessKeyRepository;
             _userAccessKeyRepository = userAccessKeyRepository;
-            _logger = logger;
         }
 
         public async Task RequestSendMail(MailRequestDTO mailRequest)
@@ -96,7 +95,7 @@ namespace MyFileSpace.Core.Services.Implementation
             string sCurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string sFile = Path.Combine(sCurrentDirectory, @".\EmailTemplates\" + fileTemplateName);
             string sFilePath = Path.GetFullPath(sFile);
-            _logger.LogInformation($"Accessing file in path:{sFilePath}");
+            Log.Logger.Information($"Accessing file in path:{sFilePath}");
             string template = File.ReadAllText(sFilePath);
 
             string clientUrl = _configuration.GetConfigValue("CommunicationEmail:ClientAppUrl");
@@ -148,7 +147,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 expiresAt = DateTime.UtcNow.AddDays(1);
             }
             string clearKey = $"{userId}{(int)userKeyType}{expiresAt}".Replace("-", "").Replace(":", "").Replace("/", "").Replace(" ", "");
-            _logger.LogInformation($"Creating user access key for :{clearKey}");
+            Log.Logger.Information($"Creating user access key for :{clearKey}");
 
             string encryptedKey = await CryptographyUtility.EncryptAsync(clearKey, userId.ToString());
             AccessKey accessKey = await _accessKeyRepository.AddAsync(new AccessKey() { Key = encryptedKey, ExpiresAt = expiresAt });
