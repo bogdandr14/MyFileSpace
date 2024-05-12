@@ -11,7 +11,6 @@ namespace MyFileSpace.Infrastructure.Persistence.Configurations
         {
             //Primary key
             builder.HasKey(u => u.Id);
-            builder.HasAlternateKey(u => u.TagName);
 
             //Index
             builder.HasIndex(u => u.TagName).IsUnique();
