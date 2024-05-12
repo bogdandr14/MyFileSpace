@@ -168,16 +168,19 @@ namespace MyFileSpace.Core.Services.Implementation
                 VirtualPath = Constants.ROOT_DIRECTORY,
             };
 
-            List<Task> tasks = new List<Task>() {
-                _virtualDirectoryRepository.AddAsync(rootDirectory),
-                _fileSystemRepository.AddDirectory(user.Id.ToString()) };
+            //List<Task> tasks = new List<Task>() {
+            //    _virtualDirectoryRepository.AddAsync(rootDirectory),
+            //    _fileSystemRepository.AddDirectory(user.Id.ToString()) };
+            await _virtualDirectoryRepository.AddAsync(rootDirectory);
+            await _fileSystemRepository.AddDirectory(user.Id.ToString());
 
             bool.TryParse(_configuration.GetConfigValue("DisableConfirmation"), out bool disableConfirmation);
             if (!disableConfirmation)
             {
-                tasks.Add(_emailService.SendWelcomeMail(userRegister.Email, userRegister.Language));
+                //tasks.Add(_emailService.SendWelcomeMail(userRegister.Email, userRegister.Language));
+                await _emailService.SendWelcomeMail(userRegister.Email, userRegister.Language);
             }
-            Task.WaitAll(tasks.ToArray());
+            //Task.WaitAll(tasks.ToArray());
             return _mapper.Map<CurrentUserDTO>(createUser);
         }
 
