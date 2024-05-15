@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Core.StorageManager;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
 using MyFileSpace.SharedKernel.Providers;
@@ -18,20 +21,20 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IFavoriteFileRepository _favoriteFileRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
-        private readonly IFileStorageRepository _fileStorageRepository;
-        private readonly ICacheRepository _cacheRepository;
+        private readonly IStorageManager _storageManager;
+        private readonly ICacheManager _cacheManager;
         private readonly IConfiguration _configuration;
         private readonly Session _session;
         private readonly TimeSpan _binRetentionTime;
 
-        public StoredFileService(IMapper mapper, IConfiguration configuration, IStoredFileRepository storedFileRepository, IFavoriteFileRepository favoriteFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
+        public StoredFileService(IMapper mapper, IConfiguration configuration, IStoredFileRepository storedFileRepository, IFavoriteFileRepository favoriteFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IStorageManager storageManager, ICacheManager cacheManager, Session session)
         {
             _mapper = mapper;
             _storedFileRepository = storedFileRepository;
-            _fileStorageRepository = fileSystemRepository;
+            _storageManager = storageManager;
             _favoriteFileRepository = favoriteFileRepository;
             _virtualDirectoryRepository = virtualDirectoryRepository;
-            _cacheRepository = cacheRepository;
+            _cacheManager = cacheManager;
             _configuration = configuration;
             _session = session;
 
@@ -42,13 +45,13 @@ namespace MyFileSpace.Core.Services.Implementation
         }
 
         #region "Public methods"
-        public async Task<MemorySizeDTO> GetAllowedStorage()
+        public async Task<MemorySize> GetAllowedStorage()
         {
             if (int.TryParse(_configuration.GetConfigValue("FileStorage:MaxStorageGB"), out int maxStorageGB))
             {
-                return new MemorySizeDTO() { Scale = "GB", Size = maxStorageGB };
+                return new MemorySize() { Scale = "GB", Size = maxStorageGB };
             }
-            return new MemorySizeDTO() { Scale = "GB", Size = 1 };
+            return new MemorySize() { Scale = "GB", Size = 1 };
         }
 
         public async Task<FileStatisticsDTO> GetStatistics()
@@ -74,7 +77,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 return statistics;
             };
 
-            return await _cacheRepository.GetAndSetAsync("statistics", statisticsTask);
+            return await _cacheManager.GetAndSetAsync("statistics", statisticsTask);
         }
 
         public async Task DeletePastBinRetention()
@@ -85,7 +88,7 @@ namespace MyFileSpace.Core.Services.Implementation
             IEnumerable<VirtualDirectory> directoriesToDelete = allDirectories.Where(d => d.IsDeleted == true && d.ModifiedAt.Add(_binRetentionTime).CompareTo(DateTime.UtcNow) < 0).ToList();
             await _storedFileRepository.DeleteRangeAsync(filesToDelete);
             await _virtualDirectoryRepository.DeleteRangeAsync(directoriesToDelete);
-            await _cacheRepository.RemoveAsync("statistics");
+            await _cacheManager.RemoveAsync("statistics");
         }
 
         public async Task<FilesFoundDTO> SearchFiles(InfiniteScrollFilter filter)
@@ -127,7 +130,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 return _mapper.Map<List<FileDTO>>(storedFiles);
             };
 
-            return (await _cacheRepository.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask)).Where(f => f.IsDeleted == deletedFiles).ToList();
+            return (await _cacheManager.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask)).Where(f => f.IsDeleted == deletedFiles).ToList();
         }
 
         public async Task<FileDetailsDTO> GetFileInfo(Guid fileId, string? accessKey = null)
@@ -147,7 +150,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 return fileDetailsDTO;
             };
 
-            return await _cacheRepository.GetAndSetAsync(fileId.FileCacheKey(_session, accessKey), fileInfoTask);
+            return await _cacheManager.GetAndSetAsync(fileId.FileCacheKey(_session, accessKey), fileInfoTask);
         }
 
         public async Task<FileDownloadDTO> DownloadFile(Guid fileId, string? accessKey = null)
@@ -155,7 +158,7 @@ namespace MyFileSpace.Core.Services.Implementation
             // validates the user has access to the file
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId, accessKey);
             FileDownloadDTO fileDownloadDTO = _mapper.Map<FileDownloadDTO>(storedFile);
-            fileDownloadDTO.ContentStream = await _fileStorageRepository.ReadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
+            fileDownloadDTO.ContentStream = await _storageManager.ReadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
             return fileDownloadDTO;
         }
 
@@ -163,7 +166,7 @@ namespace MyFileSpace.Core.Services.Implementation
         {
             await _storedFileRepository.ValidateFileNameNotInDirectory(directoryId, file.FileName);
             await _virtualDirectoryRepository.ValidateOwnDirectoryActive(_session.UserId, directoryId);
-           
+
             await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length, RetrieveMaxAllowedStorage());
 
             StoredFile fileToStore = new StoredFile()
@@ -177,8 +180,8 @@ namespace MyFileSpace.Core.Services.Implementation
             };
             StoredFile storedFile = await _storedFileRepository.AddAsync(fileToStore);
             Task.WaitAll(
-                _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file),
-                _cacheRepository.RemoveAsync(_session.AllFilesCacheKey)
+                _storageManager.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file),
+                _cacheManager.RemoveAsync(_session.AllFilesCacheKey)
             );
 
             return _mapper.Map<FileDTO>(storedFile);
@@ -199,8 +202,8 @@ namespace MyFileSpace.Core.Services.Implementation
             }
 
             await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
-            await _cacheRepository.RemoveByPrefixAsync(fileUpdate.FileId.FileCacheKeyPrefix());
+            await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheManager.RemoveByPrefixAsync(fileUpdate.FileId.FileCacheKeyPrefix());
             return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileUpdate.FileId));
         }
 
@@ -213,13 +216,13 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             await _storedFileRepository.ValidateOwnFileEnoughSpace(_session.UserId, file.Length - storedFile.SizeInBytes, RetrieveMaxAllowedStorage());
 
-            await _fileStorageRepository.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
+            await _storageManager.UploadFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString(), file);
 
             storedFile.Name = file.FileName;
             storedFile.SizeInBytes = file.Length;
             await _storedFileRepository.UpdateAsync(storedFile);
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
-            await _cacheRepository.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
+            await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheManager.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
             return _mapper.Map<FileDTO>(await _storedFileRepository.GetByIdAsync(fileId));
         }
 
@@ -234,8 +237,8 @@ namespace MyFileSpace.Core.Services.Implementation
                 await MoveToDirectory(fileId, directoryId);
             }
 
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
-            await _cacheRepository.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
+            await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheManager.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
         }
 
         public async Task AddToFavorites(Guid fileId)
@@ -244,16 +247,16 @@ namespace MyFileSpace.Core.Services.Implementation
             await _favoriteFileRepository.ValidateFileNotFavorite(fileId, _session.UserId);
             FavoriteFile favoriteFile = new FavoriteFile() { FileId = fileId, UserId = _session.UserId };
             await _favoriteFileRepository.AddAsync(favoriteFile);
-            await _cacheRepository.RemoveAsync(fileId.FileCacheKey(_session, null));
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheManager.RemoveAsync(fileId.FileCacheKey(_session, null));
+            await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
         }
 
         public async Task RemoveFromFavorites(Guid fileId)
         {
             FavoriteFile favoriteFile = await _favoriteFileRepository.ValidateAndRetrieveFavoriteFile(fileId, _session.UserId);
             await _favoriteFileRepository.DeleteAsync(favoriteFile);
-            await _cacheRepository.RemoveAsync(fileId.FileCacheKey(_session, null));
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheManager.RemoveAsync(fileId.FileCacheKey(_session, null));
+            await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
         }
 
         public async Task DeleteFile(Guid fileId, bool permanent)
@@ -266,8 +269,8 @@ namespace MyFileSpace.Core.Services.Implementation
             {
                 await MoveFileToBin(fileId);
             }
-            await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
-            await _cacheRepository.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
+            await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
+            await _cacheManager.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
         }
         #endregion
 
@@ -328,7 +331,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private async Task DeleteFilePermanently(Guid fileId)
         {
             StoredFile storedFile = await _storedFileRepository.ValidateAndRetrieveOwnDeletedFileInfo(_session, fileId);
-            await _fileStorageRepository.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
+            await _storageManager.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString());
             await _storedFileRepository.DeleteAsync(storedFile);
         }
         #endregion

@@ -2,9 +2,10 @@
 using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using MyFileSpace.Caching;
 using MyFileSpace.Core;
 using MyFileSpace.Infrastructure;
-using MyFileSpace.Infrastructure.Persistence;
+
 namespace MyFileSpace.Api
 {
     internal static class MainStartupConfig
@@ -25,9 +26,10 @@ namespace MyFileSpace.Api
             bool isDevelopment = environment.IsDevelopment();
 
             services.RegisterDbContext(configuration);
-            services.RegisterInfrastructureServices(isDevelopment, configuration);
-            services.RegisterCoreServices();
-            services.RegisterApiServices(isDevelopment);
+            services.RegisterCaching();
+            services.RegisterInfrastructure();
+            services.RegisterCoreServices(isDevelopment, configuration);
+            services.RegisterApiServices();
         }
         #endregion
 

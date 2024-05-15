@@ -4,10 +4,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
-using MyFileSpace.SharedKernel.Helpers;
 using MyFileSpace.SharedKernel.Providers;
 using Serilog;
 

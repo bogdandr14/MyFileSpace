@@ -9,7 +9,7 @@ namespace MyFileSpace.Api
 {
     internal static class ApiModule
     {
-        internal static void RegisterApiServices(this IServiceCollection services, bool isDevelopment)
+        internal static void RegisterApiServices(this IServiceCollection services)
         {
             services.AddTransient<CustomExceptionHandlerMiddleware>();
             services.AddSingleton<IHttpContextProvider, HttpContextProvider>();

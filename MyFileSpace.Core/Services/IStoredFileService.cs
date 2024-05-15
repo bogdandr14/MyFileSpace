@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
 
 namespace MyFileSpace.Core.Services
@@ -9,7 +11,7 @@ namespace MyFileSpace.Core.Services
 
         Task<FileStatisticsDTO> GetStatistics();
 
-        Task<MemorySizeDTO> GetAllowedStorage();
+        Task<MemorySize> GetAllowedStorage();
         /// <summary>
         /// </summary>
         /// <returns>

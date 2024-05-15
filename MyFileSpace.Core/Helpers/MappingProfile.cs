@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using MyFileSpace.Core.DTOs;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 
 namespace MyFileSpace.Core.Helpers
 {

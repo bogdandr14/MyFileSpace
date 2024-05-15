@@ -1,4 +1,4 @@
-﻿using MyFileSpace.Infrastructure.Persistence.Entities;
+﻿using MyFileSpace.Infrastructure.Entities;
 
 namespace MyFileSpace.Infrastructure.Repositories
 {

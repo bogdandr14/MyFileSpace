@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
-using MyFileSpace.SharedKernel.Helpers;
 
 namespace MyFileSpace.Core.Services.Implementation
 {

@@ -1,7 +1,7 @@
 using Ardalis.ListStartupServices;
 using MyFileSpace.Api;
 using MyFileSpace.Api.Middlewares;
-using MyFileSpace.Infrastructure.Persistence;
+using MyFileSpace.Infrastructure;
 using MyFileSpace.SharedKernel.Providers;
 using Serilog;
 

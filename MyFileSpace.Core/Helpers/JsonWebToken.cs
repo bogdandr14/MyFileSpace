@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.SharedKernel.Providers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

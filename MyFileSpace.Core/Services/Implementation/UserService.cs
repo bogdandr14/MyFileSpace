@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Configuration;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Core.StorageManager;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
-using MyFileSpace.SharedKernel.Helpers;
 using MyFileSpace.SharedKernel.Providers;
 using System.Text.RegularExpressions;
 
@@ -16,10 +18,10 @@ namespace MyFileSpace.Core.Services.Implementation
     internal class UserService : IUserService
     {
         private readonly IMapper _mapper;
-        private readonly ICacheRepository _cacheRepository;
+        private readonly ICacheManager _cacheManager;
         private readonly IUserRepository _userRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
-        private readonly IFileStorageRepository _fileSystemRepository;
+        private readonly IStorageManager _storageManager;
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
@@ -27,14 +29,14 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IAccessKeyRepository _accessKeyRepository;
         private readonly Session _session;
 
-        public UserService(IMapper mapper, IConfiguration configuration, ICacheRepository cacheRepository, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, IStoredFileRepository storedFileRepository, IEmailService emailService, IUserAccessKeyRepository userAccessKeyRepository, IAccessKeyRepository accessKeyRepository, Session session)
+        public UserService(IMapper mapper, IConfiguration configuration, ICacheManager cacheManager, IUserRepository userRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IStorageManager storageManager, IStoredFileRepository storedFileRepository, IEmailService emailService, IUserAccessKeyRepository userAccessKeyRepository, IAccessKeyRepository accessKeyRepository, Session session)
         {
             _mapper = mapper;
             _configuration = configuration;
             _userRepository = userRepository;
-            _cacheRepository = cacheRepository;
+            _cacheManager = cacheManager;
             _virtualDirectoryRepository = virtualDirectoryRepository;
-            _fileSystemRepository = fileSystemRepository;
+            _storageManager = storageManager;
             _storedFileRepository = storedFileRepository;
             _emailService = emailService;
             _userAccessKeyRepository = userAccessKeyRepository;
@@ -90,8 +92,8 @@ namespace MyFileSpace.Core.Services.Implementation
                 return _mapper.Map<List<DirectoryDTO>>(virtualDirectories);
             };
 
-            userDetailsDTO.Files = await _cacheRepository.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask);
-            userDetailsDTO.Directories = await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask);
+            userDetailsDTO.Files = await _cacheManager.GetAndSetAsync(_session.AllFilesCacheKey, allFilesTask);
+            userDetailsDTO.Directories = await _cacheManager.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask);
             userDetailsDTO.AllowedDirectories = _mapper.Map<List<DirectoryDTO>>((await _virtualDirectoryRepository.ListAsync(new AccessibleUserDirectoriesSpec(_session.UserId))));
             userDetailsDTO.AllowedFiles = _mapper.Map<List<FileDTO>>(await _storedFileRepository.ListAsync(new AccessibleUserFilesSpec(_session.UserId)));
 
@@ -172,7 +174,7 @@ namespace MyFileSpace.Core.Services.Implementation
             //    _virtualDirectoryRepository.AddAsync(rootDirectory),
             //    _fileSystemRepository.AddDirectory(user.Id.ToString()) };
             await _virtualDirectoryRepository.AddAsync(rootDirectory);
-            await _fileSystemRepository.AddDirectory(user.Id.ToString());
+            await _storageManager.AddDirectory(user.Id.ToString());
 
             bool.TryParse(_configuration.GetConfigValue("DisableConfirmation"), out bool disableConfirmation);
             if (!disableConfirmation)
@@ -220,7 +222,7 @@ namespace MyFileSpace.Core.Services.Implementation
             user.TagName = userToUpdate.TagName;
 
             await _userRepository.UpdateAsync(user);
-            await _cacheRepository.RemoveAsync(TagNameCacheKey(oldTagName));
+            await _cacheManager.RemoveAsync(TagNameCacheKey(oldTagName));
         }
         #endregion
 
@@ -238,7 +240,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private async Task<User?> GetUserByTagNameCached(string tagName)
         {
             Func<Task<User?>> userTask = async () => await _userRepository.FirstOrDefaultAsync(new TagNameSpec(tagName));
-            return await _cacheRepository.GetAndSetAsync(TagNameCacheKey(tagName), userTask);
+            return await _cacheManager.GetAndSetAsync(TagNameCacheKey(tagName), userTask);
         }
 
         private string TagNameCacheKey(string tagName)

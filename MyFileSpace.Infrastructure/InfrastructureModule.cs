@@ -1,33 +1,14 @@
-﻿using Azure.Identity;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.Infrastructure.Repositories.Implementation;
-using MyFileSpace.SharedKernel.Providers;
 
 namespace MyFileSpace.Infrastructure
 {
     public static class InfrastructureModule
     {
-        public static void RegisterInfrastructureServices(this IServiceCollection services, bool isDevelopment, IConfiguration configuration)
+        public static void RegisterInfrastructure(this IServiceCollection services)
         {
-            if (isDevelopment)
-            {
-                RegisterDevelopmentOnlyDependencies(services);
-            }
-            else
-            {
-                RegisterProductionOnlyDependencies(services, configuration);
-            }
-
-            RegisterCommonDependencies(services);
-        }
-
-        private static void RegisterCommonDependencies(IServiceCollection services)
-        {
-            services.AddDistributedMemoryCache();
-            services.AddSingleton<ICacheRepository, CacheRepository>();
             services.AddScoped<IAccessKeyRepository, AccessKeyRepository>();
             services.AddScoped<IDirectoryAccessKeyRepository, DirectoryAccessKeyRepository>();
             services.AddScoped<IFileAccessKeyRepository, FileAccessKeyRepository>();
@@ -38,16 +19,6 @@ namespace MyFileSpace.Infrastructure
             services.AddScoped<IVirtualDirectoryRepository, VirtualDirectoryRepository>();
             services.AddScoped<IFavoriteFileRepository, FavoriteFileRepository>();
             services.AddScoped<IUserAccessKeyRepository, UserAccessKeyRepository>();
-        }
-
-        private static void RegisterDevelopmentOnlyDependencies(IServiceCollection services)
-        {
-            services.AddSingleton<IFileStorageRepository, SystemStorageRepository>();
-        }
-
-        private static void RegisterProductionOnlyDependencies(IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddSingleton<IFileStorageRepository, AzureStorageRepository>();
         }
     }
 }
