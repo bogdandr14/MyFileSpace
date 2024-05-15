@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using MyFileSpace.Infrastructure.Persistence;
+using MyFileSpace.Infrastructure;
 
 #nullable disable
 
@@ -25,7 +25,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.AccessKey", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.AccessKey", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,7 +47,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("AccessKey");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.DirectoryAccessKey", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.DirectoryAccessKey", b =>
                 {
                     b.Property<Guid>("DirectoryId")
                         .HasColumnType("uniqueidentifier");
@@ -66,7 +66,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("DirectoryAccessKey");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.FileAccessKey", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.FileAccessKey", b =>
                 {
                     b.Property<Guid>("FileId")
                         .HasColumnType("uniqueidentifier");
@@ -85,7 +85,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("FileAccessKey");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.StoredFile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -136,7 +136,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("StoredFile");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.User", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -180,7 +180,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.UserDirectoryAccess", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.UserDirectoryAccess", b =>
                 {
                     b.Property<Guid>("DirectoryId")
                         .HasColumnType("uniqueidentifier");
@@ -195,7 +195,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("UserDirectoryAccess");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.UserFileAccess", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.UserFileAccess", b =>
                 {
                     b.Property<Guid>("FileId")
                         .HasColumnType("uniqueidentifier");
@@ -210,7 +210,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("UserFileAccess");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.VirtualDirectory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -250,17 +250,17 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.ToTable("VirtualDirectory");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.DirectoryAccessKey", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.DirectoryAccessKey", b =>
                 {
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.AccessKey", "AccessKey")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.AccessKey", "AccessKey")
                         .WithOne("DirectoryAccess")
-                        .HasForeignKey("MyFileSpace.Infrastructure.Persistence.Entities.DirectoryAccessKey", "AccessKeyId")
+                        .HasForeignKey("MyFileSpace.Infrastructure.Entities.DirectoryAccessKey", "AccessKeyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "AccessibleDirectory")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.VirtualDirectory", "AccessibleDirectory")
                         .WithOne("DirectoryAccessKey")
-                        .HasForeignKey("MyFileSpace.Infrastructure.Persistence.Entities.DirectoryAccessKey", "DirectoryId")
+                        .HasForeignKey("MyFileSpace.Infrastructure.Entities.DirectoryAccessKey", "DirectoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -269,17 +269,17 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("AccessibleDirectory");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.FileAccessKey", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.FileAccessKey", b =>
                 {
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.AccessKey", "AccessKey")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.AccessKey", "AccessKey")
                         .WithOne("FileAccess")
-                        .HasForeignKey("MyFileSpace.Infrastructure.Persistence.Entities.FileAccessKey", "AccessKeyId")
+                        .HasForeignKey("MyFileSpace.Infrastructure.Entities.FileAccessKey", "AccessKeyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", "AccessibleFile")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.StoredFile", "AccessibleFile")
                         .WithOne("FileAccessKey")
-                        .HasForeignKey("MyFileSpace.Infrastructure.Persistence.Entities.FileAccessKey", "FileId")
+                        .HasForeignKey("MyFileSpace.Infrastructure.Entities.FileAccessKey", "FileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -288,15 +288,15 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("AccessibleFile");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.StoredFile", b =>
                 {
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "Directory")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.VirtualDirectory", "Directory")
                         .WithMany("FilesInDirectory")
                         .HasForeignKey("DirectorId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.User", "Owner")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.User", "Owner")
                         .WithMany("Files")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -307,15 +307,15 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.UserDirectoryAccess", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.UserDirectoryAccess", b =>
                 {
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.User", "AllowedUser")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.User", "AllowedUser")
                         .WithMany("AllowedDirectories")
                         .HasForeignKey("AllowedUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "Directory")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.VirtualDirectory", "Directory")
                         .WithMany("AllowedUsers")
                         .HasForeignKey("DirectoryId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -326,15 +326,15 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("Directory");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.UserFileAccess", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.UserFileAccess", b =>
                 {
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.User", "AllowedUser")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.User", "AllowedUser")
                         .WithMany("AllowedFiles")
                         .HasForeignKey("AllowedUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", "File")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.StoredFile", "File")
                         .WithMany("AllowedUsers")
                         .HasForeignKey("FileId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -345,15 +345,15 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("File");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.VirtualDirectory", b =>
                 {
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.User", "Owner")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.User", "Owner")
                         .WithMany("Directories")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", "ParentDirectory")
+                    b.HasOne("MyFileSpace.Infrastructure.Entities.VirtualDirectory", "ParentDirectory")
                         .WithMany("ChildDirectories")
                         .HasForeignKey("ParentDirectoryId")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -363,21 +363,21 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("ParentDirectory");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.AccessKey", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.AccessKey", b =>
                 {
                     b.Navigation("DirectoryAccess");
 
                     b.Navigation("FileAccess");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.StoredFile", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.StoredFile", b =>
                 {
                     b.Navigation("AllowedUsers");
 
                     b.Navigation("FileAccessKey");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.User", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.User", b =>
                 {
                     b.Navigation("AllowedDirectories");
 
@@ -388,7 +388,7 @@ namespace MyFileSpace.Infrastructure.Migrations.Migrations
                     b.Navigation("Files");
                 });
 
-            modelBuilder.Entity("MyFileSpace.Infrastructure.Persistence.Entities.VirtualDirectory", b =>
+            modelBuilder.Entity("MyFileSpace.Infrastructure.Entities.VirtualDirectory", b =>
                 {
                     b.Navigation("AllowedUsers");
 

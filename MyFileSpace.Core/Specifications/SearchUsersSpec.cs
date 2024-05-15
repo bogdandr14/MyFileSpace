@@ -1,6 +1,6 @@
 ﻿using Ardalis.Specification;
 using MyFileSpace.Core.DTOs;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.SharedKernel.Enums;
 
 namespace MyFileSpace.Core.Specifications

@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 
@@ -16,7 +17,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
         private readonly IUserRepository _userRepository;
-        private readonly ICacheRepository _cacheRepository;
+        private readonly ICacheManager _cacheManager;
         private readonly Session _session;
 
         public UserAccessService(IMapper mapper,
@@ -25,7 +26,7 @@ namespace MyFileSpace.Core.Services.Implementation
             IStoredFileRepository storedFileRepo,
             IVirtualDirectoryRepository virtualDirectoryRepo,
             IUserRepository userRepo,
-            ICacheRepository cacheRepo,
+            ICacheManager cacheManager,
             Session session)
         {
             _mapper = mapper;
@@ -34,7 +35,7 @@ namespace MyFileSpace.Core.Services.Implementation
             _storedFileRepository = storedFileRepo;
             _virtualDirectoryRepository = virtualDirectoryRepo;
             _userRepository = userRepo;
-            _cacheRepository = cacheRepo;
+            _cacheManager = cacheManager;
             _session = session;
         }
 
@@ -63,7 +64,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 List<UserDirectoryAccess> allowedUsersToAdd = userAccess.AddUserIds.Select(userId => new UserDirectoryAccess() { AllowedUserId = userId, DirectoryId = userAccess.ObjectId }).ToList();
                 await _userDirectoryAccessRepository.AddRangeAsync(allowedUsersToAdd);
                 await _userDirectoryAccessRepository.DeleteRangeAsync(allowedUsersToRemove);
-                await _cacheRepository.RemoveAsync(GetAllObjectAccessCacheKey(userAccess.ObjectId));
+                await _cacheManager.RemoveAsync(GetAllObjectAccessCacheKey(userAccess.ObjectId));
             }
         }
 
@@ -86,7 +87,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 return _mapper.Map<List<UserDTO>>(await _userRepository.ListAsync(new UserWithAccessSpec(objectId)));
             };
 
-            return await _cacheRepository.GetAndSetAsync(GetAllObjectAccessCacheKey(objectId), allowedUsersTask);
+            return await _cacheManager.GetAndSetAsync(GetAllObjectAccessCacheKey(objectId), allowedUsersTask);
         }
         #endregion
 

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyFileSpace.Api.Attributes;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Services;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -12,12 +14,12 @@ namespace MyFileSpace.Api.Controllers
     [ApiController]
     public class ManagementController : ControllerBase
     {
-        private readonly ICacheService _cacheService;
+        private readonly ICacheManager _cacheManager;
         private readonly IStoredFileService _storedFileService;
 
-        public ManagementController(ICacheService cacheService, IStoredFileService storedFileService)
+        public ManagementController(ICacheManager cacheManager, IStoredFileService storedFileService)
         {
-            _cacheService = cacheService;
+            _cacheManager = cacheManager;
             _storedFileService = storedFileService;
         }
 
@@ -31,7 +33,7 @@ namespace MyFileSpace.Api.Controllers
         [HttpGet("allowedStorage")]
         [MyFileSpaceAuthorize]
 
-        public async Task<MemorySizeDTO> GetAllowedStorage()
+        public async Task<MemorySize> GetAllowedStorage()
         {
             return await _storedFileService.GetAllowedStorage();
         }
@@ -48,9 +50,9 @@ namespace MyFileSpace.Api.Controllers
         [HttpGet("cacheUsage")]
         [MyFileSpaceAuthorize(RoleType.Admin)]
 
-        public async Task<MemorySizeDTO> GetMemoryUsage()
+        public async Task<MemorySize> GetMemoryUsage()
         {
-            return await _cacheService.GetMemoryUsed();
+            return await _cacheManager.GetMemoryUsedAsync();
         }
 
         // DELETE api/<CacheController>
@@ -59,7 +61,7 @@ namespace MyFileSpace.Api.Controllers
 
         public async Task Delete()
         {
-            await _cacheService.ClearCache();
+            await _cacheManager.ClearAsync();
         }
     }
 }

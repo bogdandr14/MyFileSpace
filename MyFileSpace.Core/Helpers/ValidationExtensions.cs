@@ -1,9 +1,9 @@
 ﻿using MyFileSpace.Core.Specifications;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
+using MyFileSpace.SharedKernel;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
-using MyFileSpace.SharedKernel.Helpers;
 using System.Text.RegularExpressions;
 
 namespace MyFileSpace.Core.Helpers

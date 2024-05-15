@@ -40,11 +40,13 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Azure.Communication.Email" Version="1.0.1" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyFileSpace.Infrastructure\MyFileSpace.Infrastructure.csproj" />
+    <ProjectReference Include="..\MyFileSpace.Caching\MyFileSpace.Caching.csproj" />
     <ProjectReference Include="..\MyFileSpace.SharedKernel\MyFileSpace.SharedKernel.csproj" />
   </ItemGroup>
 

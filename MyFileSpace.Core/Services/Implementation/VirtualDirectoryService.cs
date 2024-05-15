@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Core.Specifications;
-using MyFileSpace.Infrastructure.Persistence.Entities;
+using MyFileSpace.Core.StorageManager;
+using MyFileSpace.Infrastructure.Entities;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.SharedKernel.Enums;
 using MyFileSpace.SharedKernel.Exceptions;
@@ -14,17 +16,17 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IMapper _mapper;
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
-        private readonly IFileStorageRepository _fileStorageRepository;
-        private readonly ICacheRepository _cacheRepository;
+        private readonly IStorageManager _storageManager;
+        private readonly ICacheManager _cacheManager;
         private readonly Session _session;
 
-        public VirtualDirectoryService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IFileStorageRepository fileSystemRepository, ICacheRepository cacheRepository, Session session)
+        public VirtualDirectoryService(IMapper mapper, IStoredFileRepository storedFileRepository, IVirtualDirectoryRepository virtualDirectoryRepository, IStorageManager storageManager, ICacheManager cacheManager, Session session)
         {
             _mapper = mapper;
             _storedFileRepository = storedFileRepository;
-            _fileStorageRepository = fileSystemRepository;
+            _storageManager = storageManager;
             _virtualDirectoryRepository = virtualDirectoryRepository;
-            _cacheRepository = cacheRepository;
+            _cacheManager = cacheManager;
             _session = session;
         }
 
@@ -36,7 +38,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 List<VirtualDirectory> virtualDirectories = await _virtualDirectoryRepository.ListAsync(new OwnedDirectoriesSpec(_session.UserId));
                 return _mapper.Map<List<DirectoryDTO>>(virtualDirectories);
             };
-            return (await _cacheRepository.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask)).Where(x => x.IsDeleted == deletedDirectories).ToList();
+            return (await _cacheManager.GetAndSetAsync(_session.AllDirectoriesCacheKey, allDirectoriesTask)).Where(x => x.IsDeleted == deletedDirectories).ToList();
         }
 
         public async Task<DirectoryDetailsDTO> GetDirectoryInfo(Guid directoryId, string? accessKey = null)
@@ -82,8 +84,8 @@ namespace MyFileSpace.Core.Services.Implementation
             virtualDirectory.OwnerId = _session.UserId;
             VirtualDirectory newDirectory = await _virtualDirectoryRepository.AddAsync(virtualDirectory);
             Task.WaitAll(
-                _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey),
-                _cacheRepository.RemoveAsync(DirectoryDetailsCacheKey(newDirectory.ParentDirectoryId!.Value, null))
+                _cacheManager.RemoveAsync(_session.AllDirectoriesCacheKey),
+                _cacheManager.RemoveAsync(DirectoryDetailsCacheKey(newDirectory.ParentDirectoryId!.Value, null))
             );
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
@@ -109,7 +111,7 @@ namespace MyFileSpace.Core.Services.Implementation
             }
 
             await _virtualDirectoryRepository.UpdateAsync(virtualDirectory);
-            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
+            await _cacheManager.RemoveAsync(_session.AllDirectoriesCacheKey);
             VirtualDirectory newDirectory = await _virtualDirectoryRepository.ValidateAndRetrieveDirectoryInfo(_session, directoryUpdate.DirectoryId);
             return _mapper.Map<DirectoryDTO>(newDirectory);
         }
@@ -119,13 +121,13 @@ namespace MyFileSpace.Core.Services.Implementation
             if (restore)
             {
                 await RestoreDirectory(directoryToMoveId, newParentDirectoryId);
-                await _cacheRepository.RemoveAsync(_session.AllFilesCacheKey);
+                await _cacheManager.RemoveAsync(_session.AllFilesCacheKey);
             }
             else
             {
                 await MoveToDirectory(directoryToMoveId, newParentDirectoryId);
             }
-            await _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey);
+            await _cacheManager.RemoveAsync(_session.AllDirectoriesCacheKey);
         }
 
         public async Task DeleteDirectory(Guid directoryId, bool permanent)
@@ -140,8 +142,8 @@ namespace MyFileSpace.Core.Services.Implementation
             }
 
             Task.WaitAll(
-                _cacheRepository.RemoveAsync(_session.AllFilesCacheKey),
-                _cacheRepository.RemoveAsync(_session.AllDirectoriesCacheKey)
+                _cacheManager.RemoveAsync(_session.AllFilesCacheKey),
+                _cacheManager.RemoveAsync(_session.AllDirectoriesCacheKey)
             );
         }
         #endregion
@@ -223,7 +225,7 @@ namespace MyFileSpace.Core.Services.Implementation
             IEnumerable<Task> tasks = new List<Task>();
             foreach (StoredFile storedFile in filesToDelete)
             {
-                tasks.Append(_fileStorageRepository.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString()));
+                tasks.Append(_storageManager.RemoveFile(storedFile.OwnerId.ToString(), storedFile.Id.ToString()));
             }
 
             await Task.WhenAll(tasks);
