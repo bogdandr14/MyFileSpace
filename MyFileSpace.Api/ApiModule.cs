@@ -66,8 +66,8 @@ namespace MyFileSpace.Api
             {
                 Name = Constants.SWAGGER_AUTHORIZATION,
                 Type = SecuritySchemeType.Http,
-                Scheme = OpenApiConstants.Bearer,
-                BearerFormat = OpenApiConstants.Jwt,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
                 In = ParameterLocation.Header,
                 Description = Constants.SWAGGER_SECURITY_DESCRIPTION
             });
