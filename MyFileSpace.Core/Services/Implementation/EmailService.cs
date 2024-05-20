@@ -1,7 +1,6 @@
 ﻿using Azure;
 using Azure.Communication.Email;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Infrastructure.Entities;
@@ -112,6 +111,7 @@ namespace MyFileSpace.Core.Services.Implementation
 
             if (bool.TryParse(useDebugRecipient, out bool useDebug) && useDebug)
             {
+                emailContent = new EmailContent($"{emailContent.Subject} - {emailAddress}") { Html = emailContent.Html };
                 emailAddress = _configuration.GetConfigValue("CommunicationEmail:DebugRecipient");
             }
 

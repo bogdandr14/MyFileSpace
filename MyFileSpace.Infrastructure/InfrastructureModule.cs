@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using MyFileSpace.Infrastructure.Repositories;
 using MyFileSpace.Infrastructure.Repositories.Implementation;
 

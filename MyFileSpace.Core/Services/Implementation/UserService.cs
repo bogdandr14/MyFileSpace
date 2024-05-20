@@ -291,6 +291,11 @@ namespace MyFileSpace.Core.Services.Implementation
                 throw new InvalidException("Can not modify other users' data");
             }
 
+            if (newTagName.Length < 6)
+            {
+                throw new InvalidException("TagName must have at least 6 characters");
+            }
+
             if (!newTagName.Equals(existingUser.TagName))
             {
                 User? user = await GetUserByTagNameCached(newTagName);
