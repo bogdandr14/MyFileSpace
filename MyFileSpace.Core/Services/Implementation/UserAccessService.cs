@@ -54,6 +54,7 @@ namespace MyFileSpace.Core.Services.Implementation
                 List<UserFileAccess> allowedUsersToRemove = await _userFileAccessRepository.ValidateAndRetrieveExistingUserFileAccess(userAccess.ObjectId, userAccess.RemoveUserIds, true);
                 await _userFileAccessRepository.AddRangeAsync(allowedUsersToAdd);
                 await _userFileAccessRepository.DeleteRangeAsync(allowedUsersToRemove);
+                await _cacheManager.RemoveAsync(userAccess.ObjectId.FileCacheKeyPrefix());
             }
             else if (userAccess.ObjectType == ObjectType.VirtualDirectory)
             {
@@ -64,8 +65,9 @@ namespace MyFileSpace.Core.Services.Implementation
                 List<UserDirectoryAccess> allowedUsersToAdd = userAccess.AddUserIds.Select(userId => new UserDirectoryAccess() { AllowedUserId = userId, DirectoryId = userAccess.ObjectId }).ToList();
                 await _userDirectoryAccessRepository.AddRangeAsync(allowedUsersToAdd);
                 await _userDirectoryAccessRepository.DeleteRangeAsync(allowedUsersToRemove);
-                await _cacheManager.RemoveAsync(GetAllObjectAccessCacheKey(userAccess.ObjectId));
+                await _cacheManager.RemoveAsync(userAccess.ObjectId.DirectoryCacheKeyPrefix());
             }
+            await _cacheManager.RemoveAsync(GetAllObjectAccessCacheKey(userAccess.ObjectId));
         }
 
         public async Task<List<UserDTO>> GetAllowedUsers(Guid objectId, ObjectType objectType)
