@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MyFileSpace.Caching;
 using MyFileSpace.Core.DTOs;
 using MyFileSpace.Core.Helpers;
 using MyFileSpace.Infrastructure.Entities;
@@ -17,6 +18,7 @@ namespace MyFileSpace.Core.Services.Implementation
         private readonly IFileAccessKeyRepository _fileAccessKeyRepository;
         private readonly IStoredFileRepository _storedFileRepository;
         private readonly IVirtualDirectoryRepository _virtualDirectoryRepository;
+        private readonly ICacheManager _cacheManager;
         private readonly Session _session;
 
         public AccessKeyService(IMapper mapper,
@@ -25,6 +27,7 @@ namespace MyFileSpace.Core.Services.Implementation
             IFileAccessKeyRepository fileAccessKeyRepo,
             IStoredFileRepository storedFileRepo,
             IVirtualDirectoryRepository virtualDirectoryRepo,
+            ICacheManager cacheManager,
             Session session)
         {
             _mapper = mapper;
@@ -33,6 +36,7 @@ namespace MyFileSpace.Core.Services.Implementation
             _fileAccessKeyRepository = fileAccessKeyRepo;
             _storedFileRepository = storedFileRepo;
             _virtualDirectoryRepository = virtualDirectoryRepo;
+            _cacheManager = cacheManager;
             _session = session;
         }
 
@@ -46,11 +50,13 @@ namespace MyFileSpace.Core.Services.Implementation
             if (keyAccess.ObjectType == ObjectType.StoredFile)
             {
                 await _fileAccessKeyRepository.AddAsync(new FileAccessKey() { AccessKeyId = accessKey.Id, FileId = keyAccess.ObjectId });
+                await _cacheManager.RemoveAsync(keyAccess.ObjectId.FileCacheKey(_session, null));
             }
 
             if (keyAccess.ObjectType == ObjectType.VirtualDirectory)
             {
                 await _directoryAccessKeyRepository.AddAsync(new DirectoryAccessKey() { AccessKeyId = accessKey.Id, DirectoryId = keyAccess.ObjectId });
+                await _cacheManager.RemoveAsync(keyAccess.ObjectId.DirectoryCacheKey(_session, null));
             }
 
             KeyAccessDetailsDTO keyAccessDetailsDTO = _mapper.Map<KeyAccessDetailsDTO>(accessKey);

@@ -74,6 +74,13 @@ namespace MyFileSpace.Api.Controllers
             await _storedFileService.MoveFile(fileId, directoryId, restore);
         }
 
+        [HttpGet("favorite")]
+        [MyFileSpaceAuthorize]
+        public async Task<List<FileDTO>> GetFavorite()
+        {
+           return await _storedFileService.GetAllFavorites();
+        }
+
         [HttpPost("favorite/{fileId:Guid}")]
         [MyFileSpaceAuthorize]
         public async Task AddFavorite(Guid fileId)

@@ -16,7 +16,7 @@ namespace MyFileSpace.Core.Specifications
                         && vd.AllowedUsers.Any(ad => ad.AllowedUserId == requestingUser)
                         )
                     )
-            );
+            ).Include(f=> f.UsersFavorite);
         }
 
         // returns all files that the requester was granted access to
@@ -26,7 +26,7 @@ namespace MyFileSpace.Core.Specifications
                 && (vd.AccessLevel != AccessType.Private
                 && vd.AllowedUsers.Any(ad => ad.AllowedUserId == requestingUser)
                 )
-            );
+            ).Include(f => f.UsersFavorite);
         }
     }
 }

@@ -241,6 +241,12 @@ namespace MyFileSpace.Core.Services.Implementation
             await _cacheManager.RemoveByPrefixAsync(fileId.FileCacheKeyPrefix());
         }
 
+        public async Task<List<FileDTO>> GetAllFavorites()
+        {
+            List<StoredFile> favoriteFiles = await _storedFileRepository.ListAsync(new UserFavoritesSpec(_session.UserId));
+            return _mapper.Map<List<FileDTO>>(favoriteFiles);
+        }
+
         public async Task AddToFavorites(Guid fileId)
         {
             await _storedFileRepository.ValidateAndRetrieveFileInfo(_session, fileId);

@@ -17,7 +17,7 @@
             return $"Directory_{directoryId}_";
         }
 
-        public static string DirectoryCacheKey(this Guid directoryId, Session session, string accessKey)
+        public static string DirectoryCacheKey(this Guid directoryId, Session session, string? accessKey)
         {
             return $"Directory_{directoryId}_{session.UserId}_{accessKey}";
         }
