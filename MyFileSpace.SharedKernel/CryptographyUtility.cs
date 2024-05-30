@@ -48,12 +48,8 @@ namespace MyFileSpace.SharedKernel
 
         public static async Task<string> EncryptAsync(string clearText, string passphrase)
         {
-            if (clearText.Length / 2 == 1)
-            {
-                clearText = clearText + '0';
-            }
-            using MemoryStream unencryptedInput = new(Convert.FromHexString(clearText));
-            return Convert.ToHexString(await EncryptAsync(unencryptedInput, passphrase));
+            using MemoryStream unencryptedInput = new(Encoding.ASCII.GetBytes(clearText));
+            return Convert.ToBase64String(await EncryptAsync(unencryptedInput, passphrase));
         }
 
         public static async Task<byte[]> EncryptAsync(Stream inputDecryptedStream, string passphrase)
@@ -72,8 +68,8 @@ namespace MyFileSpace.SharedKernel
 
         public static async Task<string> DecryptAsync(string encryptedText, string passphrase)
         {
-            MemoryStream encryptedInput = new MemoryStream(Convert.FromHexString(encryptedText));
-            return Convert.ToHexString((await DecryptAsync(encryptedInput, passphrase)).ToArray());
+            MemoryStream encryptedInput = new MemoryStream(Convert.FromBase64String(encryptedText));
+            return Encoding.ASCII.GetString((await DecryptAsync(encryptedInput, passphrase)).ToArray());
         }
 
         public static async Task<MemoryStream> DecryptAsync(Stream inputEncryptedStream, string passphrase)
