@@ -195,7 +195,7 @@ namespace MyFileSpace.Core.Services.Implementation
             }
             else if (_session.IsAuthenticated)
             {
-                user = await _userRepository.ValidateCredentialsAndRetrieveUser(updatePassword.Email, updatePassword.CurrentPassword);
+                user = await _userRepository.ValidateCredentialsAndRetrieveUser(_session.UserId, updatePassword.CurrentPassword);
             }
             else
             {
